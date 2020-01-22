@@ -177,14 +177,14 @@ class MapEngine:
 
     def paintCanvas(self, cr):
         """
-        Implements draw slot
-        - Draw a test circle in middle of widget
+        Draws map on canvas.
+        Draws background, and calls draw on each layer.
         """
-
         ## Draw background
         cr.set_source_rgb(0.05, 0.05, 0.05) ## Set color to 95% black
         cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
         cr.fill() ## Fill rectangle
 
+        ## Draw each layer
         for layer in self._layer_list:
             layer.draw(cr)
