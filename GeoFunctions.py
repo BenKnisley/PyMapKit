@@ -5,7 +5,11 @@ Date: January 12, 2020
 """
 ## Import PyProj, and numpy
 import pyproj
+from pyproj import Transformer, transform
 import numpy as np
+
+global cnt
+cnt = 0
 
 
 def geo2proj(geo_data, WGS84_proj, dest_proj):
@@ -16,13 +20,19 @@ def geo2proj(geo_data, WGS84_proj, dest_proj):
     if WGS84_proj == dest_proj:
         return geo_data
 
+    transformer = Transformer.from_proj(WGS84_proj, dest_proj)
+
     ## If geo_data is a list
     if isinstance(geo_data, list):
 
         lon = [coord[0] for coord in geo_data]
         lat = [coord[1] for coord in geo_data]
 
-        x, y = pyproj.transform(WGS84_proj, dest_proj, lat, lon)
+        lon = np.array(lon)
+        lat = np.array(lat)
+
+        #x, y = pyproj.transform(WGS84_proj, dest_proj, lat, lon)
+        x, y = transformer.transform(lat, lon)
 
         proj_data = list( zip(x,y) )
 

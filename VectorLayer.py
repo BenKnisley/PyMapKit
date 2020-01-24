@@ -26,9 +26,11 @@ def _get_geom_points(geom):
     ## Create root point list
     feature_point_stuct = []
 
-    if geom.GetGeometryName() == "POINT":
+    if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
+        subgeom_struct = []
         for point in geom.GetPoints():
-            feature_point_stuct = point
+             subgeom_struct.append(point)
+        feature_point_stuct.append(subgeom_struct)
 
     elif geom.GetGeometryName() in ("LINESTRING", "MULTILINESTRING"):
         geocount = geom.GetGeometryCount()
@@ -64,7 +66,7 @@ def _get_geom_points(geom):
             feature_point_stuct.append(subpoly_struct)
 
     else:
-        print("There is an unexpected geometry type. WTF")
+        print("There is an unexpected geometry type.")
         print(geom.GetGeometryName())
         print()
 
@@ -204,20 +206,25 @@ class VectorLayer:
             self.features = self.rawdata
             return
 
-        if self.geotype == 'point':
-            ## No multiprocessing, already optimized
-            self.features = self._project_points(self.rawdata)
+        with multiprocessing.Pool(processes=8) as pool:
+            self.features = pool.map(self._project_feature, self.rawdata)
 
-        elif self.geotype == 'line':
-            with multiprocessing.Pool(processes=8) as pool:
-                self.features = pool.map(self._project_line, self.rawdata)
 
-        elif self.geotype == 'polygon':
-            with multiprocessing.Pool(processes=8) as pool:
-                self.features = pool.map(self._project_poly, self.rawdata)
-
-    def _project_points(self, geofeatures):
+    def _project_feature(self, geofeature):
         """ projectData Helper function """
+        projected_Feature = []
+        for subFeature in geofeature:
+            projected_Feature.append( self._map_engine.geo2proj(subFeature) )
+        return projected_Feature
+
+    def _project_point(self, geofeature):
+        """ projectData Helper function """
+        projFeat = []
+        for subFeat in geofeature:
+            projFeat.append( self._map_engine.geo2proj(subFeat) )
+        return projFeat
+
+
         return self._map_engine.geo2proj(geofeatures)
 
     def _project_line(self, geoline):
@@ -239,9 +246,11 @@ class VectorLayer:
 
     def draw(self, cr):
         if self.geotype == 'point':
-            pixPoints = self._map_engine.proj2pix(self.features)
-            for point, style in zip(pixPoints, self.styles):
-                self._map_engine._map_painter.drawPoint(cr, point, style)
+            for projPoint, style in zip(self.features, self.styles):
+                pixPoint = []
+                for subPoint in projPoint:
+                    pixPoint.append(self._map_engine.proj2pix(subPoint))
+                self._map_engine._map_painter.drawPoint(cr, pixPoint, style)
 
         elif self.geotype == 'line':
             for projLine, style in zip(self.features, self.styles):

@@ -12,8 +12,10 @@ class CairoMapPainter:
         rad = style.pointradius
 
         cr.set_source_rgb(R, G, B)
-        cr.arc(point[0], point[1], rad, 0, 6.2830)
-        cr.fill()
+        for subpoint in point:
+            for vertex in subpoint:
+                cr.arc(vertex[0], vertex[1], rad, 0, 6.2830)
+                cr.fill()
 
     def drawLine(self, cr, line, style):
         """ """
