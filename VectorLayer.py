@@ -7,6 +7,7 @@ Date: December 31, 2019
 ## Import OGR
 from osgeo import ogr
 import multiprocessing
+import numpy as np
 
 def _get_geom_points(geom):
     """
@@ -32,6 +33,7 @@ def _get_geom_points(geom):
              subgeom_struct.append(point)
         feature_point_stuct.append(subgeom_struct)
 
+
     elif geom.GetGeometryName() in ("LINESTRING", "MULTILINESTRING"):
         geocount = geom.GetGeometryCount()
         if geocount == 0:
@@ -51,6 +53,7 @@ def _get_geom_points(geom):
                     subgeom_struct.append(point)
 
                 feature_point_stuct.append(subgeom_struct)
+
 
     elif geom.GetGeometryName() in ("POLYGON", "LINEARRING", "MULTIPOLYGON"):
         for indx in range(geom.GetGeometryCount()):
@@ -196,8 +199,8 @@ class VectorLayer:
         """ """
         None
 
+
     def projectData(self):
-        """ """
         ## Clear existing features
         self.features = []
 
@@ -206,42 +209,30 @@ class VectorLayer:
             self.features = self.rawdata
             return
 
-        with multiprocessing.Pool(processes=8) as pool:
-            self.features = pool.map(self._project_feature, self.rawdata)
+        ## Break features into structure and points
+        structure = []
+        point_list = []
 
+        ## Loop each raw feature, building structure, & list of points
+        for feature in self.rawdata:
+            feature_structure = []
+            for subfeatures in feature:
+                feature_structure.append(len(subfeatures))
+                for point in subfeatures:
+                    point_list.append(point)
+            structure.append(feature_structure)
 
-    def _project_feature(self, geofeature):
-        """ projectData Helper function """
-        projected_Feature = []
-        for subFeature in geofeature:
-            projected_Feature.append( self._map_engine.geo2proj(subFeature) )
-        return projected_Feature
+        ## Project all points in bulk
+        proj_points = self._map_engine.geo2proj(point_list)
 
-    def _project_point(self, geofeature):
-        """ projectData Helper function """
-        projFeat = []
-        for subFeat in geofeature:
-            projFeat.append( self._map_engine.geo2proj(subFeat) )
-        return projFeat
-
-
-        return self._map_engine.geo2proj(geofeatures)
-
-    def _project_line(self, geoline):
-        """ projectData Helper function """
-        projline = []
-        for subline in geoline:
-            projline.append( self._map_engine.geo2proj(subline) )
-        return projline
-
-    def _project_poly(self, geopoly):
-        """ projectData Helper function """
-        projpoly = []
-        for subpoly in geopoly:
-            projpoly.append( self._map_engine.geo2proj(subpoly) )
-        return projpoly
-
-
+        ## Rebuild features from points and structure
+        point_pointer = 0
+        for feature in structure:
+            proj_feature = []
+            for sub_pnt_cnt in feature:
+                proj_feature.append(proj_points[point_pointer:point_pointer+sub_pnt_cnt])
+                point_pointer += sub_pnt_cnt
+            self.features.append(proj_feature)
 
 
     def draw(self, cr):
