@@ -3,6 +3,7 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Date: January 1, 2020
 """
+import numpy as np
 
 class CairoMapPainter:
 
@@ -34,7 +35,7 @@ class CairoMapPainter:
 
     def drawPolygon(self, cr, polygon, style):
         """ """
-        last_drawn = (None, None)
+        last_drawn = (0, 0)
 
         R, G, B = style.polyColor
         cr.set_source_rgb(R, G, B)

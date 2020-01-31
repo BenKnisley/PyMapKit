@@ -16,35 +16,66 @@ import MapEngine.CairoMapPainter as CairoMapPainter
 
 
 class MapEngine:
-    """
-    """
-    def __init__(self, projection, initCoord):
-        """ """
-        ## Keep a reference WGS84
+    """A class to manage map infomation, layers, and drawing."""
+
+    def __init__(self, **input_args):
+        """Initializes MapEngine object from defaults and user input."""
+        ## Keep a reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
-        ## Variable projection
-        self._proj = pyproj.Proj(projection)
-        self._scale = 0.01
+        ## Create list to hold MapLayers
+        self._layer_list = []
+
+        ## Get projection string from input_args, or default to WGS84
+        if "projection" in input_args:
+            projection_str = input_args["projection"]
+        else:
+            projection_str = "EPSG:4326"
+        ## Create and set PyProj projection
+        self._projection = pyproj.Proj(projection_str)
+
+        if "coordinate" in input_args:
+            initCoord = input_args["coordinate"]
+        else:
+            initCoord = (0,0)
+        ## Set point of intrest
         self._POI = self.geo2proj(initCoord)
 
-        ## Set default size
+
+
+        if "scale" in input_args:
+            scale = input_args["scale"]
+        else:
+            scale = 0.01
+        ## Set point of intrest
+        self._scale = scale
+
+        ## Set default canvas size
         self._size = (500, 500) ## Default to 500px x 500px
 
         ## Create MapPainter object
         self._map_painter = CairoMapPainter.CairoMapPainter()
 
-        ## Create list to hold layers
-        self._layer_list = []
 
     def addLayer(self, new_map_layer):
         """
+        Activates and adds a new layer to MapEngine
         """
+        ## Call new_map_layer activate function
+        new_map_layer._activate(self)
+
+        ## Add layer to layer_list
         self._layer_list.append(new_map_layer)
+
+    def remove_layer(index):
+        """ Removes map layer at given index """
+        layer = self._layer_list.pop(index)
+        layer._deactivate()
+
 
 
     def getProjection(self):
-        return self._proj
+        return self._projection
 
     def setProjection(self, newProjection):
         None
@@ -57,7 +88,6 @@ class MapEngine:
     def getPOI(self):
         return self._POI
 
-
     def zoomIn(self):
         self._scale -= (self._scale * 0.1)
 
@@ -65,10 +95,10 @@ class MapEngine:
         self._scale += (self._scale * 0.1)
 
 
-    def setScale(self, newScale):
+    def set_scale(self, newScale):
         self._scale = newScale
 
-    def getScale(self):
+    def get_scale(self):
         return self._scale
 
 
@@ -76,27 +106,28 @@ class MapEngine:
         self._size = newSize
 
     def getSize(self):
+        """ """
         return self._size
 
 
     def getCenterPoint(self):
+        """ """
         x = int(self._size[0]/2)
         y = int(self._size[1]/2)
         return (x, y)
 
 
     ## GeoFunctions Wrapper functions
-    ## Added to
 
     def geo2proj(self, geo_data):
         """
         """
-        proj_data = GeoFunctions.geo2proj(geo_data, self._WGS84, self._proj)
+        proj_data = GeoFunctions.geo2proj(geo_data, self._WGS84, self._projection)
         return proj_data
 
     def proj2geo(self, proj_data):
         """ """
-        geo_data = GeoFunctions.proj2geo(proj_data, self._WGS84, self._proj)
+        geo_data = GeoFunctions.proj2geo(proj_data, self._WGS84, self._projection)
         return geo_data
 
     def proj2pix(self, projPoint):
@@ -125,6 +156,9 @@ class MapEngine:
             ## Round to int to make drawing faster
             pixelX = np.rint(pixelX)
             pixelY = np.rint(pixelY)
+
+            pixelX = pixelX[~np.isinf(pixelX)]
+            pixelY = pixelY[~np.isinf(pixelY)]
 
             pixPoint = list( zip(pixelX, pixelY) )
 
@@ -181,7 +215,8 @@ class MapEngine:
         Draws background, and calls draw on each layer.
         """
         ## Draw background
-        cr.set_source_rgb(0.05, 0.05, 0.05) ## Set color to 95% black
+        #cr.set_source_rgb(0.05, 0.05, 0.05) ## Set color to 95% black
+        cr.set_source_rgb(0.45, 0.62, 0.81) ## Set color to 95% black
         cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
         cr.fill() ## Fill rectangle
 

@@ -106,7 +106,7 @@ def _data_from_OGR_layer(ogrlayer):
     ## Return New vector Layer
     return field_names, attributes_list, geometry_type, geometrys_list
 
-def from_shapefile(MapEngine_obj, shapefile_path):
+def from_shapefile(shapefile_path):
     """
     """
     ## Setup driver for shapefile, open shapefile
@@ -121,7 +121,7 @@ def from_shapefile(MapEngine_obj, shapefile_path):
 
     ## Get data from ogrlayer, and return new VectorLayer
     field_names, attributes_list, geometry_type, geometrys_list = _data_from_OGR_layer(ogrlayer)
-    return VectorLayer(MapEngine_obj, geometry_type, geometrys_list, field_names, attributes_list)
+    return VectorLayer(geometry_type, geometrys_list, field_names, attributes_list)
 
 
 def style_by_attribute(input_layer, **kw):
@@ -143,12 +143,18 @@ def style_by_attribute(input_layer, **kw):
 def style_layer_random(input_layer):
     """ This is a junk function, not to be kept. """
     ## Define colors in list
-    colors = [(1,0,0),
-              (0,1,0),
-              (0,0,1),
-              (0,0.5,0),
-              (0.5,0.5,0.5),
-              (0.5,0,0)]
+    #colors = [(0.768,0.47,0.53), (0,1,0), (0,0,1), (0,0.5,0), (0.5,0.5,0.5), (0.5,0,0)]
+    #colors = [(color[0]*255, color[1]*255, color[2]*255) for color in colors]
+
+    colors = [
+        (228,26,28),
+        (55,126,184),
+        (77,175,74),
+        (152,78,163),
+        (255,127,0)
+    ]
+    colors = [(color[0]/255.0, color[1]/255.0, color[2]/255.0) for color in colors]
+
 
     counter = 0
     for style in input_layer.styles:
@@ -156,6 +162,7 @@ def style_layer_random(input_layer):
 
         counter += 1
         if counter == len(colors): counter = 0
+
 
 class _FeatureStyle:
     """ """
@@ -167,33 +174,40 @@ class _FeatureStyle:
         self.linewidth = 1
 
         self.polyColor = (0.31, 0.34, 0.68)
-        self.polyLineColor = (0.0, 1.0, 0.5)
+        self.polyLineColor = (0.0, 0.0, 0.0)
         self.polyLineWidth = 0.5
 
 
 class VectorLayer:
     """ """
-    def __init__(self, host_map_engine, geotype, geom_data, field_names, attributes_list):
+    def __init__(self, geotype, geom_data, field_names, attributes_list):
         """ """
         ##
         #! MAKE THESE PRIVATE
-        self._map_engine = host_map_engine
+        self._MapEngine = None ## Set as none when not added to MapEngine
         self.geotype = geotype
         self.rawdata = geom_data #! RENAME THIS
         self.fields = field_names
         self.attributes_store = attributes_list
 
-
         self.features = []
         self.attributes = []
         self.styles = []
 
-        self.projectData()
-
         ## Set Defalt map style to each feature
-        for _ in self.features:
+        for _ in self.rawdata:
             new_style = _FeatureStyle()
             self.styles.append(new_style)
+
+    def _activate(self, new_MapEngine):
+        """ Function called when layer is added to a MapEngine """
+        self._MapEngine = new_MapEngine
+        self.projectData()
+
+    def _deactivate(self):
+        """ Function called when layer is added to a MapEngine """
+        self._MapEngine = None
+        self.features.clear()
 
     def setStyle(self, index, style):
         """ """
@@ -205,7 +219,7 @@ class VectorLayer:
         self.features = []
 
         ## If source and destination proj are same, skip projection overhead
-        if self._map_engine._WGS84 == self._map_engine._proj:
+        if self._MapEngine._WGS84 == self._MapEngine._projection:
             self.features = self.rawdata
             return
 
@@ -223,7 +237,7 @@ class VectorLayer:
             structure.append(feature_structure)
 
         ## Project all points in bulk
-        proj_points = self._map_engine.geo2proj(point_list)
+        proj_points = self._MapEngine.geo2proj(point_list)
 
         ## Rebuild features from points and structure
         point_pointer = 0
@@ -240,22 +254,22 @@ class VectorLayer:
             for projPoint, style in zip(self.features, self.styles):
                 pixPoint = []
                 for subPoint in projPoint:
-                    pixPoint.append(self._map_engine.proj2pix(subPoint))
-                self._map_engine._map_painter.drawPoint(cr, pixPoint, style)
+                    pixPoint.append(self._MapEngine.proj2pix(subPoint))
+                self._MapEngine._map_painter.drawPoint(cr, pixPoint, style)
 
         elif self.geotype == 'line':
             for projLine, style in zip(self.features, self.styles):
                 pixLine = []
                 for subline in projLine:
-                    pix_subline = self._map_engine.proj2pix(subline)
+                    pix_subline = self._MapEngine.proj2pix(subline)
                     pixLine.append(pix_subline)
-                self._map_engine._map_painter.drawLine(cr, pixLine, style)
+                self._MapEngine._map_painter.drawLine(cr, pixLine, style)
 
         else: # self.geotype == polygon:
             for projFeature, style in zip(self.features, self.styles):
                 pixPoly = []
                 for subPoly in projFeature:
-                    pixsubPoly = self._map_engine.proj2pix(subPoly)
+                    pixsubPoly = self._MapEngine.proj2pix(subPoly)
                     pixPoly.append(pixsubPoly)
 
-                self._map_engine._map_painter.drawPolygon(cr, pixPoly, style)
+                self._MapEngine._map_painter.drawPolygon(cr, pixPoly, style)
