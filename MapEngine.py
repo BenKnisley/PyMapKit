@@ -56,8 +56,29 @@ class MapEngine:
         ## Create MapPainter object
         self._map_painter = CairoMapPainter.CairoMapPainter()
 
+        self._background_color = (0.05, 0.05, 0.05)
 
-    def addLayer(self, new_map_layer):
+    def draw(self, cr):
+        """
+        Draws map on canvas.
+        Draws background, and calls draw on each layer.
+        """
+        ## Draw background
+        cr.set_source_rgb(*self._background_color)
+        #cr.set_source_rgb(0.45, 0.62, 0.81) ## Set color to 95% black
+        cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
+        cr.fill() ## Fill rectangle
+
+        ## Draw each layer
+        for layer in self._layer_list:
+            layer.draw(cr)
+
+    def set_background_color(self, color):
+        if isinstance(color, tuple): ## RGB input
+            self._background_color = color
+            return
+
+    def add_layer(self, new_map_layer):
         """
         Activates and adds a new layer to MapEngine
         """
@@ -73,12 +94,13 @@ class MapEngine:
         layer._deactivate()
 
 
-
     def getProjection(self):
+        """ """
         return self._projection
 
     def setProjection(self, newProjection):
-        None
+        """ """
+        pass
 
 
     def setPOI(self, newPOI):
@@ -88,6 +110,8 @@ class MapEngine:
     def getPOI(self):
         return self._POI
 
+
+    #! Remove these??
     def zoomIn(self):
         self._scale -= (self._scale * 0.1)
 
@@ -205,21 +229,3 @@ class MapEngine:
         projPoint = self.pix2proj(pixPoint)
         geoPoint = self.proj2geo(projPoint)
         return geoPoint
-
-
-
-
-    def paintCanvas(self, cr):
-        """
-        Draws map on canvas.
-        Draws background, and calls draw on each layer.
-        """
-        ## Draw background
-        #cr.set_source_rgb(0.05, 0.05, 0.05) ## Set color to 95% black
-        cr.set_source_rgb(0.45, 0.62, 0.81) ## Set color to 95% black
-        cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
-        cr.fill() ## Fill rectangle
-
-        ## Draw each layer
-        for layer in self._layer_list:
-            layer.draw(cr)
