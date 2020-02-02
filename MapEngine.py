@@ -19,7 +19,22 @@ class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
 
     def __init__(self, **input_args):
-        """Initializes MapEngine object from defaults and user input."""
+        """
+        Initializes MapEngine object.
+
+        Input: None required
+        Optional:
+            - projection - the projection string of the projection to use.
+                Defaults to EPSG:4326.
+
+            - coordinate - the starting geographic location to use. Defaults to
+                Lat:0.0 Lon:0.0
+
+            - scale - the starting scale to use. Defaults to 0.01
+
+        Results: A new MapEngine object.
+        Returns: None
+        """
         ## Keep a reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
@@ -41,8 +56,6 @@ class MapEngine:
         ## Set point of intrest
         self._POI = self.geo2proj(initCoord)
 
-
-
         if "scale" in input_args:
             scale = input_args["scale"]
         else:
@@ -56,16 +69,22 @@ class MapEngine:
         ## Create MapPainter object
         self._map_painter = CairoMapPainter.CairoMapPainter()
 
+        ## Set default background color
         self._background_color = (0.05, 0.05, 0.05)
 
+    ## Drawing and style methods
     def draw(self, cr):
         """
-        Draws map on canvas.
-        Draws background, and calls draw on each layer.
+        Draws the map on canvas.
+
+        Input: cr - a cairo canvas object
+
+        Result: The background and all map layers are drawn onto the canvas.
+
+        Returns: None
         """
-        ## Draw background
+        ## Draw background by drawing rectangle the size of canvas
         cr.set_source_rgb(*self._background_color)
-        #cr.set_source_rgb(0.45, 0.62, 0.81) ## Set color to 95% black
         cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
         cr.fill() ## Fill rectangle
 
@@ -74,10 +93,20 @@ class MapEngine:
             layer.draw(cr)
 
     def set_background_color(self, color):
+        """
+        Sets background color of map.
+
+        Input: color - a tuple of 0-1 RGB values defining background color of
+            Map. Default is 95% black.
+        """
         if isinstance(color, tuple): ## RGB input
             self._background_color = color
             return
 
+        #! TODO: Add more types of color string inputs
+
+
+    ## Layer methods
     def add_layer(self, new_map_layer):
         """
         Activates and adds a new layer to MapEngine
@@ -93,7 +122,13 @@ class MapEngine:
         layer = self._layer_list.pop(index)
         layer._deactivate()
 
+    def get_layer(self, index):
+        """ Returns the layer at the given index """
+        layer = self._layer_list[index]
+        return layer
 
+
+    ## Projection methods
     def getProjection(self):
         """ """
         return self._projection
@@ -103,22 +138,33 @@ class MapEngine:
         pass
 
 
-    def setPOI(self, newPOI):
-        """ """
+    ## Location methods
+    def set_POI(self, newPOI):
+        """ Sets projection location of map  """
         self._POI = newPOI
 
-    def getPOI(self):
+    def get_POI(self):
+        """ Returns the projection location """
         return self._POI
 
+    def set_location(self, new_location):
+        """ Sets geographic location on map """
+        #! Add constaints
+        self._POI = self.geo2proj(new_location)
 
-    #! Remove these??
-    def zoomIn(self):
-        self._scale -= (self._scale * 0.1)
+    def get_location(self):
+        """ Returns the geographic location on map """
+        #! Add constaints
+        return self.proj2geo(self._POI)
 
-    def zoomOut(self):
-        self._scale += (self._scale * 0.1)
+    def get_canvas_center(self):
+        """ Returns a pixel point that is the center of the canvas. """
+        x = int(self._size[0]/2)
+        y = int(self._size[1]/2)
+        return (x, y)
 
 
+    ## Scale functions
     def set_scale(self, newScale):
         self._scale = newScale
 
@@ -126,23 +172,17 @@ class MapEngine:
         return self._scale
 
 
-    def setSize(self, newSize): # size tuple (x, y)
+    ## Size methods
+    def set_size(self, newSize): # size tuple (width, height)
+        """ Sets size of  """
         self._size = newSize
 
-    def getSize(self):
+    def get_size(self):
         """ """
         return self._size
 
 
-    def getCenterPoint(self):
-        """ """
-        x = int(self._size[0]/2)
-        y = int(self._size[1]/2)
-        return (x, y)
-
-
     ## GeoFunctions Wrapper functions
-
     def geo2proj(self, geo_data):
         """
         """
@@ -158,7 +198,7 @@ class MapEngine:
         """ """
         ## Unpack points
         focusX, focusY = self._POI
-        centerX, centerY = self.getCenterPoint()
+        centerX, centerY = self.get_canvas_center()
 
         ##
         if isinstance(projPoint, list):
@@ -204,7 +244,7 @@ class MapEngine:
         """ """
         ## Unpack points
         focusX, focusY = self._POI
-        centerX, centerY = self.getCenterPoint()
+        centerX, centerY = self.get_canvas_center()
         pixX, pixY = pixPoint
 
         ##
