@@ -8,9 +8,6 @@ import pyproj
 from pyproj import Transformer, transform
 import numpy as np
 
-global cnt
-cnt = 0
-
 
 def geo2proj(geo_data, WGS84_proj, dest_proj):
     """
