@@ -1,14 +1,240 @@
 #!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
-Date: December 31, 2019
+Date: Febuary 8, 2020
 """
-
-## Import OGR
 from osgeo import ogr
-import multiprocessing
 import numpy as np
 
+
+class _VectorFeature:
+    """ """
+    def __init__(self):
+        """ """
+        self._field_list = []
+        self._attributes = []
+
+        ## List to hold geom structure tree
+        self._geom_struct = np.array([])
+
+        ## NumPy arrays to hold geo coords
+        self._geo_x = np.array([])
+        self._geo_y = np.array([])
+
+        ## NumPy arrays to hold projection coords
+        self._proj_x = np.array([])
+        self._proj_y = np.array([])
+
+        ## Hold values for extent
+        self._min_x = 0
+        self._max_x = 0
+        self._min_y = 0
+        self._max_y = 0
+
+
+    def __len__(self):
+        return len(self._geo_x)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            key = self._field_list.index(key)
+        return self._attributes[key]
+
+    def _activate(self, MapLayer_obj):
+        self._field_list = MapLayer_obj._field_list.copy()
+
+    def _deactivate(self):
+        pass
+
+    def get_extent(self):
+        pass
+
+    def import_geographic(self, xvalues, yvalues):
+        self._geo_x = np.array(xvalues)
+        self._geo_y = np.array(yvalues)
+
+
+class _PointFeature(_VectorFeature):
+    """ """
+    def __init__(self):
+        """ """
+        self._color = (0.61, 0.13, 0.15)
+        self._radius = 2
+
+    def set_color(self, input):
+        """ """
+        self._color = _color_converter(input)
+
+    def set_size(self, input):
+        self._radius = input / 2
+
+    def draw(self, layer, cr):
+        ## Calulate pixel values
+        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+
+        ## Draw point
+        pointer = 0
+        for p_count in self._geom_struct:
+            for index in range(pointer, pointer+p_count):
+                cr.set_source_rgb(*self._color)
+                cr.arc(pix_x[index], pix_y[index], self._radius, 0, 6.2830)
+                cr.fill()
+            pointer += p_count
+
+class _LineFeature(_VectorFeature):
+    """ """
+    def __init__(self):
+        """ """
+        self._color = (0.31, 0.34, 0.68)
+        self._width = 1
+
+    def set_color(self, input_color):
+        """ """
+        self._color = _color_converter(input_color)
+
+    def set_size(self, input_width):
+        """ """
+        self._width = input_width
+
+    def draw(self, layer, cr):
+        ## Calulate pixel values
+        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+
+        cr.set_source_rgb(*self._color)
+        cr.set_line_width(self._width)
+        pointer = 0
+        for p_count in self._geom_struct:
+            cr.move_to( pix_x[pointer], pix_y[pointer] )
+            for index in range(pointer, pointer+p_count):
+                cr.line_to( pix_x[index], pix_y[index] )
+            cr.stroke()
+            pointer += p_count
+
+class _PolygonFeature(_VectorFeature):
+    """ """
+    def __init__(self):
+        """ """
+        self._bgcolor = (0.31, 0.34, 0.68)
+        self._line_color = (1.0, 1.0, 1.0)
+        self._line_width = 1
+
+    def set_color(self, input_color):
+        """ """
+        self._bgcolor = _color_converter(input_color)
+
+    def set_line_color(self, input_color):
+        """ """
+        self._line_color = _color_converter(input_color)
+
+    def set_line_width(self, input_width):
+        """ """
+        self._line_width = input_width
+
+    def draw(self, layer, cr):
+        """ """
+        ## Calulate pixel values
+        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        if len(self._proj_x) != len(pix_x):
+            print(self._attributes)
+            #return
+
+        cr.set_source_rgb(*self._bgcolor)
+        pointer = 0
+        for p_count in self._geom_struct:
+            last_x, last_y = None, None
+            cr.move_to( pix_x[pointer], pix_y[pointer] )
+            for index in range(pointer, pointer+p_count):
+                cr.line_to(pix_x[index], pix_y[index])
+            cr.fill()
+            pointer += p_count
+
+        cr.set_source_rgb(*self._line_color)
+        cr.set_line_width(self._line_width)
+        pointer = 0
+        for p_count in self._geom_struct:
+            cr.move_to( pix_x[pointer], pix_y[pointer] )
+            for index in range(pointer, pointer+p_count):
+                cr.line_to(pix_x[index], pix_y[index])
+            cr.stroke()
+            pointer += p_count
+
+
+class VectorLayer:
+    """ """
+    def __init__(self, geotype, field_names, features):
+        """ """
+        self._MapEngine = None
+        self._geometry_type = geotype
+        self._field_list = field_names
+        self._features = features
+        for feature in self._features:
+            feature._activate(self)
+
+    def __len__(self):
+        ## Return number of items in features list
+        return len(self._features)
+
+    def __getitem__(self, key):
+        return self._features[key]
+
+    def __iter__(self):
+        ## Create index for iteration and return self
+        self._iter_indx = 0
+        return self
+
+    def __next__(self):
+        ## If there are no more feature then stop iteration
+        if self._iter_indx == len(self._features):
+            raise StopIteration
+
+        ## Return next feature from features list
+        feature = self._features[self._iter_indx]
+        self._iter_indx += 1
+        return feature
+
+
+    def _activate(self, new_MapEngine):
+        """ Function called when layer is added to a MapEngine layer list."""
+        self._MapEngine = new_MapEngine
+        self._project_features()
+
+    def _deactivate(self):
+        """ Function called when layer is added to a MapEngine """
+        pass
+
+    def _project_features(self):
+        """ This coule be fucked """
+        ## Clear existing projection lists
+        for feature in self:
+            feature._proj_x = np.array([])
+            feature._proj_y = np.array([])
+
+        feature_len_list = []
+        grand_geo_point_x_list = np.array([])
+        grand_geo_point_y_list = np.array([])
+        for feature in self:
+            feature_len_list.append(len(feature))
+            grand_geo_point_x_list = np.concatenate([grand_geo_point_x_list, feature._geo_x])
+            grand_geo_point_y_list = np.concatenate([grand_geo_point_y_list, feature._geo_y])
+
+        grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
+
+        pointer = 0
+        for feature, p_count in zip(self._features, feature_len_list):
+            feature._proj_x = grand_proj_point_x_list[pointer:pointer+p_count]
+            feature._proj_y = grand_proj_point_y_list[pointer:pointer+p_count]
+            pointer += p_count
+
+
+
+
+    def draw(self, cr):
+        """ """
+        for feature in self._features:
+            feature.draw(self, cr)
+
+
+# TODO: Refactor these to be bit cleaner
 def _get_geom_points(geom):
     """
     Given a OGR geometry, returns a list structure of points.
@@ -73,19 +299,25 @@ def _get_geom_points(geom):
         print(geom.GetGeometryName())
         print()
 
-    ## Return root point list
-    return feature_point_stuct
+    feature_points = []
+    feature_struct = []
+
+    for subfeat in feature_point_stuct:
+        feature_struct.append(len(subfeat))
+        for point in subfeat:
+            feature_points.append(point)
+
+
+    return feature_struct, np.array(feature_points)
 
 def _data_from_OGR_layer(ogrlayer):
-
+    """ """
     ## Set int GetGeomType to string of geom type
     geometry_type = [None, 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
 
-    ## Get layer field metadata
-    attrib_data = ogrlayer.GetLayerDefn()
-
-    ## Create list of attributes field names
+    ## Create list of attributes field names from
     field_names = []
+    attrib_data = ogrlayer.GetLayerDefn()
     field_count = attrib_data.GetFieldCount()
     for indx in range(field_count):
         field_data = attrib_data.GetFieldDefn(indx)
@@ -95,16 +327,33 @@ def _data_from_OGR_layer(ogrlayer):
     attributes_list = []
     geometrys_list = []
 
-    ## Loop through all features, loading attributes & geometry lists
-    for feature in ogrlayer:
+    feature_class = {"point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
+    features = list()
+    ## Loop through all OGR features, creating _VectorFeatures
+    for feature_ogr in ogrlayer:
+
+        ## Extract attribute from ogr feature into list
         feature_attributes = []
         for indx in range(field_count):
-            feature_attributes.append(feature.GetField(indx))
-        attributes_list.append(feature_attributes)
-        geometrys_list.append(_get_geom_points(feature.GetGeometryRef()))
+            feature_attributes.append(feature_ogr.GetField(indx))
+
+        ## Create new VectorFeature to store
+        new_feature = feature_class()
+        new_feature._attributes = feature_attributes
+        geoStruct, geo_points = _get_geom_points(feature_ogr.GetGeometryRef())
+
+        new_feature._geom_struct = np.array(geoStruct)
+
+        lon = [coord[1] for coord in geo_points]
+        lat = [coord[0] for coord in geo_points]
+
+        new_feature.import_geographic(lon, lat)
+
+        features.append(new_feature)
 
     ## Return New vector Layer
-    return field_names, attributes_list, geometry_type, geometrys_list
+    #return field_names, attributes_list, geometry_type, geometrys_list
+    return field_names, geometry_type, features
 
 def from_shapefile(shapefile_path):
     """
@@ -120,10 +369,10 @@ def from_shapefile(shapefile_path):
     ogrlayer = shapefile.GetLayer()
 
     ## Get data from ogrlayer, and return new VectorLayer
-    field_names, attributes_list, geometry_type, geometrys_list = _data_from_OGR_layer(ogrlayer)
-    return VectorLayer(geometry_type, geometrys_list, field_names, attributes_list)
+    fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+    return VectorLayer(geometry_type, fields, features)
 
-def color_parse(input_color):
+def _color_converter(input_color):
     """ Converts different color formats into single format.
 
     Inputs:
@@ -170,153 +419,3 @@ def color_parse(input_color):
             G = int(input_color[3:5], 16) / 255.0
             B = int(input_color[5:7], 16) / 255.0
             return (R,G,B)
-
-def style_by_attribute(input_layer, color, **kw):
-    """ This is a junk function, not to be kept. """
-
-    newstyle = _FeatureStyle()
-    newstyle.polyColor = color_parse(color)
-
-    for field in kw:
-        input_value = kw[field]
-        if field not in input_layer.fields: print("Bad attribute name"); return
-
-        field_index = input_layer.fields.index(field)
-
-        for indx, featureAttrb in enumerate(input_layer.attributes_store):
-            if featureAttrb[field_index] == input_value:
-                input_layer.styles[indx] = newstyle
-
-def style_layer_random(input_layer):
-    """ This is a junk function, not to be kept. """
-    ## Define colors in list
-    #colors = [(0.768,0.47,0.53), (0,1,0), (0,0,1), (0,0.5,0), (0.5,0.5,0.5), (0.5,0,0)]
-    #colors = [(color[0]*255, color[1]*255, color[2]*255) for color in colors]
-
-    colors = [
-        (228,26,28),
-        (55,126,184),
-        (77,175,74),
-        (152,78,163),
-        (255,127,0)
-    ]
-    colors = [(color[0]/255.0, color[1]/255.0, color[2]/255.0) for color in colors]
-
-
-    counter = 0
-    for style in input_layer.styles:
-        style.polyColor = colors[counter]
-
-        counter += 1
-        if counter == len(colors): counter = 0
-
-
-class _FeatureStyle:
-    """ """
-    def __init__(self):
-        self.pointcolor = (0.61, 0.13, 0.15)
-        self.pointradius = 2
-
-        self.linecolor = (0,0,1)
-        self.linewidth = 1
-
-        self.polyColor = (0.31, 0.34, 0.68)
-        self.polyLineColor = (0.0, 0.0, 0.0)
-        self.polyLineWidth = 0.5
-
-
-class VectorLayer:
-    """ """
-    def __init__(self, geotype, geom_data, field_names, attributes_list):
-        """ """
-        ##
-        #! MAKE THESE PRIVATE
-        self._MapEngine = None ## Set as none when not added to MapEngine
-        self.geotype = geotype
-        self.rawdata = geom_data #! RENAME THIS
-        self.fields = field_names
-        self.attributes_store = attributes_list
-
-        self.features = []
-        self.attributes = []
-        self.styles = []
-
-        ## Set Defalt map style to each feature
-        for _ in self.rawdata:
-            new_style = _FeatureStyle()
-            self.styles.append(new_style)
-
-    def _activate(self, new_MapEngine):
-        """ Function called when layer is added to a MapEngine """
-        self._MapEngine = new_MapEngine
-        self.projectData()
-
-    def _deactivate(self):
-        """ Function called when layer is added to a MapEngine """
-        self._MapEngine = None
-        self.features.clear()
-
-    def setStyle(self, index, style):
-        """ """
-        None
-
-
-    def projectData(self):
-        ## Clear existing features
-        self.features = []
-
-        ## If source and destination proj are same, skip projection overhead
-        if self._MapEngine._WGS84 == self._MapEngine._projection:
-            self.features = self.rawdata
-            return
-
-        ## Break features into structure and points
-        structure = []
-        point_list = []
-
-        ## Loop each raw feature, building structure, & list of points
-        for feature in self.rawdata:
-            feature_structure = []
-            for subfeatures in feature:
-                feature_structure.append(len(subfeatures))
-                for point in subfeatures:
-                    point_list.append(point)
-            structure.append(feature_structure)
-
-        ## Project all points in bulk
-        proj_points = self._MapEngine.geo2proj(point_list)
-
-        ## Rebuild features from points and structure
-        point_pointer = 0
-        for feature in structure:
-            proj_feature = []
-            for sub_pnt_cnt in feature:
-                proj_feature.append(proj_points[point_pointer:point_pointer+sub_pnt_cnt])
-                point_pointer += sub_pnt_cnt
-            self.features.append(proj_feature)
-
-
-    def draw(self, cr):
-        if self.geotype == 'point':
-            for projPoint, style in zip(self.features, self.styles):
-                pixPoint = []
-                for subPoint in projPoint:
-                    pixPoint.append(self._MapEngine.proj2pix(subPoint))
-                self._MapEngine._map_painter.drawPoint(cr, pixPoint, style)
-
-        elif self.geotype == 'line':
-            for projLine, style in zip(self.features, self.styles):
-                pixLine = []
-                for subline in projLine:
-                    pix_subline = self._MapEngine.proj2pix(subline)
-                    pixLine.append(pix_subline)
-                self._MapEngine._map_painter.drawLine(cr, pixLine, style)
-
-        else: # self.geotype == polygon:
-            for projFeature, style in zip(self.features, self.styles):
-                pixPoly = []
-                for subPoly in projFeature:
-                    pixsubPoly = self._MapEngine.proj2pix(subPoly)
-                    pixPoly.append(pixsubPoly)
-
-                self._MapEngine._map_painter.drawPolygon(cr, pixPoly, style)
