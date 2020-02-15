@@ -82,8 +82,7 @@ class MapEngine:
         """
         ## Draw background by drawing rectangle the size of canvas
         cr.set_source_rgb(*self._background_color)
-        cr.rectangle( 0,0, self._size[0], self._size[1] ) ## Draw rectangle over entire widget
-        cr.fill() ## Fill rectangle
+        #cr.paint()
 
         ## Draw each layer
         for layer in self._layer_list:

@@ -5,7 +5,7 @@ Date: Febuary 8, 2020
 """
 from osgeo import ogr
 import numpy as np
-
+from timer import time_function
 
 class _VectorFeature:
     """ """
@@ -24,12 +24,6 @@ class _VectorFeature:
         ## NumPy arrays to hold projection coords
         self._proj_x = np.array([])
         self._proj_y = np.array([])
-
-        ## Hold values for extent
-        self._min_x = 0
-        self._max_x = 0
-        self._min_y = 0
-        self._max_y = 0
 
 
     def __len__(self):
@@ -133,30 +127,26 @@ class _PolygonFeature(_VectorFeature):
     def draw(self, layer, cr):
         """ """
         ## Calulate pixel values
+
+        """ ## Full layer vectorization proj2pix optimization
+        pix_x, pix_y = self._pix_x, self. _pix_y
+        """ ## Single Vector iteration proj2pix
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
-        if len(self._proj_x) != len(pix_x):
-            print(self._attributes)
-            #return
+        #"""
+
+        pointer = 0
+        for p_count in self._geom_struct:
+            cr.move_to( pix_x[pointer], pix_y[pointer] )
+            #"""
+            for index in range(pointer, pointer+p_count):
+                cr.line_to(pix_x[index], pix_y[index])
+            pointer = pointer + p_count
 
         cr.set_source_rgb(*self._bgcolor)
-        pointer = 0
-        for p_count in self._geom_struct:
-            last_x, last_y = None, None
-            cr.move_to( pix_x[pointer], pix_y[pointer] )
-            for index in range(pointer, pointer+p_count):
-                cr.line_to(pix_x[index], pix_y[index])
-            cr.fill()
-            pointer += p_count
-
+        cr.fill_preserve()
         cr.set_source_rgb(*self._line_color)
         cr.set_line_width(self._line_width)
-        pointer = 0
-        for p_count in self._geom_struct:
-            cr.move_to( pix_x[pointer], pix_y[pointer] )
-            for index in range(pointer, pointer+p_count):
-                cr.line_to(pix_x[index], pix_y[index])
-            cr.stroke()
-            pointer += p_count
+        cr.stroke()
 
 
 class VectorLayer:
@@ -202,6 +192,7 @@ class VectorLayer:
         """ Function called when layer is added to a MapEngine """
         pass
 
+    @time_function
     def _project_features(self):
         """ This coule be fucked """
         ## Clear existing projection lists
@@ -212,6 +203,7 @@ class VectorLayer:
         feature_len_list = []
         grand_geo_point_x_list = np.array([])
         grand_geo_point_y_list = np.array([])
+
         for feature in self:
             feature_len_list.append(len(feature))
             grand_geo_point_x_list = np.concatenate([grand_geo_point_x_list, feature._geo_x])
@@ -219,17 +211,32 @@ class VectorLayer:
 
         grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
 
+        self._feature_len_cache = np.array(feature_len_list)
+        self._proj_x_cache = grand_proj_point_x_list.copy()
+        self._proj_y_cache = grand_proj_point_y_list.copy()
+
         pointer = 0
         for feature, p_count in zip(self._features, feature_len_list):
             feature._proj_x = grand_proj_point_x_list[pointer:pointer+p_count]
             feature._proj_y = grand_proj_point_y_list[pointer:pointer+p_count]
             pointer += p_count
 
+    @time_function
+    def _pixilize_points(self):
+        self._pix_x_cache, self._pix_y_cache = self._MapEngine.proj2pix(self._proj_x_cache, self._proj_y_cache)
+
+        pointer = 0
+        for feature, lenght in zip(self._features, self._feature_len_cache):
+            feature._pix_x = self._pix_x_cache[pointer:pointer+lenght]
+            feature._pix_y = self._pix_y_cache[pointer:pointer+lenght]
+            pointer += lenght
 
 
 
+    @time_function
     def draw(self, cr):
         """ """
+        self._pixilize_points()
         for feature in self._features:
             feature.draw(self, cr)
 
