@@ -44,7 +44,7 @@ def geo2proj(geo_data, WGS84_proj, dest_proj):
 
 def proj2geo(proj_data, WGS84_proj, source_proj):
     """ """
-    x, y = projPoint
+    x, y = proj_data
     lon, lat = pyproj.transform(WGS84_proj, source_proj, x, y)
     geo_data = (lat, lon)
     return geo_data

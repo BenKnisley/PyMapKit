@@ -25,7 +25,6 @@ class _VectorFeature:
         self._proj_x = np.array([])
         self._proj_y = np.array([])
 
-
     def __len__(self):
         return len(self._geo_x)
 
@@ -330,9 +329,6 @@ def _data_from_OGR_layer(ogrlayer):
         field_data = attrib_data.GetFieldDefn(indx)
         field_names.append(field_data.GetName())
 
-    ## Create lists to hold lists of attributes and geometrys
-    attributes_list = []
-    geometrys_list = []
 
     feature_class = {"point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
     features = list()

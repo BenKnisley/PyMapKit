@@ -82,7 +82,7 @@ class MapEngine:
         """
         ## Draw background by drawing rectangle the size of canvas
         cr.set_source_rgb(*self._background_color)
-        #cr.paint()
+        cr.paint()
 
         ## Draw each layer
         for layer in self._layer_list:
@@ -107,7 +107,7 @@ class MapEngine:
         ## Add layer to layer_list
         self._layer_list.append(new_map_layer)
 
-    def remove_layer(index):
+    def remove_layer(self, index):
         """ Removes map layer at given index """
         layer = self._layer_list.pop(index)
         layer._deactivate()
