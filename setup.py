@@ -14,8 +14,10 @@ setup(
     url = "https://github.com/BenKnisley/MapEngine",
     license = "MIT",
     keywords = "GIS map MapEngine",
-    package_dir={'': 'src'},
-    py_modules=["MapEngine", "VectorLayer", "CairoMapPainter"],
+    install_requires=['numpy','pyproj'],
+    packages=["MapEngine",],
+    package_dir={'MapEngine':'src'},
+    #py_modules=["MapEngine"],
     long_description="...",
     classifiers=[
         "Development Status :: 1 - Planning",

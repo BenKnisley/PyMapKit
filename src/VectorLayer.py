@@ -5,7 +5,6 @@ Date: Febuary 8, 2020
 """
 from osgeo import ogr
 import numpy as np
-from timer import time_function
 
 class _VectorFeature:
     """ """
@@ -191,7 +190,6 @@ class VectorLayer:
         """ Function called when layer is added to a MapEngine """
         pass
 
-    @time_function
     def _project_features(self):
         """ This coule be fucked """
         ## Clear existing projection lists
@@ -220,7 +218,6 @@ class VectorLayer:
             feature._proj_y = grand_proj_point_y_list[pointer:pointer+p_count]
             pointer += p_count
 
-    @time_function
     def _pixilize_points(self):
         self._pix_x_cache, self._pix_y_cache = self._MapEngine.proj2pix(self._proj_x_cache, self._proj_y_cache)
 
@@ -231,8 +228,6 @@ class VectorLayer:
             pointer += lenght
 
 
-
-    @time_function
     def draw(self, cr):
         """ """
         self._pixilize_points()
