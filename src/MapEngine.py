@@ -8,7 +8,6 @@ Function:
 """
 ## Import PyProj, and numpy
 import pyproj
-from pyproj import Transformer, transform
 import numpy as np
 
 
@@ -132,7 +131,6 @@ class MapEngine:
             self._projection = new_projection
 
 
-
     ## Location methods
     def set_POI(self, newPOI):
         """ Sets projection location of map  """
@@ -150,7 +148,7 @@ class MapEngine:
     def get_location(self):
         """ Returns the geographic location on map """
         #! Add constaints
-        return self.proj2geo(self._POI)
+        return self.proj2geo(self._POI[0], self._POI[1])
 
     def get_canvas_center(self):
         """ Returns a pixel point that is the center of the canvas. """
@@ -177,7 +175,7 @@ class MapEngine:
         return self._size
 
 
-    ## GeoFunctions Wrapper functions
+    ## Geo Functions Wrapper functions
     def geo2proj(self, geo_x, geo_y):
         """
         Good
@@ -203,13 +201,11 @@ class MapEngine:
 
         return proj_x, proj_y
 
-    def proj2geo(self, proj_data):
+    def proj2geo(self, proj_x, proj_y):
         """ """
-        x, y = projPoint
-        lon, lat = pyproj.transform(self._WGS84, self._projection, x, y)
+        lon, lat = pyproj.transform(self._WGS84, self._projection, proj_x, proj_y)
         geo_data = (lat, lon)
         return geo_data
-
 
     def proj2pix(self, proj_x, proj_y):
         """ """
@@ -235,8 +231,6 @@ class MapEngine:
 
         return pix_x, pix_y
 
-
-
     def pix2proj(self, pix_x, pix_y):
         """ """
         ## Unpack points
@@ -254,17 +248,16 @@ class MapEngine:
 
         return proj_x, proj_y
 
-
     def geo2pix(self, geoPoint):
         """ """
-        projPoint = self.geo2proj(geoPoint)
-        pixPoint = self.proj2pix(projPoint)
+        projPoint = self.geo2proj(geoPoint[0], geoPoint[1])
+        pixPoint = self.proj2pix(projPoint[0], geoPoint[1])
         return pixPoint
 
     def pix2geo(self, pixPoint):
         """ """
-        projPoint = self.pix2proj(pixPoint)
-        geoPoint = self.proj2geo(projPoint)
+        projPoint = self.pix2proj(pixPoint[0], pixPoint[1])
+        geoPoint = self.proj2geo(projPoint[0], projPoint[1])
         return geoPoint
 
 
