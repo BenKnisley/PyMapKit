@@ -4,11 +4,30 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: January 1, 2020
 """
 import numpy as np
+import cairo
 
-class CairoMapPainter:
+
+class CairoPainter:
+
+    def new_canvas(self, x_size, y_size):
+        """
+        """
+        return cairo.ImageSurface(cairo.FORMAT_ARGB32, x_size, y_size)
+
+    def draw_point(self, cr, point, style):
+        """ """
+        pass
+
+    def draw_line(self, cr, line, style):
+        """ """
+        pass
+
+    def draw_polygon(self, cr, polygon, style):
+        """ """
+        pass
 
     ## TODO: Removes color_converter
-    def color_converter(self, input_color):
+    def _color_converter(self, input_color):
         """ Converts different color formats into single format.
 
         Inputs:
@@ -55,62 +74,3 @@ class CairoMapPainter:
                 G = int(input_color[3:5], 16) / 255.0
                 B = int(input_color[5:7], 16) / 255.0
                 return (R,G,B)
-
-    def drawPoint(self, cr, point, style):
-        """ """
-        R, G, B = style.pointcolor
-        rad = style.pointradius
-
-        cr.set_source_rgb(R, G, B)
-        for subpoint in point:
-            for vertex in subpoint:
-                cr.arc(vertex[0], vertex[1], rad, 0, 6.2830)
-                cr.fill()
-
-    def drawLine(self, cr, line, style):
-        """ """
-        R, G, B = style.linecolor
-        W = style.linewidth
-
-        cr.set_source_rgb(R, G, B)
-        cr.set_line_width(W)
-        for subline in line:
-            initPnt = subline[0]
-            cr.move_to( initPnt[0], initPnt[1] )
-
-            for point in subline:
-                cr.line_to( point[0], point[1] )
-            cr.stroke()
-
-    def drawPolygon(self, cr, polygon, style):
-        """ """
-        last_drawn = (0, 0)
-
-        R, G, B = style.polyColor
-        cr.set_source_rgb(R, G, B)
-
-        for subpoly in polygon:
-            initPnt = subpoly[0]
-            cr.move_to( initPnt[0], initPnt[1] )
-
-            for point in subpoly:
-                if point != last_drawn:
-                    cr.line_to( point[0], point[1] )
-                    last_drawn = point
-        cr.fill()
-
-
-        R, G, B = style.polyLineColor
-        W = style.polyLineWidth
-
-        ## Draw line outline
-        cr.set_source_rgb(R, G, B)
-        cr.set_line_width(W)
-
-        for subpoly in polygon:
-            initPnt = subpoly[0]
-            cr.move_to( initPnt[0], initPnt[1] )
-
-            for point in subpoly:
-                cr.line_to( point[0], point[1] )
-            cr.stroke()
