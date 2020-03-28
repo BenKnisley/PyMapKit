@@ -14,7 +14,7 @@ import numpy as np
 
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
-    def __init__(self, **input_args):
+    def __init__(self, projection="EPSG:4326", scale=0.01, **input_args):
         """
         Initializes MapEngine object.
 
@@ -37,14 +37,11 @@ class MapEngine:
         ## Create list to hold MapLayers
         self._layer_list = []
 
-        ## Get projection string from input_args, or default to WGS84
-        if "projection" in input_args:
-            projection_str = input_args["projection"]
-        else:
-            projection_str = "EPSG:4326"
-        ## Create and set PyProj projection
-        self._projection = pyproj.Proj(projection_str)
+        ## Set Projection 
+        self._projection = pyproj.Proj(projection)
+        self._scale = scale
 
+        #! TODO: Deep name change to map coords
         if "coordinate" in input_args:
             initCoord = input_args["coordinate"]
         else:
@@ -52,12 +49,6 @@ class MapEngine:
         ## Set point of intrest
         self._POI = self.geo2proj(initCoord[0], initCoord[1])
 
-        if "scale" in input_args:
-            scale = input_args["scale"]
-        else:
-            scale = 0.01
-        ## Set point of intrest
-        self._scale = scale
 
         ## Set default canvas size
         self._size = (500, 500) ## Default to 500px x 500px
