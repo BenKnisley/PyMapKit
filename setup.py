@@ -14,6 +14,8 @@ setup(
     url = "https://github.com/BenKnisley/MapEngine",
     license = "MIT",
     keywords = "GIS map MapEngine",
+    requires_python='>=3.6',
+    requires_external='GDAL (>=1.8)',
     install_requires=['numpy','pyproj'],
     packages=["MapEngine",],
     package_dir={'MapEngine':'src'},
