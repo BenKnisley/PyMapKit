@@ -165,7 +165,7 @@ class MapEngine:
         return self._scale
 
 
-    ## Size methods
+    ## Size methods #! Change to two functions
     def set_size(self, newSize): # size tuple (width, height)
         """ Sets size of  """
         self._size = newSize
