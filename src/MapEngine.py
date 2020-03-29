@@ -14,7 +14,7 @@ import numpy as np
 
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
-    def __init__(self, projection="EPSG:4326", scale=0.01, **input_args):
+    def __init__(self, projection="EPSG:4326", scale=0.01, longitude=0.0, latitude=0.0, width=500, height=500, **input_args):
         """
         Initializes MapEngine object.
 
@@ -37,7 +37,7 @@ class MapEngine:
         ## Create list to hold MapLayers
         self._layer_list = []
 
-        ## Set Projection 
+        ## Set Projection, and scale
         self._projection = pyproj.Proj(projection)
         self._scale = scale
 
@@ -51,7 +51,8 @@ class MapEngine:
 
 
         ## Set default canvas size
-        self._size = (500, 500) ## Default to 500px x 500px
+        self._width = width
+        self._height = height
 
         ## Create MapPainter object
         #self._map_painter = CairoMapPainter.CairoMapPainter()
@@ -143,8 +144,8 @@ class MapEngine:
 
     def get_canvas_center(self):
         """ Returns a pixel point that is the center of the canvas. """
-        x = int(self._size[0]/2)
-        y = int(self._size[1]/2)
+        x = int(self._width/2)
+        y = int(self._height/2)
         return (x, y)
 
 
@@ -157,14 +158,14 @@ class MapEngine:
 
 
     ## Size methods #! Change to two functions
-    def set_size(self, newSize): # size tuple (width, height)
+    def set_size(self, new_width, new_height): # size tuple (width, height)
         """ Sets size of  """
-        self._size = newSize
+        self._width = new_width
+        self._height = new_height
 
     def get_size(self):
         """ """
-        return self._size
-
+        return self._width, self._height
 
     ## Geo Functions Wrapper functions
     def geo2proj(self, geo_x, geo_y):
