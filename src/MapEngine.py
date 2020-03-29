@@ -159,6 +159,8 @@ class MapEngine:
 
     def set_size(self, new_width, new_height): # size tuple (width, height)
         """ Sets size of  """
+        assert isinstance(new_width, int)
+        assert isinstance(new_height, int)
         self._width = new_width
         self._height = new_height
 
