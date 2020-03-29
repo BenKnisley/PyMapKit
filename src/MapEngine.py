@@ -172,6 +172,7 @@ class MapEngine:
 
     @width.setter
     def width(self, new_width):
+        assert isinstance(new_width, int)
         self._width = new_width
     
     @property
@@ -180,6 +181,7 @@ class MapEngine:
 
     @height.setter
     def height(self, new_height):
+        assert isinstance(new_height, int)
         self._height = new_height
 
     ## Geo Functions Wrapper functions
