@@ -14,7 +14,7 @@ import numpy as np
 
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
-    def __init__(self, projection="EPSG:4326", scale=0.01, longitude=0.0, latitude=0.0, width=500, height=500, **input_args):
+    def __init__(self, projection="EPSG:4326", scale=0.01, longitude=0.0, latitude=0.0, width=500, height=500):
         """
         Initializes MapEngine object.
 
@@ -37,23 +37,15 @@ class MapEngine:
         ## Create list to hold MapLayers
         self._layer_list = []
 
-        ## Set Projection, and scale
+        ## Set Projection, scale, and canvas size
         self._projection = pyproj.Proj(projection)
         self._scale = scale
-
-        #! TODO: Deep name change to map coords
-        if "coordinate" in input_args:
-            initCoord = input_args["coordinate"]
-        else:
-            initCoord = (0,0)
-        ## Set point of intrest
-        self._POI = self.geo2proj(initCoord[0], initCoord[1])
-
-
-        ## Set default canvas size
         self._width = width
         self._height = height
 
+        ## Set projection coords from input lat, lon
+        self._projx, self._projy = self.geo2proj(longitude, latitude)
+        
         ## Create MapPainter object
         #self._map_painter = CairoMapPainter.CairoMapPainter()
 
@@ -124,32 +116,43 @@ class MapEngine:
 
 
     ## Location methods
-    def set_POI(self, newPOI):
+    def set_proj_coordinate(self, new_proj_x, new_proj_y):
         """ Sets projection location of map  """
-        self._POI = newPOI
+        self._projx = new_proj_x
+        self._projy = new_proj_y
 
-    def get_POI(self):
+    def get_proj_coordinate(self):
         """ Returns the projection location """
-        return self._POI
+        return self._projx, self._projy
 
-    def set_location(self, new_location):
+
+    def set_location(self, new_long, new_lat):
         """ Sets geographic location on map """
         #! Add constaints
-        self._POI = self.geo2proj(new_location[0], new_location[1])
+        self._projx, self._projy = self.geo2proj(new_long, new_lat)
 
     def get_location(self):
         """ Returns the geographic location on map """
-        #! Add constaints
-        return self.proj2geo(self._POI[0], self._POI[1])
+        return self.proj2geo(self._projx, self._projy)
+    
+    @property
+    def longitude(self):
+        return self.get_location()[0]
 
-    def get_canvas_center(self):
-        """ Returns a pixel point that is the center of the canvas. """
-        x = int(self._width/2)
-        y = int(self._height/2)
-        return (x, y)
+    @longitude.setter
+    def longitude(self, new_long):
+        self.set_location(new_long, self.latitude)
+
+    @property
+    def latitude(self):
+        return self.get_location()[1]
+    
+    @latitude.setter
+    def latitude(self, new_lat):
+        self.set_location(self.longitude, new_lat)
 
 
-    ## Scale functions
+    ## Scale methods
     def set_scale(self, newScale):
         self._scale = newScale
 
@@ -157,6 +160,7 @@ class MapEngine:
         return self._scale
 
 
+    ## Size methods
     def set_size(self, new_width, new_height): # size tuple (width, height)
         """ Sets size of  """
         assert isinstance(new_width, int)
@@ -185,6 +189,14 @@ class MapEngine:
     def height(self, new_height):
         assert isinstance(new_height, int)
         self._height = new_height
+  
+    def get_canvas_center(self):
+        """ Returns a pixel point that is the center of the canvas. """
+        x = int(self._width/2)
+        y = int(self._height/2)
+        return (x, y)
+
+
 
     ## Geo Functions Wrapper functions
     def geo2proj(self, geo_x, geo_y):
@@ -214,14 +226,14 @@ class MapEngine:
 
     def proj2geo(self, proj_x, proj_y):
         """ """
-        lon, lat = pyproj.transform(self._WGS84, self._projection, proj_x, proj_y)
-        geo_data = (lat, lon)
-        return geo_data
+        lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
+        #geo_data = (lat, lon)
+        return lon, lat
 
     def proj2pix(self, proj_x, proj_y):
         """ """
         ## Unpack points
-        focusX, focusY = self._POI
+        focusX, focusY = self._projx, self._projy
         centerX, centerY = self.get_canvas_center()
 
         if isinstance(proj_x, list):
@@ -245,7 +257,7 @@ class MapEngine:
     def pix2proj(self, pix_x, pix_y):
         """ """
         ## Unpack points
-        focus_x, focus_y = self._POI
+        focus_x, focus_y = self._projx, self._projy
         center_x, center_y = self.get_canvas_center()
 
         if isinstance(pix_x, list):
