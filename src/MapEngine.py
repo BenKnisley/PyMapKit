@@ -79,6 +79,7 @@ class MapEngine:
         ## Set RGB values
         self._background_color = _color_converter(input_color)
 
+
     ## Layer methods
     def add_layer(self, new_map_layer):
         """
