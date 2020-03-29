@@ -157,7 +157,6 @@ class MapEngine:
         return self._scale
 
 
-    ## Size methods #! Change to two functions
     def set_size(self, new_width, new_height): # size tuple (width, height)
         """ Sets size of  """
         self._width = new_width
@@ -166,6 +165,22 @@ class MapEngine:
     def get_size(self):
         """ """
         return self._width, self._height
+    
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, new_width):
+        self._width = new_width
+    
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, new_height):
+        self._height = new_height
 
     ## Geo Functions Wrapper functions
     def geo2proj(self, geo_x, geo_y):
