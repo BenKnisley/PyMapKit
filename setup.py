@@ -17,8 +17,8 @@ setup(
     requires_python='>=3.6',
     requires_external='GDAL (>=1.8)',
     install_requires=['numpy','pyproj'],
-    packages=["MapEngine",],
-    package_dir={'MapEngine':'src'},
+    #packages=["MapEngine",],
+    package_dir={'':'src'},
     long_description="...",
     classifiers=[
         "Development Status :: 1 - Planning",
