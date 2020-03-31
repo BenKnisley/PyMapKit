@@ -14,7 +14,7 @@ import numpy as np
 
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
-    def __init__(self, projection="EPSG:4326", scale=0.01, longitude=0.0, latitude=0.0, width=500, height=500):
+    def __init__(self, projection="EPSG:4326", scale=1.0, longitude=0.0, latitude=0.0, width=500, height=500):
         """
         Initializes MapEngine object.
 
@@ -130,7 +130,7 @@ class MapEngine:
     def set_location(self, new_long, new_lat):
         """ Sets geographic location on map """
         #! Add constaints
-        self._projx, self._projy = self.geo2proj(new_long, new_lat)
+        self._projx, self._projy = self.geo2proj(new_lat, new_long)
 
     def get_location(self):
         """ Returns the geographic location on map """
@@ -142,7 +142,7 @@ class MapEngine:
 
     @longitude.setter
     def longitude(self, new_long):
-        self.set_location(new_long, self.latitude)
+        self.set_location(new_long, self.get_location()[1])
 
     @property
     def latitude(self):
@@ -150,7 +150,7 @@ class MapEngine:
     
     @latitude.setter
     def latitude(self, new_lat):
-        self.set_location(self.longitude, new_lat)
+        self.set_location(self.get_location()[0], new_lat)
 
 
     ## Scale methods
@@ -166,6 +166,9 @@ class MapEngine:
         """ Sets size of  """
         assert isinstance(new_width, int)
         assert isinstance(new_height, int)
+        assert new_height > 0
+        assert new_width > 0
+
         self._width = new_width
         self._height = new_height
 
