@@ -151,7 +151,7 @@ def test_get_location():
     """ """
     ##
     m = MapEngine.MapEngine()
-    m.set_location(-82.0, 40.0)
+    m.set_location(40.0, -82.0)
     
     ##
     coord = m.get_location() 
@@ -165,7 +165,7 @@ def test_get_location():
 def test_set_location():
     """ """
     m = MapEngine.MapEngine()
-    m.set_location(-82.0, 40.0)
+    m.set_location(40.0, -82.0)
     
     coord = m.get_location() 
     assert math.isclose(coord[0], -82.0, rel_tol=1e-9, abs_tol=0.0)
@@ -192,7 +192,7 @@ def test_set_location():
     assert math.isclose(coord[0], 67.1, rel_tol=1e-9, abs_tol=0.0)
     assert math.isclose(coord[1], -10.0, rel_tol=1e-9, abs_tol=0.0) 
 
-def xtest_set_location_bad_input():
+def test_set_location_bad_input():
     """ """
     m = MapEngine.MapEngine()
 

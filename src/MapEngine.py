@@ -10,8 +10,6 @@ Function:
 import pyproj
 import numpy as np
 
-
-
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
     def __init__(self, projection="EPSG:4326", scale=1.0, longitude=0.0, latitude=0.0, width=500, height=500):
@@ -127,14 +125,15 @@ class MapEngine:
         return self._projx, self._projy
 
 
-    def set_location(self, new_long, new_lat):
+    def set_location(self, new_long, new_lat): #X,Y
         """ Sets geographic location on map """
         #! Add constaints
-        self._projx, self._projy = self.geo2proj(new_lat, new_long)
+        self._projx, self._projy = self.geo2proj(new_long, new_lat) ## Y,X
 
     def get_location(self):
         """ Returns the geographic location on map """
-        return self.proj2geo(self._projx, self._projy)
+        lon, lat = self.proj2geo(self._projx, self._projy)
+        return lat, lon
     
     @property
     def longitude(self):
@@ -142,7 +141,7 @@ class MapEngine:
 
     @longitude.setter
     def longitude(self, new_long):
-        self.set_location(new_long, self.get_location()[1])
+        self.set_location(self.get_location()[1], new_long)
 
     @property
     def latitude(self):
@@ -150,7 +149,7 @@ class MapEngine:
     
     @latitude.setter
     def latitude(self, new_lat):
-        self.set_location(self.get_location()[0], new_lat)
+        self.set_location(new_lat, self.get_location()[0])
 
 
     ## Scale methods
