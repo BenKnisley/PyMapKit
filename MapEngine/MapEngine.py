@@ -50,6 +50,9 @@ class MapEngine:
         ## Set default background color
         self._background_color = (0.05, 0.05, 0.05)
 
+    def test(self):
+        print("Hello")
+
     ## Drawing and style methods
     def render(self, cr):
         """
