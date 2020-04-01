@@ -155,21 +155,21 @@ def test_get_location():
     
     ##
     coord = m.get_location() 
-    assert math.isclose(coord[0], -82.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], 40.0, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[0], 40.0, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[1], -82.0, rel_tol=1e-9, abs_tol=0.0)
 
     ##
     assert math.isclose(m.latitude, 40.0, rel_tol=1e-9, abs_tol=0.0)
     assert math.isclose(m.longitude, -82.0, rel_tol=1e-9, abs_tol=0.0)
-    
+ 
 def test_set_location():
     """ """
     m = MapEngine.MapEngine()
     m.set_location(40.0, -82.0)
     
     coord = m.get_location() 
-    assert math.isclose(coord[0], -82.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], 40.0, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[0], 40.0, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[1], -82.0, rel_tol=1e-9, abs_tol=0.0)
 
     m.set_location(0.0, 0.0)
     coord = m.get_location() 
@@ -179,18 +179,18 @@ def test_set_location():
     m.latitude = 47.678
     m.longitude = -32.1
     coord = m.get_location() 
-    assert math.isclose(coord[0], -32.1, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], 47.678, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[0], 47.678, rel_tol=1e-9, abs_tol=0.0)
+    assert math.isclose(coord[1], -32.1, rel_tol=1e-9, abs_tol=0.0)
 
     m.latitude = -10.0
     coord = m.get_location() 
-    assert math.isclose(coord[0], -32.1, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], -10.0, rel_tol=1e-9, abs_tol=0.0) 
+    assert math.isclose(coord[0], -10.0, rel_tol=1e-9, abs_tol=0.0) 
+    assert math.isclose(coord[1], -32.1, rel_tol=1e-9, abs_tol=0.0)
 
     m.longitude = 67.1
     coord = m.get_location() 
-    assert math.isclose(coord[0], 67.1, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], -10.0, rel_tol=1e-9, abs_tol=0.0) 
+    assert math.isclose(coord[0], -10.0, rel_tol=1e-9, abs_tol=0.0) 
+    assert math.isclose(coord[1], 67.1, rel_tol=1e-9, abs_tol=0.0)
 
 def test_set_location_bad_input():
     """ """
@@ -229,21 +229,85 @@ def test_set_location_bad_input():
     with pytest.raises(Exception):
         m.longitude = 'break'
 
+def test_get_projection():
+    """ """
+    m = MapEngine.MapEngine()
 
-"""
-TODO: Write Tests for these functions
- - def get_projection
- - def set_projection
- - set_proj_coordinate
- - get_proj_coordinate
- - add_layer
- - remove_layer
- - get_layer
- - render
- - geo2proj
- - proj2geo
- - proj2pix
- - pix2proj
- - geo2pix
- - pix2geo
-"""
+    ## Test default 
+    assert m.get_projection() == pyproj.Proj("EPSG:4326")
+
+    ## Set new and test get projection 
+    m.set_projection("EPSG:3735")
+    assert m.get_projection() == pyproj.Proj("EPSG:3735")
+
+def test_set_projection():
+    """ """
+    m = MapEngine.MapEngine()
+
+    ##
+    m.set_projection("EPSG:3735")
+    assert m.get_projection() == pyproj.Proj("EPSG:3735")
+
+    ##
+    p = pyproj.Proj("EPSG:4326")
+    m.set_projection(p)
+    assert m.get_projection() == pyproj.Proj("EPSG:4326")
+
+    ##
+    m.set_projection("+proj=longlat +datum=WGS84 +no_defs")
+    assert m.get_projection() == pyproj.Proj("EPSG:4326")
+
+def test_set_projection_bad_input():
+    """ """
+    pass
+
+def test_get_proj_coordinate():
+    pass
+
+def test_set_proj_coordinate():
+    pass
+
+def test_set_proj_coordinate_bad_input():
+    pass
+
+def test_add_layer():
+    pass
+
+def test_add_layer_bad_input():
+    pass
+
+def test_remove_layer():
+    pass
+
+def test_remove_layer_bad_input():
+    """ """ 
+    pass
+
+def test_get_layer():
+    """ """
+    pass
+
+def test_geo2proj():
+    """ """
+    pass
+
+def test_proj2geo():
+    """ """ 
+    pass
+
+def test_proj2pix():
+    """ """
+    pass
+
+def test_pix2proj():
+    """ """
+    pass
+
+def test_geo2pix():
+    """ """
+    pass
+
+def test_pix2geo():
+    """ """
+    pass
+
