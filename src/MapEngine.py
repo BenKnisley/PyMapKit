@@ -137,19 +137,19 @@ class MapEngine:
     
     @property
     def longitude(self):
-        return self.get_location()[0]
+        return self.get_location()[1]
 
     @longitude.setter
     def longitude(self, new_long):
-        self.set_location(self.get_location()[1], new_long)
+        self.set_location(self.get_location()[0], new_long)
 
     @property
     def latitude(self):
-        return self.get_location()[1]
+        return self.get_location()[0]
     
     @latitude.setter
     def latitude(self, new_lat):
-        self.set_location(new_lat, self.get_location()[0])
+        self.set_location(new_lat, self.get_location()[1])
 
 
     ## Scale methods
