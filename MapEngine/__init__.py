@@ -11,7 +11,6 @@ from .MapEngine import MapEngine
 from .VectorLayer import from_shapefile as layer_from_shapefile
 
 ## Import Cario Functions
-from .CairoPainter import new_drawing_pair
 from .CairoPainter import draw_point
 from .CairoPainter import draw_line
 from .CairoPainter import draw_polygon

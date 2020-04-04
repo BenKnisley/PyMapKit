@@ -54,23 +54,14 @@ class MapEngine:
         print("Hello")
 
     ## Drawing and style methods
-    def render(self, cr):
-        """
-        Draws the map on canvas.
-
-        Input: cr - a cairo canvas object
-
-        Result: The background and all map layers are drawn onto the canvas.
-
-        Returns: None
-        """
+    def render(self, renderer, cr):
+        """ """
         ## Draw background by drawing rectangle the size of canvas
-        cr.set_source_rgb(*self._background_color)
-        cr.paint()
+        renderer.draw_background(cr, self._background_color)
 
-        ## Draw each layer
+        ## Draw each layer, pass renderer, and canvas to each object
         for layer in self._layer_list:
-            layer.draw(cr)
+            layer.draw(renderer, cr)
 
     def set_background_color(self, input_color):
         """

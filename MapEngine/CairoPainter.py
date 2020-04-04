@@ -6,27 +6,51 @@ Date: January 1, 2020
 import numpy as np
 import cairo
 
-## TODO: Rename this function
-def new_drawing_pair(x_size, ysize):
-    """ """
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, x_size, ysize)
-    context = cairo.Context(surface)
-    return surface, context
 
-def draw_point(cr, point, style):
-    """ """
-    pass
+def draw_background(cr, color):
+    ## Draw background
+    cr.set_source_rgb(*color_converter(color))
+    cr.paint()
 
-def draw_line(cr, line, style):
+def draw_point(cr, geomstruct, x_values, y_values, color, radius):
     """ """
-    pass
+    pointer = 0
+    for p_count in geomstruct:
+        for index in range(pointer, pointer+p_count):
+            cr.set_source_rgb(*color)
+            cr.arc(x_values[index], y_values[index], radius, 0, 6.2830)
+            cr.fill()
+        pointer += p_count
 
-def draw_polygon(cr, polygon, style):
+def draw_line(cr, geomstruct, x_values, y_values, l_weight, l_color):
     """ """
-    pass
+    cr.set_source_rgb(*l_color)
+    cr.set_line_width(l_weight)
+    pointer = 0
+    for p_count in geomstruct:
+        cr.move_to( x_values[pointer], y_values[pointer] )
+        for index in range(pointer, pointer+p_count):
+            cr.line_to( x_values[index], y_values[index] )
+        cr.stroke()
+        pointer += p_count
 
-## TODO: Removes color_converter
-def _color_converter(self, input_color):
+def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color):
+    """ """
+    pointer = 0
+    for p_count in geomstruct:
+        cr.move_to( x_values[pointer], y_values[pointer] )
+
+        for index in range(pointer, pointer+p_count):
+            cr.line_to(x_values[index], y_values[index])
+        pointer = pointer + p_count
+
+    cr.set_source_rgb(*bg_color)
+    cr.fill_preserve()
+    cr.set_source_rgb(*l_color)
+    cr.set_line_width(l_weight)
+    cr.stroke()
+
+def color_converter(input_color):
     """ Converts different color formats into single format.
 
     Inputs:

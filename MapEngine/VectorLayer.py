@@ -60,18 +60,13 @@ class _PointFeature(_VectorFeature):
     def set_size(self, input):
         self._radius = input / 2
 
-    def draw(self, layer, cr):
+    def draw(self, layer, renderer, cr):
         ## Calulate pixel values
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
 
         ## Draw point
-        pointer = 0
-        for p_count in self._geom_struct:
-            for index in range(pointer, pointer+p_count):
-                cr.set_source_rgb(*self._color)
-                cr.arc(pix_x[index], pix_y[index], self._radius, 0, 6.2830)
-                cr.fill()
-            pointer += p_count
+        renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._color, self._radius)
+        
 
 class _LineFeature(_VectorFeature):
     """ """
@@ -88,19 +83,11 @@ class _LineFeature(_VectorFeature):
         """ """
         self._width = input_width
 
-    def draw(self, layer, cr):
+    def draw(self, layer, renderer, cr):
         ## Calulate pixel values
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        renderer.draw_line(cr, self._geom_struct, pix_x, pix_y, self._width, self._color)
 
-        cr.set_source_rgb(*self._color)
-        cr.set_line_width(self._width)
-        pointer = 0
-        for p_count in self._geom_struct:
-            cr.move_to( pix_x[pointer], pix_y[pointer] )
-            for index in range(pointer, pointer+p_count):
-                cr.line_to( pix_x[index], pix_y[index] )
-            cr.stroke()
-            pointer += p_count
 
 class _PolygonFeature(_VectorFeature):
     """ """
@@ -122,29 +109,17 @@ class _PolygonFeature(_VectorFeature):
         """ """
         self._line_width = input_width
 
-    def draw(self, layer, cr):
+    def draw(self, layer, renderer, cr):
         """ """
         ## Calulate pixel values
-
         """ ## Full layer vectorization proj2pix optimization
         pix_x, pix_y = self._pix_x, self. _pix_y
         """ ## Single Vector iteration proj2pix
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
         #"""
 
-        pointer = 0
-        for p_count in self._geom_struct:
-            cr.move_to( pix_x[pointer], pix_y[pointer] )
-            #"""
-            for index in range(pointer, pointer+p_count):
-                cr.line_to(pix_x[index], pix_y[index])
-            pointer = pointer + p_count
-
-        cr.set_source_rgb(*self._bgcolor)
-        cr.fill_preserve()
-        cr.set_source_rgb(*self._line_color)
-        cr.set_line_width(self._line_width)
-        cr.stroke()
+        ## Call on renderer to render polygon
+        renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._bgcolor, self._line_width, self._line_color)
 
 
 class VectorLayer:
@@ -228,11 +203,11 @@ class VectorLayer:
             pointer += lenght
 
 
-    def draw(self, cr):
+    def draw(self, renderer, cr):
         """ """
         self._pixilize_points()
         for feature in self._features:
-            feature.draw(self, cr)
+            feature.draw(self, renderer, cr)
 
 
 # TODO: Refactor these to be bit cleaner
