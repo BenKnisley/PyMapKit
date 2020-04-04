@@ -50,9 +50,6 @@ class MapEngine:
         ## Set default background color
         self._background_color = (0.05, 0.05, 0.05)
 
-    def test(self):
-        print("Hello")
-
     ## Drawing and style methods
     def render(self, renderer, cr):
         """ """
@@ -106,8 +103,10 @@ class MapEngine:
 
         else: ## PyProj object TODO: Check that it is PyProj object
             self._projection = new_projection
-
-
+            
+        for layer in self._layer_list:
+            layer._activate(self)
+        
     ## Location methods
     def set_proj_coordinate(self, new_proj_x, new_proj_y):
         """ Sets projection location of map  """
@@ -119,7 +118,7 @@ class MapEngine:
         return self._projx, self._projy
 
 
-    def set_location(self, new_long, new_lat): #X,Y
+    def set_location(self, new_lat, new_long): #Y,X
         """ Sets geographic location on map """
         #! Add constaints
         self._projx, self._projy = self.geo2proj(new_long, new_lat) ## Y,X
@@ -148,6 +147,17 @@ class MapEngine:
 
     ## Scale methods
     def set_scale(self, newScale):
+        """ """
+        if 'units' not in self._projection.crs.to_dict():
+            ## Convert scale to m/pix from deg
+            newScale = newScale / 110570
+        else: 
+            if self._projection.crs.to_dict()['units'] == 'us-ft':
+                newScale = newScale * 3.28084
+            else:
+                pass ## Is meters :)
+
+
         self._scale = newScale
 
     def get_scale(self):
@@ -223,6 +233,11 @@ class MapEngine:
 
     def proj2geo(self, proj_x, proj_y):
         """ """
+        ## If dest_proj is WGS84, no convert is needed, pass geo_data to output
+        if self._WGS84 == self._projection:
+            return proj_x, proj_y
+
+
         lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
         #geo_data = (lat, lon)
         return lon, lat

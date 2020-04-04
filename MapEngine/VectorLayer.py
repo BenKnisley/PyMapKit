@@ -166,7 +166,6 @@ class VectorLayer:
         pass
 
     def _project_features(self):
-        """ This coule be fucked """
         ## Clear existing projection lists
         for feature in self:
             feature._proj_x = np.array([])
