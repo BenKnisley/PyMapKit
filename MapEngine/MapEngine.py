@@ -13,22 +13,7 @@ import numpy as np
 class MapEngine:
     """A class to manage map infomation, layers, and drawing."""
     def __init__(self, projection="EPSG:4326", scale=1.0, longitude=0.0, latitude=0.0, width=500, height=500):
-        """
-        Initializes MapEngine object.
-
-        Input: None required
-        Optional:
-            - projection - the projection string of the projection to use.
-                Defaults to EPSG:4326.
-
-            - coordinate - the starting geographic location to use. Defaults to
-                Lat:0.0 Lon:0.0
-
-            - scale - the starting scale to use. Defaults to 0.01
-
-        Results: A new MapEngine object.
-        Returns: None
-        """
+        """ """
         ## Keep a reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
@@ -38,17 +23,15 @@ class MapEngine:
         ## Set Projection, scale, and canvas size
         self._projection = pyproj.Proj(projection)
         self._scale = scale
+        self.set_scale(scale) 
         self._width = width
         self._height = height
 
         ## Set projection coords from input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
         
-        ## Create MapPainter object
-        #self._map_painter = CairoMapPainter.CairoMapPainter()
-
         ## Set default background color
-        self._background_color = (0.05, 0.05, 0.05)
+        self.set_background_color('#0C0C0C')
 
     ## Drawing and style methods
     def render(self, renderer, cr):
@@ -67,7 +50,6 @@ class MapEngine:
         """
         ## Set RGB values
         self._background_color = _color_converter(input_color)
-
 
     ## Layer methods
     def add_layer(self, new_map_layer):
@@ -90,7 +72,6 @@ class MapEngine:
         layer = self._layer_list[index]
         return layer
 
-
     ## Projection methods
     def get_projection(self):
         """ """
@@ -98,12 +79,18 @@ class MapEngine:
 
     def set_projection(self, new_projection):
         """ """
+        lat, lon = self.get_location()
+
         if isinstance(new_projection, str):
             self._projection = pyproj.Proj(new_projection)
 
         else: ## PyProj object TODO: Check that it is PyProj object
             self._projection = new_projection
-            
+
+        ## Reset scale and location on projection change
+        self.set_location(lat, lon)
+        self.set_scale(self._scale)
+
         for layer in self._layer_list:
             layer._activate(self)
         
@@ -116,7 +103,6 @@ class MapEngine:
     def get_proj_coordinate(self):
         """ Returns the projection location """
         return self._projx, self._projy
-
 
     def set_location(self, new_lat, new_long): #Y,X
         """ Sets geographic location on map """
@@ -144,25 +130,27 @@ class MapEngine:
     def latitude(self, new_lat):
         self.set_location(new_lat, self.get_location()[1])
 
-
     ## Scale methods
-    def set_scale(self, newScale):
+    def set_scale(self, new_scale):
         """ """
+        ## Set _scale before setting _proj_scale
+        self._scale = new_scale
+
+
         if 'units' not in self._projection.crs.to_dict():
             ## Convert scale to m/pix from deg
-            newScale = newScale / 110570
+            new_scale = new_scale / 110570
         else: 
             if self._projection.crs.to_dict()['units'] == 'us-ft':
-                newScale = newScale * 3.28084
+                new_scale = new_scale * 3.28084
             else:
                 pass ## Is meters :)
-
-
-        self._scale = newScale
+        
+        ## Set processed newscale
+        self._proj_scale = new_scale
 
     def get_scale(self):
         return self._scale
-
 
     ## Size methods
     def set_size(self, new_width, new_height): # size tuple (width, height)
@@ -203,9 +191,7 @@ class MapEngine:
         y = int(self._height/2)
         return (x, y)
 
-
-
-    ## Geo Functions Wrapper functions
+    ## Geo Functions
     def geo2proj(self, geo_x, geo_y):
         """
         Good
@@ -257,8 +243,8 @@ class MapEngine:
         #proj_y = np.round(proj_y, decimals=2)
 
         ## Do math logic on all points
-        pix_x = ((proj_x - focusX) / float(self._scale)) + centerX
-        pix_y = -((proj_y - focusY) / float(self._scale)) + centerY
+        pix_x = ((proj_x - focusX) / float(self._proj_scale)) + centerX
+        pix_y = -((proj_y - focusY) / float(self._proj_scale)) + centerY
 
         ## Round to int to make drawing faster
         pix_x = np.rint(pix_x).astype(int)
@@ -278,8 +264,8 @@ class MapEngine:
             pix_y = np.array(pix_y)
 
         ##
-        proj_x = ((pix_x - center_x) * self._scale) + focus_x
-        proj_y = ((pix_y - center_y) * self._scale) + focus_y
+        proj_x = ((pix_x - center_x) * self._proj_scale) + focus_x
+        proj_y = ((pix_y - center_y) * self._proj_scale) + focus_y
 
         return proj_x, proj_y
 
