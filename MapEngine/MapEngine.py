@@ -242,8 +242,8 @@ class MapEngine:
         #proj_y = np.round(proj_y, decimals=2)
 
         ## Do math logic on all points
-        pix_x = ((proj_x - focusX) / int(self._scale)) + centerX
-        pix_y = -((proj_y - focusY) / int(self._scale)) + centerY
+        pix_x = ((proj_x - focusX) / float(self._scale)) + centerX
+        pix_y = -((proj_y - focusY) / float(self._scale)) + centerY
 
         ## Round to int to make drawing faster
         pix_x = np.rint(pix_x).astype(int)
