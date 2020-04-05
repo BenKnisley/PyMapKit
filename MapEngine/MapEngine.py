@@ -1,76 +1,127 @@
 #!/usr/bin/env python3
 """
-Project: Map Engine
-Title: MapEngine
+Title: MapEngine Class Definition
+Project: MapEngine
+Function: Define MapEngine class and all methods.
+Created: 8 December, 2019
 Author: Ben Knisley [benknisley@gmail.com]
-Date: 8 December, 2019
-Function:
 """
-## Import PyProj, and numpy
 import pyproj
 import numpy as np
 
+
 class MapEngine:
-    """A class to manage map infomation, layers, and drawing."""
-    def __init__(self, projection="EPSG:4326", scale=1.0, longitude=0.0, latitude=0.0, width=500, height=500):
-        """ """
+    """
+    A class to manage map layers, state, and rendering.
+    #
+    Attributes:
+        add_layer: Adds a MapLayer subclassed layer to layer list.
+        remove_layer: Removes a layer from layer list.
+        get_layer: Returns (but does not remove) layer in layer list.
+        ...
+    """
+
+    def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500):
+        """
+        Initializes new MapEngine object.
+        
+        Arguments:
+            projection: Input defining which projection the map should use. Takes a string as either a EPSG code
+            or a proj string. Also takes a pyproj.Proj object. Defaults to EPSG:4326.
+
+            scale: Value indicating the scale of the map in meters per pixel. Takes an integer or a float. Defaults
+            to 50000.
+
+            latitude: The latitude to set the map to. Should be in WGS84. Defaults to 0 degrees.
+
+            longitude: The longitude to set the map to. Should be in WGS84. Defaults to 0 degrees.
+
+            width: The width in pixels of the map. Defaults to 500px. 
+
+            height: The height in pixels of the map. Defaults to 500px.
+        """
+
         ## Keep a reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
         ## Create list to hold MapLayers
         self._layer_list = []
 
-        ## Set Projection, scale, and canvas size
-        self._projection = pyproj.Proj(projection)
-        self._scale = scale
-        self.set_scale(scale) 
-        self._width = width
-        self._height = height
-
-        ## Set projection coords from input lat, lon
-        self._projx, self._projy = self.geo2proj(longitude, latitude)
-        
         ## Set default background color
         self.set_background_color('#0C0C0C')
 
-    ## Drawing and style methods
-    def render(self, renderer, cr):
-        """ """
-        ## Draw background by drawing rectangle the size of canvas
-        renderer.draw_background(cr, self._background_color)
+        ## Set Projection from default or input
+        self._projection = pyproj.Proj(projection)
+        
+        ## set _scale and _proj_scale from defalt or input
+        self._scale = scale
+        self.set_scale(scale) 
+        
+        ## Set map width and height from defalt or input
+        self._width = width
+        self._height = height
 
-        ## Draw each layer, pass renderer, and canvas to each object
-        for layer in self._layer_list:
-            layer.draw(renderer, cr)
-
-    def set_background_color(self, input_color):
-        """
-        Sets background color of map.
-        ...
-        """
-        ## Set RGB values
-        self._background_color = _color_converter(input_color)
-
+        ## Set projection coords from default or input lat, lon
+        self._projx, self._projy = self.geo2proj(longitude, latitude)
+        
     ## Layer methods
-    def add_layer(self, new_map_layer):
+    def add_layer(self, new_map_layer, index=0):
         """
-        Activates and adds a new layer to MapEngine
+        Adds a map layer
+
+        Adds given layer to MapEngines' layer list, and calls layers' activate function.
+
+        Arguments:
+            new_map_layer: The layer to add to the MapEngine layer list. Must be a MapLayer subclassed layer.
+
+            index: Index where the new layer should be added. Defaults to 0, top of list.
+        
+        Returns:
+            None
         """
         ## Call new_map_layer activate function
         new_map_layer._activate(self)
 
         ## Add layer to layer_list
-        self._layer_list.append(new_map_layer)
+        self._layer_list.insert(index, new_map_layer) 
 
     def remove_layer(self, index):
-        """ Removes map layer at given index """
+        """ 
+        Removes a map layer
+        
+        Removes layer at given index, and runs layers' deactivate method.
+
+        Arguments:
+            index: The index of the layer to remove.
+        
+        Returns:
+            none
+        """
+        ## Pop off layer at index, and call deactivate method
         layer = self._layer_list.pop(index)
         layer._deactivate()
 
     def get_layer(self, index):
-        """ Returns the layer at the given index """
+        """ 
+        Returns a map layer
+        
+        Returns the MapLayer Object at the given index, with removing it.
+
+        Arguments:
+            index: The index of the layer to return.
+
+        Returns:
+            MapLayer object at given index
+        """
+        ## Look up layer at index and return it 
         layer = self._layer_list[index]
         return layer
+
+    """
+    #
+    Write docs and tests for following functions
+    #
+    """
 
     ## Projection methods
     def get_projection(self):
@@ -190,6 +241,25 @@ class MapEngine:
         x = int(self._width/2)
         y = int(self._height/2)
         return (x, y)
+
+    ## Drawing and style methods
+    def render(self, renderer, cr):
+        """ """
+        ## Draw background by drawing rectangle the size of canvas
+        renderer.draw_background(cr, self._background_color)
+
+        ## Draw each layer, pass renderer, and canvas to each object
+        for layer in self._layer_list:
+            layer.draw(renderer, cr)
+
+    def set_background_color(self, input_color):
+        """
+        Sets background color of map.
+        ...
+        """
+        ## Set RGB values
+        self._background_color = _color_converter(input_color)
+
 
     ## Geo Functions
     def geo2proj(self, geo_x, geo_y):
