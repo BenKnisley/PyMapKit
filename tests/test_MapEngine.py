@@ -166,6 +166,40 @@ def test_get_layer():
     assert len(m._layer_list) == 3
 
 
+def test_get_projection():
+    """ Test basic function of get_projection method """
+    m = MapEngine.MapEngine()
+
+    ## Test default 
+    assert m.get_projection() == pyproj.Proj("EPSG:4326").definition.decode()
+
+    ## Set new and test get projection  
+    m.set_projection("EPSG:3735")
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+
+
+def test_set_projection():
+    """ Test basic function of set_projection method """
+    m = MapEngine.MapEngine()
+
+    ## Set new projection from string
+    m.set_projection("EPSG:3735")
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+
+    ## Change projection again
+    p = pyproj.Proj("EPSG:4326")
+    m.set_projection(p)
+    assert m.get_projection() == pyproj.Proj("EPSG:4326").definition.decode()
+
+    ## Set Projection from proj string
+    m.set_projection("+proj=longlat +datum=WGS84 +no_defs")
+    assert m.get_projection() == pyproj.Proj("+proj=longlat +datum=WGS84 +no_defs").definition.decode()
+
+    ## Set Projection from proj obj
+    p = pyproj.Proj("EPSG:3735")
+    m.set_projection(p)
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+
 
 def implement_test_get_size():
     """ Test initiation of MapEngine Object  """
@@ -358,33 +392,6 @@ def implement_test_set_location_bad_input():
     with pytest.raises(Exception):
         m.longitude = 'break'
 
-def implement_test_get_projection():
-    """ """
-    m = MapEngine.MapEngine()
-
-    ## Test default 
-    assert m.get_projection() == pyproj.Proj("EPSG:4326")
-
-    ## Set new and test get projection 
-    m.set_projection("EPSG:3735")
-    assert m.get_projection() == pyproj.Proj("EPSG:3735")
-
-def implement_test_set_projection():
-    """ """
-    m = MapEngine.MapEngine()
-
-    ##
-    m.set_projection("EPSG:3735")
-    assert m.get_projection() == pyproj.Proj("EPSG:3735")
-
-    ##
-    p = pyproj.Proj("EPSG:4326")
-    m.set_projection(p)
-    assert m.get_projection() == pyproj.Proj("EPSG:4326")
-
-    ##
-    m.set_projection("+proj=longlat +datum=WGS84 +no_defs")
-    assert m.get_projection() == pyproj.Proj("EPSG:4326")
 
 def implement_test_set_projection_bad_input():
     """ """

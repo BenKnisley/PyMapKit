@@ -117,34 +117,59 @@ class MapEngine:
         layer = self._layer_list[index]
         return layer
 
-    """
-    #
-    Write docs and tests for following functions
-    #
-    """
+
 
     ## Projection methods
     def get_projection(self):
-        """ """
-        return self._projection
+        """ 
+        Gets the current projection 
+
+        Gets the string representative of the current projection.
+
+        Arguments:
+            None
+
+        Returns:
+            Returns the string representative of the current projection
+        """
+        return self._projection.definition.decode()
 
     def set_projection(self, new_projection):
-        """ """
+        """ 
+        Sets the current projection 
+
+        Sets the projection from a pyproj Proj object or a string representative 
+        of a projection. EPSG code or proj string.
+
+        Arguments:
+            new_projection: The string representative of the new projection, or a Proj object.
+
+        Returns:
+            None
+        """
+        ## Get coordinates before changing projection
         lat, lon = self.get_location()
 
+        ## Set projection according input str or Proj object
         if isinstance(new_projection, str):
             self._projection = pyproj.Proj(new_projection)
-
-        else: ## PyProj object TODO: Check that it is PyProj object
+        else:
             self._projection = new_projection
 
         ## Reset scale and location on projection change
         self.set_location(lat, lon)
         self.set_scale(self._scale)
 
+        ## Call activate of all layers to reset projection
         for layer in self._layer_list:
             layer._activate(self)
-        
+
+    """
+    #
+    Write docs and tests for following functions
+    #
+    """
+
     ## Location methods
     def set_proj_coordinate(self, new_proj_x, new_proj_y):
         """ Sets projection location of map  """
