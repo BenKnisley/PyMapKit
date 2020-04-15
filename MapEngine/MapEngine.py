@@ -172,7 +172,18 @@ class MapEngine:
 
     ## Location methods
     def set_proj_coordinate(self, new_proj_x, new_proj_y):
-        """ Sets projection location of map  """
+        """ 
+        Sets the projection coordinates
+
+        Sets the projection coordinates from the given values
+
+        Arguments:
+            new_proj_x: The new x value to move the map too
+            new_proj_y: The new y value to move the map too
+
+        Returns:
+            None
+        """
         self._projx = new_proj_x
         self._projy = new_proj_y
 
