@@ -64,7 +64,6 @@ class MapEngine:
         ## Set projection coords from default or input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
         
-    ## Layer methods
     def add_layer(self, new_map_layer, index=0):
         """
         Adds a map layer
@@ -117,9 +116,6 @@ class MapEngine:
         layer = self._layer_list[index]
         return layer
 
-
-
-    ## Projection methods
     def get_projection(self):
         """ 
         Gets the current projection 
@@ -164,7 +160,6 @@ class MapEngine:
         for layer in self._layer_list:
             layer._activate(self)
 
-    ## Location methods
     def set_proj_coordinate(self, new_proj_x, new_proj_y):
         """ 
         Sets the projection coordinates
@@ -204,10 +199,9 @@ class MapEngine:
     #
     """
 
-    def set_location(self, new_lat, new_long): #Y,X
+    def set_location(self, new_lat, new_long):
         """ Sets geographic location on map """
-        #! Add constaints
-        self._projx, self._projy = self.geo2proj(new_long, new_lat) ## Y,X
+        self._projx, self._projy = self.geo2proj(new_long, new_lat)
 
     def get_location(self):
         """ Returns the geographic location on map """

@@ -56,7 +56,6 @@ def _color_converter(input_color):
             B = int(input_color[5:7], 16) / 255.0
             return (R,G,B)
 
-## __init__ method tests
 def test_init():
     """ Test initiation of MapEngine Object  """
     m = MapEngine.MapEngine()
@@ -88,7 +87,6 @@ def test_init_args():
     assert math.isclose(m.longitude, -82.1, rel_tol=1e-9, abs_tol=0.0), "longitude did not set correctly"
     assert math.isclose(m.latitude, 40.0, rel_tol=1e-9, abs_tol=0.0),  "latitude did not set correctly"
 
-## add_layer_tests
 def test_add_layer():
     """ Test basic function of add_layer method """
     m = MapEngine.MapEngine()
@@ -142,7 +140,6 @@ def test_remove_layer():
     with pytest.raises(Exception):
         m.remove_layer(0)
 
-## get_layer tests
 def test_get_layer():
     """ Test basic function of get_layer method """
     m = MapEngine.MapEngine()
@@ -165,7 +162,6 @@ def test_get_layer():
     assert m.get_layer(1) == v2
     assert len(m._layer_list) == 3
 
-
 def test_get_projection():
     """ Test basic function of get_projection method """
     m = MapEngine.MapEngine()
@@ -176,7 +172,6 @@ def test_get_projection():
     ## Set new and test get projection  
     m.set_projection("EPSG:3735")
     assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
-
 
 def test_set_projection():
     """ Test basic function of set_projection method """
@@ -200,7 +195,6 @@ def test_set_projection():
     m.set_projection(p)
     assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
 
-
 def test_get_proj_coordinate():
     """ Test retrieval of projection coords """
     m = MapEngine.MapEngine()
@@ -214,8 +208,6 @@ def test_get_proj_coordinate():
     assert m.get_proj_coordinate()[0] == 18853
     assert m.get_proj_coordinate()[1] == -45670
 
-
-
 def test_set_proj_coordinate():
     """ Test retrieval of projection coords """
     m = MapEngine.MapEngine()
@@ -228,237 +220,4 @@ def test_set_proj_coordinate():
     assert m.get_proj_coordinate()[0] == 180
     assert m.get_proj_coordinate()[1] == 90
 
-
-
-
-
-def implement_test_get_size():
-    """ Test initiation of MapEngine Object  """
-    m = MapEngine.MapEngine()
-    
-    m.set_size(800, 500)
-    assert m.get_size() == (800, 500)
-    assert m.width == 800
-    assert m.height == 500
-
-    m.set_size(1000, 2000)
-    assert m.get_size() == (1000, 2000)
-    assert m.width == 1000
-    assert m.height == 2000
-
-def implement_test_set_size():
-    """ Test initiation of MapEngine Object  """
-    m = MapEngine.MapEngine()
-    m.set_size(600, 500)
-    assert m.get_size() == (600, 500)
-
-    m.width = 50
-    m.height = 45
-
-    assert m.get_size() == (50, 45)
-    assert m.width == 50
-    assert m.height == 45
-
-def implement_test_set_size_bad_input():
-    """  """
-    m = MapEngine.MapEngine()
-
-    with pytest.raises(Exception):
-        m.set_size("Hello", "World")
-    
-    with pytest.raises(Exception):
-        m.set_size([1,4,5], [70,56,5])
-
-    with pytest.raises(Exception):
-        m.set_size(-400, -300)
-    
-    with pytest.raises(Exception):
-        m.set_size(500, -530)
-    
-    with pytest.raises(Exception):
-        m.set_size(-500, 530)
-
-    with pytest.raises(Exception):
-        m.set_size(100.8, 100)
-    
-    with pytest.raises(Exception):
-        m.set_size(100, 100.2)
-    
-    with pytest.raises(Exception):
-        m.set_size(0, 0)
-    
-    with pytest.raises(Exception):
-        m.set_size(0, 100)
-
-    with pytest.raises(Exception):
-        m.set_size(100, 0)
-
-    with pytest.raises(Exception):
-        m.width = -100
-    
-    with pytest.raises(Exception):
-        m.height = -100
-
-    with pytest.raises(Exception):
-        m.width = 400.3
-    
-    with pytest.raises(Exception):
-        m.height = 300.1
-
-def implement_test_get_scale():
-    """ """
-    m = MapEngine.MapEngine()
-    
-    m.set_scale(100.043)
-    assert m.get_scale() == 100.043
-
-    m.set_scale(0.000032)
-    assert m.get_scale() == 0.000032
-
-def implement_test_set_scale():
-    """ """
-    m = MapEngine.MapEngine()
-    
-    m.set_scale(100.043)
-    assert m.get_scale() == 100.043
-
-    m.set_scale(0.000032)
-    assert m.get_scale() == 0.000032
-
-def implement_test_set_scale_bad_input():
-    """ """
-    m = MapEngine.MapEngine()
-    
-    with pytest.raises(Exception):
-        m.set_scale("Hello World")
-    
-    with pytest.raises(Exception):
-        m.set_scale(0)
-    
-    with pytest.raises(Exception):
-        m.set_scale(-1)
-    
-    with pytest.raises(Exception):
-        m.set_scale(-10000)
-
-def implement_test_get_location():
-    """ """
-    ##
-    m = MapEngine.MapEngine()
-    m.set_location(40.0, -82.0)
-    
-    ##
-    coord = m.get_location() 
-    assert math.isclose(coord[0], 40.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], -82.0, rel_tol=1e-9, abs_tol=0.0)
-
-    ##
-    assert math.isclose(m.latitude, 40.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(m.longitude, -82.0, rel_tol=1e-9, abs_tol=0.0)
- 
-def implement_test_set_location():
-    """ """
-    m = MapEngine.MapEngine()
-    m.set_location(40.0, -82.0)
-    
-    coord = m.get_location() 
-    assert math.isclose(coord[0], 40.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], -82.0, rel_tol=1e-9, abs_tol=0.0)
-
-    m.set_location(0.0, 0.0)
-    coord = m.get_location() 
-    assert math.isclose(coord[0], 0.0, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], 0.0, rel_tol=1e-9, abs_tol=0.0)
-
-    m.latitude = 47.678
-    m.longitude = -32.1
-    coord = m.get_location() 
-    assert math.isclose(coord[0], 47.678, rel_tol=1e-9, abs_tol=0.0)
-    assert math.isclose(coord[1], -32.1, rel_tol=1e-9, abs_tol=0.0)
-
-    m.latitude = -10.0
-    coord = m.get_location() 
-    assert math.isclose(coord[0], -10.0, rel_tol=1e-9, abs_tol=0.0) 
-    assert math.isclose(coord[1], -32.1, rel_tol=1e-9, abs_tol=0.0)
-
-    m.longitude = 67.1
-    coord = m.get_location() 
-    assert math.isclose(coord[0], -10.0, rel_tol=1e-9, abs_tol=0.0) 
-    assert math.isclose(coord[1], 67.1, rel_tol=1e-9, abs_tol=0.0)
-
-def implement_test_set_location_bad_input():
-    """ """
-    m = MapEngine.MapEngine()
-
-    with pytest.raises(Exception):
-        m.set_location(0, 91) ## lat too large
-    
-    with pytest.raises(Exception):
-        m.set_location(0, -91) ## lat too large
-    
-    with pytest.raises(Exception):
-        m.set_location(181, 0) ## lon too large
-    
-    with pytest.raises(Exception):
-        m.set_location(-181, 0) ## lon too large
-    
-    with pytest.raises(Exception):
-        m.latitude = 91
-
-    with pytest.raises(Exception):
-        m.latitude = -91
-
-    with pytest.raises(Exception):
-        m.longitude = 181
-    
-    with pytest.raises(Exception):
-        m.longitude = -181
-
-    with pytest.raises(Exception):
-        m.set_location('break', 'break')
-
-    with pytest.raises(Exception):
-        m.latitude = 'break'
-    
-    with pytest.raises(Exception):
-        m.longitude = 'break'
-
-
-def implement_test_set_projection_bad_input():
-    """ """
-    pass
-
-def implement_test_get_proj_coordinate():
-    pass
-
-def implement_test_set_proj_coordinate():
-    pass
-
-def implement_test_set_proj_coordinate_bad_input():
-    pass
-
-
-def implement_test_geo2proj():
-    """ """
-    pass
-
-def implement_test_proj2geo():
-    """ """ 
-    pass
-
-def implement_test_proj2pix():
-    """ """
-    pass
-
-def implement_test_pix2proj():
-    """ """
-    pass
-
-def implement_test_geo2pix():
-    """ """
-    pass
-
-def implement_test_pix2geo():
-    """ """
-    pass
 
