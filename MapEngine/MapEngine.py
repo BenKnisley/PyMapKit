@@ -198,11 +198,11 @@ class MapEngine:
         """
         return self._projx, self._projy
 
-"""
-#
-Write docs and tests for following functions
-#
-"""
+    """
+    #
+    Write docs and tests for following functions
+    #
+    """
 
     def set_location(self, new_lat, new_long): #Y,X
         """ Sets geographic location on map """
