@@ -40,7 +40,6 @@ class MapEngine:
 
             height: The height in pixels of the map. Defaults to 500px.
         """
-
         ## Keep an internal reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
@@ -193,21 +192,46 @@ class MapEngine:
         """
         return self._projx, self._projy
 
+    def set_location(self, new_lat, new_long):
+        """ 
+        Sets geographic location on map 
+        
+        Sets new map location from given geographic coordinates.
+        Input locations are in WGS86.
+
+        Arguments:
+            new_lat: The latitude to move the map to.
+            new_long: The longitude to move the map to.
+
+        Returns:
+            None
+        """
+        ## Set the projection coord via the geo2proj method
+        self._projx, self._projy = self.geo2proj(new_long, new_lat)
+
+    def get_location(self):
+        """ 
+        Returns the current geographic location of the map
+        
+        Gets the geographic location on the map from the stored
+        projection coordinates.
+
+        Arguments:
+            None
+        
+        Returns:
+            latitude: The current latitude of the map.
+            longitude: The currnt longitude on the map.
+        """
+        lon, lat = self.proj2geo(self._projx, self._projy)
+        return lat, lon
+    
     """
     #
     Write docs and tests for following functions
     #
     """
 
-    def set_location(self, new_lat, new_long):
-        """ Sets geographic location on map """
-        self._projx, self._projy = self.geo2proj(new_long, new_lat)
-
-    def get_location(self):
-        """ Returns the geographic location on map """
-        lon, lat = self.proj2geo(self._projx, self._projy)
-        return lat, lon
-    
     @property
     def longitude(self):
         return self.get_location()[1]

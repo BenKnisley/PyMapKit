@@ -3,7 +3,7 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Date:
 """
-import math
+import math #! TODO: Replace math.isclose with pytest.approx
 import pytest
 import pyproj
 import MapEngine
@@ -221,3 +221,31 @@ def test_set_proj_coordinate():
     assert m.get_proj_coordinate()[1] == 90
 
 
+def test_set_location():
+    """ Test setting location from geo coord"""
+    m = MapEngine.MapEngine()
+
+    m.set_location(40.0, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(40.0, rel=1e-3)
+    assert lon == pytest.approx(-83.0, rel=1e-3)
+
+    m.set_location(-10.1, 43.4)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-10.1, rel=1e-3) 
+    assert lon == pytest.approx(43.4, rel=1e-3) 
+
+
+def test_get_location():
+    """ Test getting location from geo coord"""
+    m = MapEngine.MapEngine()
+
+    m.set_location(40.0, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(40.0, rel=1e-3)
+    assert lon == pytest.approx(-83.0, rel=1e-3)
+
+    m.set_location(-10.1, 43.4)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-10.1, rel=1e-3) 
+    assert lon == pytest.approx(43.4, rel=1e-3) 
