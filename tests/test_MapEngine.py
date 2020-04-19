@@ -201,6 +201,37 @@ def test_set_projection():
     assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
 
 
+def test_get_proj_coordinate():
+    """ Test retrieval of projection coords """
+    m = MapEngine.MapEngine()
+
+    ## Test default 
+    assert m.get_proj_coordinate()[0] == 0
+    assert m.get_proj_coordinate()[1] == 0
+
+    ## Test after change
+    m.set_proj_coordinate(18853, -45670)
+    assert m.get_proj_coordinate()[0] == 18853
+    assert m.get_proj_coordinate()[1] == -45670
+
+
+
+def test_set_proj_coordinate():
+    """ Test retrieval of projection coords """
+    m = MapEngine.MapEngine()
+
+    m.set_proj_coordinate(18853, -45670)
+    assert m.get_proj_coordinate()[0] == 18853
+    assert m.get_proj_coordinate()[1] == -45670
+    
+    m.set_proj_coordinate(180, 90)
+    assert m.get_proj_coordinate()[0] == 180
+    assert m.get_proj_coordinate()[1] == 90
+
+
+
+
+
 def implement_test_get_size():
     """ Test initiation of MapEngine Object  """
     m = MapEngine.MapEngine()

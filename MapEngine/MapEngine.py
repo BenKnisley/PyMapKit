@@ -41,7 +41,7 @@ class MapEngine:
             height: The height in pixels of the map. Defaults to 500px.
         """
 
-        ## Keep a reference WGS84 projection on hand
+        ## Keep an internal reference WGS84 projection on hand
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
         ## Create list to hold MapLayers
@@ -57,7 +57,7 @@ class MapEngine:
         self._scale = scale
         self.set_scale(scale) 
         
-        ## Set map width and height from defalt or input
+        ## Set private map width and height from defalt or input
         self._width = width
         self._height = height
 
@@ -164,18 +164,14 @@ class MapEngine:
         for layer in self._layer_list:
             layer._activate(self)
 
-    """
-    #
-    Write docs and tests for following functions
-    #
-    """
-
     ## Location methods
     def set_proj_coordinate(self, new_proj_x, new_proj_y):
         """ 
         Sets the projection coordinates
 
-        Sets the projection coordinates from the given values
+        Sets the projection coordinates from the given values.
+        This should most often be used by tools changing location
+        without having go through projection.
 
         Arguments:
             new_proj_x: The new x value to move the map too
@@ -188,8 +184,25 @@ class MapEngine:
         self._projy = new_proj_y
 
     def get_proj_coordinate(self):
-        """ Returns the projection location """
+        """ 
+        Gets the current projection coordinates
+
+        Returns the current location in coordinates of the current projection.
+
+        Arguments:
+            None:
+
+        Returns:
+            project_x: The current projection x value of the map
+            project_y: The current projection y value of the map
+        """
         return self._projx, self._projy
+
+"""
+#
+Write docs and tests for following functions
+#
+"""
 
     def set_location(self, new_lat, new_long): #Y,X
         """ Sets geographic location on map """
