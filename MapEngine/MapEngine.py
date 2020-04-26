@@ -406,11 +406,11 @@ class MapEngine:
 
         return proj_x, proj_y
 
-    def geo2pix(self, geoPoint):
+    def geo2pix(self, geo_x, geo_y):
         """ """
-        projPoint = self.geo2proj(geoPoint[0], geoPoint[1])
-        pixPoint = self.proj2pix(projPoint[0], geoPoint[1])
-        return pixPoint
+        proj_x, proj_y = self.geo2proj(geo_x, geo_y)
+        pix_x, pix_y = self.proj2pix(proj_x, proj_y)
+        return pix_x, pix_y
 
     def pix2geo(self, pixPoint):
         """ """
