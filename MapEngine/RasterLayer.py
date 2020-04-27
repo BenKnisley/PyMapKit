@@ -3,18 +3,56 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Date: Febuary 8, 2020
 """
+import os
 from osgeo import ogr
 import numpy as np
+import gdal
+import pyproj
+import tempfile
+import cairo
+from PIL import Image
 
 class RasterLayer:
     """ """
-    def __init__(self):
+    def __init__(self, path):
         """ """
         self._MapEngine = None
+        self.path = path
 
+        ## open raster with gdal
+        self.gdal_raster = gdal.Open(path)
+
+        #self.gdal_raster.GetRasterBand(1).SetNoDataValue(-9999)
+
+
+        ## Extract projection, scale, and location from raster
+        self._init_proj = pyproj.Proj(self.gdal_raster.GetProjection())
+
+        self._init_proj_x, self._init_scale_x, _, self._init_proj_y, _, self._init_scale_y = self.gdal_raster.GetGeoTransform()
+
+    
     def _activate(self, new_MapEngine):
         """ Function called when layer is added to a MapEngine layer list."""
         self._MapEngine = new_MapEngine
+
+        ## Create a tempfile geotif file
+        temp_tif = tempfile.NamedTemporaryFile(suffix='.tif')			      
+	      
+        ## Reproject to mapengines projection into temp_tif 
+        gdal.Warp(temp_tif.name, self.gdal_raster, dstSRS=self._MapEngine.get_projection())
+
+        ## Create a temp PNG 
+        ## Load/convert temp_tif into temp_png
+        temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        #Image.MAX_IMAGE_PIXELS = 9331200000000
+        im = Image.open(temp_tif.name)
+        im.save(temp_png.name, "PNG")
+        
+        self.image_surface = cairo.ImageSurface.create_from_png(temp_png.name)
+
+        ## 
+        self._proj_x, self._proj_y =  pyproj.transform(self._init_proj, self._MapEngine.get_projection(), self._init_proj_x, self._init_proj_y)
+
 
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
@@ -22,12 +60,20 @@ class RasterLayer:
 
     def draw(self, renderer, cr):
         """ """
-        pix_x, pix_y = self._MapEngine.geo2pix(-83.0, 40.0)
-        cr.rectangle(pix_x, pix_y, 50, 50)
-        cr.set_source_rgb(1,1,1)
-        cr.fill()
+        pix_x, pix_y = self._MapEngine.proj2pix(self._proj_x, self._proj_y)
+
+        cr.save()
+        
+        scale_fact_x = abs( self._init_scale_x / self._MapEngine._scale )
+        scale_fact_y = abs( self._init_scale_y / self._MapEngine._scale )
+        
+        cr.translate(pix_x, pix_y)
+        cr.scale(scale_fact_x, scale_fact_y)
+
+        cr.set_source_surface(self.image_surface)
+
+        cr.paint()
+        cr.restore()
 
 
 
-def from_geotiff(path):
-    return RasterLayer()
