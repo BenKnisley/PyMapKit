@@ -167,11 +167,11 @@ def test_get_projection():
     m = MapEngine.MapEngine()
 
     ## Test default 
-    assert m.get_projection() == pyproj.Proj("EPSG:4326").definition.decode()
+    assert m.get_projection() == pyproj.Proj("EPSG:4326").srs
 
     ## Set new and test get projection  
     m.set_projection("EPSG:3735")
-    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").srs
 
 def test_set_projection():
     """ Test basic function of set_projection method """
@@ -179,21 +179,21 @@ def test_set_projection():
 
     ## Set new projection from string
     m.set_projection("EPSG:3735")
-    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").srs
 
     ## Change projection again
     p = pyproj.Proj("EPSG:4326")
     m.set_projection(p)
-    assert m.get_projection() == pyproj.Proj("EPSG:4326").definition.decode()
+    assert m.get_projection() == pyproj.Proj("EPSG:4326").srs
 
     ## Set Projection from proj string
     m.set_projection("+proj=longlat +datum=WGS84 +no_defs")
-    assert m.get_projection() == pyproj.Proj("+proj=longlat +datum=WGS84 +no_defs").definition.decode()
+    assert m.get_projection() == pyproj.Proj("+proj=longlat +datum=WGS84 +no_defs").srs
 
     ## Set Projection from proj obj
     p = pyproj.Proj("EPSG:3735")
     m.set_projection(p)
-    assert m.get_projection() == pyproj.Proj("EPSG:3735").definition.decode()
+    assert m.get_projection() == pyproj.Proj("EPSG:3735").srs
 
 def test_get_proj_coordinate():
     """ Test retrieval of projection coords """

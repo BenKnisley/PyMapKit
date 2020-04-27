@@ -8,6 +8,7 @@ Author: Ben Knisley [benknisley@gmail.com]
 """
 import pyproj
 import numpy as np
+import warnings
 
 
 class MapEngine:
@@ -127,7 +128,7 @@ class MapEngine:
         Returns:
             Returns the string representative of the current projection
         """
-        return self._projection.definition.decode()
+        return self._projection.srs
 
     def set_projection(self, new_projection):
         """ 
@@ -254,12 +255,16 @@ class MapEngine:
         ## Set _scale before setting _proj_scale
         self._scale = new_scale
 
+        ## Get projection crs dict, ignore all warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            crs_dict = self._projection.crs.to_dict()
 
-        if 'units' not in self._projection.crs.to_dict():
+        if 'units' not in crs_dict:
             ## Convert scale to m/pix from deg
             new_scale = new_scale / 110570
         else: 
-            if self._projection.crs.to_dict()['units'] == 'us-ft':
+            if crs_dict['units'] == 'us-ft':
                 new_scale = new_scale * 3.28084
             else:
                 pass ## Is meters :)
