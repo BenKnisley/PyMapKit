@@ -7,24 +7,24 @@ import numpy as np
 import cairo
 
 
-def draw_background(cr, color):
+def draw_background(cr, color, alpha=1):
     ## Draw background
-    cr.set_source_rgb(*color_converter(color))
+    cr.set_source_rgba(*color_converter(color), alpha)
     cr.paint()
 
-def draw_point(cr, geomstruct, x_values, y_values, color, radius):
+def draw_point(cr, geomstruct, x_values, y_values, color, radius, alpha):
     """ """
     pointer = 0
     for p_count in geomstruct:
         for index in range(pointer, pointer+p_count):
-            cr.set_source_rgb(*color)
+            cr.set_source_rgba(*color, alpha)
             cr.arc(x_values[index], y_values[index], radius, 0, 6.2830)
             cr.fill()
         pointer += p_count
 
-def draw_line(cr, geomstruct, x_values, y_values, l_weight, l_color):
+def draw_line(cr, geomstruct, x_values, y_values, l_weight, l_color, alpha):
     """ """
-    cr.set_source_rgb(*l_color)
+    cr.set_source_rgba(*l_color, alpha)
     cr.set_line_width(l_weight)
     pointer = 0
     for p_count in geomstruct:
@@ -34,7 +34,7 @@ def draw_line(cr, geomstruct, x_values, y_values, l_weight, l_color):
         cr.stroke()
         pointer += p_count
 
-def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color):
+def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color, alpha):
     """ """
     pointer = 0
     for p_count in geomstruct:
@@ -44,9 +44,9 @@ def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color
             cr.line_to(x_values[index], y_values[index])
         pointer = pointer + p_count
 
-    cr.set_source_rgb(*bg_color)
+    cr.set_source_rgba(*bg_color, alpha)
     cr.fill_preserve()
-    cr.set_source_rgb(*l_color)
+    cr.set_source_rgba(*l_color, alpha)
     cr.set_line_width(l_weight)
     cr.stroke()
 

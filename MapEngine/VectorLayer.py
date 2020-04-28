@@ -65,7 +65,7 @@ class _PointFeature(_VectorFeature):
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
 
         ## Draw point
-        renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._color, self._radius)
+        renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._color, self._radius, layer._alpha)
         
 
 class _LineFeature(_VectorFeature):
@@ -86,7 +86,7 @@ class _LineFeature(_VectorFeature):
     def draw(self, layer, renderer, cr):
         ## Calulate pixel values
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
-        renderer.draw_line(cr, self._geom_struct, pix_x, pix_y, self._width, self._color)
+        renderer.draw_line(cr, self._geom_struct, pix_x, pix_y, self._width, self._color, layer._alpha)
 
 
 class _PolygonFeature(_VectorFeature):
@@ -119,7 +119,7 @@ class _PolygonFeature(_VectorFeature):
         #"""
 
         ## Call on renderer to render polygon
-        renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._bgcolor, self._line_width, self._line_color)
+        renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._bgcolor, self._line_width, self._line_color, layer._alpha)
 
 
 class VectorLayer:
@@ -130,6 +130,7 @@ class VectorLayer:
         self._geometry_type = geotype
         self._field_list = field_names
         self._features = features
+        self._alpha = 1
         for feature in self._features:
             feature._activate(self)
 
@@ -201,6 +202,13 @@ class VectorLayer:
             feature._pix_y = self._pix_y_cache[pointer:pointer+lenght]
             pointer += lenght
 
+    def set_opacity(self, opacity_val):
+        """ """
+        self._alpha = opacity_val
+    
+    def get_opacity(self):
+        """ """
+        return self._alpha
 
     def draw(self, renderer, cr):
         """ """
