@@ -16,18 +16,16 @@ class RasterLayer:
     """ """
     def __init__(self, path):
         """ """
+        ## Init MapEngine object
         self._MapEngine = None
-        self.path = path
 
         ## open raster with gdal
         self.gdal_raster = gdal.Open(path)
 
-        #self.gdal_raster.GetRasterBand(1).SetNoDataValue(-9999)
-
-
         ## Extract projection, scale, and location from raster
         self._init_proj = pyproj.Proj(self.gdal_raster.GetProjection())
 
+        ##
         self._init_proj_x, self._init_scale_x, _, self._init_proj_y, _, self._init_scale_y = self.gdal_raster.GetGeoTransform()
 
     
@@ -36,18 +34,37 @@ class RasterLayer:
         self._MapEngine = new_MapEngine
 
         ## Create a tempfile geotif file
-        temp_tif = tempfile.NamedTemporaryFile(suffix='.tif')			      
+        temp_tif = tempfile.NamedTemporaryFile(suffix='.tif', delete=False)			      
 	      
         ## Reproject to mapengines projection into temp_tif 
         gdal.Warp(temp_tif.name, self.gdal_raster, dstSRS=self._MapEngine.get_projection())
 
+
         ## Create a temp PNG 
         ## Load/convert temp_tif into temp_png
         temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        
         #Image.MAX_IMAGE_PIXELS = 9331200000000
         im = Image.open(temp_tif.name)
+        
+        im = im.convert("RGBA")
+        datas = im.getdata()
+
+        ## Convert pure black pixels to transpancy 
+        newData = []
+        for item in datas:
+            if item[0] == 0 and item[1] == 0 and item[2] == 0:
+                newData.append((255, 255, 255, 0))
+            else:
+                newData.append(item)
+
+        im.putdata(newData)
+        
         im.save(temp_png.name, "PNG")
         
+
+
+
         self.image_surface = cairo.ImageSurface.create_from_png(temp_png.name)
 
         ## 
@@ -57,6 +74,7 @@ class RasterLayer:
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
         pass
+
 
     def draw(self, renderer, cr):
         """ """
