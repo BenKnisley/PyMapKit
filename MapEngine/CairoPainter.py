@@ -7,9 +7,9 @@ import numpy as np
 import cairo
 
 
-def draw_background(cr, color, alpha=1):
+def draw_background(cr, color):
     ## Draw background
-    cr.set_source_rgba(*color_converter(color), alpha)
+    cr.set_source_rgba(*color_converter(color))
     cr.paint()
 
 def draw_point(cr, geomstruct, x_values, y_values, color, radius, alpha):
