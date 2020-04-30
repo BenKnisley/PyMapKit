@@ -50,6 +50,11 @@ def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color
     cr.set_line_width(l_weight)
     cr.stroke()
 
+def draw_image(cr, path, TL_x, TL_y, scale_x, scale_y):
+    """ """
+    pass
+
+
 def color_converter(input_color):
     """ Converts different color formats into single format.
 
