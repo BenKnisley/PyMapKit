@@ -45,13 +45,14 @@ class _VectorFeature:
         self._geo_x = np.array(xvalues)
         self._geo_y = np.array(yvalues)
 
-
 class _PointFeature(_VectorFeature):
     """ """
     def __init__(self):
         """ """
         self._color = (0.61, 0.13, 0.15)
         self._radius = 2
+
+    #! TODO: Add a set icon function, to draw image instead of plain circle
 
     def set_color(self, input):
         """ """
@@ -67,7 +68,6 @@ class _PointFeature(_VectorFeature):
         ## Draw point
         renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._color, self._radius, layer._alpha)
         
-
 class _LineFeature(_VectorFeature):
     """ """
     def __init__(self):
@@ -87,7 +87,6 @@ class _LineFeature(_VectorFeature):
         ## Calulate pixel values
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
         renderer.draw_line(cr, self._geom_struct, pix_x, pix_y, self._width, self._color, layer._alpha)
-
 
 class _PolygonFeature(_VectorFeature):
     """ """
@@ -120,7 +119,6 @@ class _PolygonFeature(_VectorFeature):
 
         ## Call on renderer to render polygon
         renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._bgcolor, self._line_width, self._line_color, layer._alpha)
-
 
 class VectorLayer:
     """ """

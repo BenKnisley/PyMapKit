@@ -289,9 +289,9 @@ class MapEngine:
         self.set_location(new_lat, self.get_location()[1])
 
     """
-    #
+    ============================================
     Write docs and tests for following functions
-    #
+    ============================================
     """
 
     ## Scale methods
@@ -406,13 +406,12 @@ class MapEngine:
 
     def proj2geo(self, proj_x, proj_y):
         """ """
-        ## If dest_proj is WGS84, no convert is needed, pass geo_data to output
+        ## If dest_proj is WGS84, no convert is needed, pass input to output
         if self._WGS84 == self._projection:
             return proj_x, proj_y
 
-
+        ## Convert proj coords to geo coord and return
         lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
-        #geo_data = (lat, lon)
         return lon, lat
 
     def proj2pix(self, proj_x, proj_y):
