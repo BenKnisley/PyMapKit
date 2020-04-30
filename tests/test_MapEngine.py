@@ -75,7 +75,7 @@ def test_init_defaults():
     assert m.latitude == 0.0, "Default latitude is not 0 degrees"
     assert m._projx == 0.0, "Default _proj_x is not correct"
     assert m._projy == 0.0, "Default _proj_y is not correct"
-    assert m._background_color == _color_converter('#0C0C0C'), "Default background color not correct"
+    assert m._background_color == '#0C0C0C', "Default background color not correct"
 
 def test_init_args():
     m = MapEngine.MapEngine( projection="EPSG:3735", scale=500, longitude=-82.1, latitude=40.0, width=600, height=500)
@@ -220,7 +220,6 @@ def test_set_proj_coordinate():
     assert m.get_proj_coordinate()[0] == 180
     assert m.get_proj_coordinate()[1] == 90
 
-
 def test_set_location():
     """ Test setting location from geo coord"""
     m = MapEngine.MapEngine()
@@ -235,7 +234,6 @@ def test_set_location():
     assert lat == pytest.approx(-10.1, rel=1e-3) 
     assert lon == pytest.approx(43.4, rel=1e-3) 
 
-
 def test_get_location():
     """ Test getting location from geo coord"""
     m = MapEngine.MapEngine()
@@ -249,3 +247,43 @@ def test_get_location():
     lat, lon = m.get_location()
     assert lat == pytest.approx(-10.1, rel=1e-3) 
     assert lon == pytest.approx(43.4, rel=1e-3) 
+
+def test_longitude_getter():
+    """ Test the longitude setter property"""
+    m = MapEngine.MapEngine()
+
+    m.set_location(40.0, -83.1)
+    assert m.longitude == pytest.approx(-83.1, rel=1e-3)
+
+    m.set_location(-12.2, -10.3)
+    assert m.longitude == pytest.approx(-10.3, rel=1e-3)
+
+def test_longitude_setter():
+    """ Test the longitude setter property"""
+    m = MapEngine.MapEngine()
+
+    m.longitude = 21.1
+    assert m.longitude == pytest.approx(21.1, rel=1e-3)
+
+    m.longitude = -0.1
+    assert m.longitude == pytest.approx(-0.1, rel=1e-3)
+
+def test_latitude_getter():
+    """ Test the latitude setter property"""
+    m = MapEngine.MapEngine()
+
+    m.set_location(40.0, -83.1)
+    assert m.latitude == pytest.approx(40.0, rel=1e-3)
+
+    m.set_location(-12.2, -10.3)
+    assert m.latitude == pytest.approx(-12.2, rel=1e-3)
+
+def test_latitude_setter():
+    """ Test the latitude setter property"""
+    m = MapEngine.MapEngine()
+
+    m.latitude = -102.1
+    assert m.latitude == pytest.approx(-102.1, rel=1e-3)
+
+    m.latitude = 23.12
+    assert m.latitude == pytest.approx(23.12, rel=1e-3)

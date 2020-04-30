@@ -227,27 +227,72 @@ class MapEngine:
         lon, lat = self.proj2geo(self._projx, self._projy)
         return lat, lon
     
+    @property
+    def longitude(self):
+        """ 
+        Longitude getter property
+        
+        Returns the current geographic longitude of the center on the map.
+        
+        Arguments:
+            None
+        
+        Returns:
+            longitude: The current longitude of the map.
+        """
+        return self.get_location()[1]
+
+    @longitude.setter
+    def longitude(self, new_long):
+        """ 
+        Longitude setter property
+        
+        Sets the current geographic longitude of the center on the map.
+        
+        Arguments:
+            new_long: The new longitude of the map.
+        
+        Returns:
+            None
+        """
+        self.set_location(self.get_location()[0], new_long)
+
+
+    @property
+    def latitude(self):
+        """ 
+        Latitude getter property
+        
+        Returns the current geographic latitude of the center on the map.
+        
+        Arguments:
+            None
+        
+        Returns:
+            latitude: The current longitude of the map.
+        """
+        return self.get_location()[0]
+    
+    @latitude.setter
+    def latitude(self, new_lat):
+        """ 
+        Latitude setter property
+        
+        Sets the current geographic latitude of the center on the map.
+        
+        Arguments:
+            new_lat: The new latitude of the map.
+        
+        Returns:
+            None
+        """
+        self.set_location(new_lat, self.get_location()[1])
+
     """
     #
     Write docs and tests for following functions
     #
     """
-
-    @property
-    def longitude(self):
-        return self.get_location()[1]
-
-    @longitude.setter
-    def longitude(self, new_long):
-        self.set_location(self.get_location()[0], new_long)
-
-    @property
-    def latitude(self):
-        return self.get_location()[0]
-    
-    @latitude.setter
-    def latitude(self, new_lat):
-        self.set_location(new_lat, self.get_location()[1])
 
     ## Scale methods
     def set_scale(self, new_scale):
