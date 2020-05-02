@@ -288,16 +288,21 @@ class MapEngine:
         """
         self.set_location(new_lat, self.get_location()[1])
 
-    """
-    ============================================
-    Write docs and tests for following functions
-    ============================================
-    """
-
     ## Scale methods
     def set_scale(self, new_scale):
-        """ """
-        ## Set _scale before setting _proj_scale
+        """ 
+        Sets the scale of the map
+
+        Changes the scale of the map to the input value. Modifies both the _scale and _proj_scale properties. 
+
+        Arguments:
+            new_scale: 
+                The scale to set the map to. Must be in meters per pixel regardless of the projection. Must be positive and non zero.
+
+        Returns:
+            None
+        """
+        ## Save m/pix scale into _scale before setting _proj_scale
         self._scale = new_scale
 
         ## Get projection crs dict, ignore all warnings
@@ -305,20 +310,39 @@ class MapEngine:
             warnings.simplefilter('ignore')
             crs_dict = self._projection.crs.to_dict()
 
+        ## If units not defined in crs_dict the units are degrees
         if 'units' not in crs_dict:
             ## Convert scale to m/pix from deg
             new_scale = new_scale / 110570
-        else: 
-            if crs_dict['units'] == 'us-ft':
+
+        elif crs_dict['units'] == 'us-ft':
                 new_scale = new_scale * 3.28084
-            else:
-                pass ## Is meters :)
         
+        else:
+            pass ## Is meters :) scale is already in m/pix
+    
         ## Set processed newscale
         self._proj_scale = new_scale
 
     def get_scale(self):
+        """ 
+        Returns the current scale of the map.
+        
+        Returns the current scale of the map in meters per pixel.
+
+        Arguments:
+            None
+        
+        Returns:
+            scale: The current scale of the map in meters per pixel.
+        """
         return self._scale
+
+    """
+    ============================================
+    Write docs and tests for following functions
+    ============================================
+    """
 
     ## Size methods
     def set_size(self, new_width, new_height): # size tuple (width, height)

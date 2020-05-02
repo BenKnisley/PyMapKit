@@ -287,3 +287,64 @@ def test_latitude_setter():
 
     m.latitude = 23.12
     assert m.latitude == pytest.approx(23.12, rel=1e-3)
+
+
+def test_set_scale():
+    """ Test the set_scale method """
+    m = MapEngine.MapEngine()
+
+    ## Set projection to one with degrees as units
+    m.set_projection("EPSG:4326")
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(30)
+    assert m._scale == 30
+    assert m._proj_scale == pytest.approx(0.000271321, rel=1e-5)
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(1)
+    assert m._scale == 1
+    assert m._proj_scale == pytest.approx(0.000009044, rel=1e-5)
+
+    ## Set projection to one with feet as units
+    m.set_projection("EPSG:3735")
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(30)
+    assert m._scale == 30
+    assert m._proj_scale == pytest.approx(98.4252, rel=1e-5)
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(1)
+    assert m._scale == 1
+    assert m._proj_scale == pytest.approx(3.28084, rel=1e-5)
+    
+    ## Set projection to one with meters as units
+    m.set_projection("EPSG:32122")
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(30)
+    assert m._scale == 30
+    assert m._proj_scale == pytest.approx(30, rel=1e-5)
+
+    ## Set Scale to 30 pix per meter
+    m.set_scale(1)
+    assert m._scale == 1
+    assert m._proj_scale == pytest.approx(1, rel=1e-5)
+
+
+def test_get_scale():
+    """ Test the get scale method"""
+    m = MapEngine.MapEngine()
+
+    m.set_scale(30)
+    assert m.get_scale() == 30
+    
+    m.set_scale(1)
+    assert m.get_scale() == 1
+
+    m.set_scale(0.00005)
+    assert m.get_scale() == 0.00005
+
+    m.set_scale(50000.01)
+    assert m.get_scale() == 50000.01
