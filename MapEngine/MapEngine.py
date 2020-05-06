@@ -338,27 +338,48 @@ class MapEngine:
         """
         return self._scale
 
+    ## Size methods
+    def set_size(self, new_width, new_height): # size tuple (width, height)
+        """ 
+        Changes the size of the map drawing area.
+
+        Sets the pixel width and height of the drawing area to the given values. 
+
+        Arguments:
+            new_width: 
+                The width to set the drawing area to. Must be a positive integer.
+            new_height: 
+                The height to set the drawing area to. Must be a positive integer.
+
+        Returns:
+            None
+        """
+        self._width = new_width
+        self._height = new_height
+
+    def get_size(self):
+        """ 
+        Returns the current size of the map drawing area.
+        
+        Returns the current pixel width and height of the map drawing area.
+
+        Arguments:
+            None
+        
+        Returns:
+            width:
+                The current width of the map drawing area.
+            height: 
+                 The current height of the map drawing area.
+        """
+        return self._width, self._height
+    
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
 
-    ## Size methods
-    def set_size(self, new_width, new_height): # size tuple (width, height)
-        """ Sets size of  """
-        assert isinstance(new_width, int)
-        assert isinstance(new_height, int)
-        assert new_height > 0
-        assert new_width > 0
-
-        self._width = new_width
-        self._height = new_height
-
-    def get_size(self):
-        """ """
-        return self._width, self._height
-    
     @property
     def width(self):
         return self._width

@@ -288,7 +288,6 @@ def test_latitude_setter():
     m.latitude = 23.12
     assert m.latitude == pytest.approx(23.12, rel=1e-3)
 
-
 def test_set_scale():
     """ Test the set_scale method """
     m = MapEngine.MapEngine()
@@ -332,7 +331,6 @@ def test_set_scale():
     assert m._scale == 1
     assert m._proj_scale == pytest.approx(1, rel=1e-5)
 
-
 def test_get_scale():
     """ Test the get scale method"""
     m = MapEngine.MapEngine()
@@ -348,3 +346,37 @@ def test_get_scale():
 
     m.set_scale(50000.01)
     assert m.get_scale() == 50000.01
+
+
+def test_set_size():
+    """ Test the set_size method """
+    m = MapEngine.MapEngine()
+
+    m.set_size(250, 250)
+    assert m._width == 250
+    assert m._height == 250
+
+    m.set_size(1920, 1080)
+    assert m._width == 1920
+    assert m._height == 1080
+
+    m.set_size(800, 600)
+    assert m._width == 800
+    assert m._height == 600
+
+
+def test_get_size():
+    """ Test the basic function of the get_size method """
+    m = MapEngine.MapEngine()
+
+    m._width = 250
+    m._height = 250
+    assert m.get_size() == (250, 250)
+
+    m._width = 1920
+    m._height = 1080
+    assert m.get_size() == (1920, 1080)
+
+    m._width = 800
+    m._height = 600
+    assert m.get_size() == (800, 600)
