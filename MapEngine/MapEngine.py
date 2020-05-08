@@ -374,30 +374,54 @@ class MapEngine:
         """
         return self._width, self._height
     
+    @property
+    def width(self):
+        """
+        Canvas width property
+        
+        Get or set the pixel width of the map canvas.
+        
+        Arguments:
+            optional (as setter):
+            new_width: the new width of the map canvas.
+        
+        Returns:
+            optional (as getter):
+            width: the current width of the map canvas.
+        """
+        return self._width
+
+    @width.setter
+    def width(self, new_width):
+        self._width = new_width
+    
+    @property
+    def height(self):
+        """
+        Canvas height property
+        
+        Get or set the pixel height of the map canvas.
+        
+        Arguments:
+            optional (as setter):
+            new_height: the new height of the map canvas.
+        
+        Returns:
+            optional (as getter):
+            height: the current height of the map canvas.
+        """
+        return self._height
+
+    @height.setter
+    def height(self, new_height):
+        self._height = new_height
+  
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
 
-    @property
-    def width(self):
-        return self._width
-
-    @width.setter
-    def width(self, new_width):
-        assert isinstance(new_width, int)
-        self._width = new_width
-    
-    @property
-    def height(self):
-        return self._height
-
-    @height.setter
-    def height(self, new_height):
-        assert isinstance(new_height, int)
-        self._height = new_height
-  
     def get_canvas_center(self):
         """ Returns a pixel point that is the center of the canvas. """
         x = int(self._width/2)

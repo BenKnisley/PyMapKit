@@ -248,6 +248,7 @@ def test_get_location():
     assert lat == pytest.approx(-10.1, rel=1e-3) 
     assert lon == pytest.approx(43.4, rel=1e-3) 
 
+#! TODO: Merge getters and setters into same function
 def test_longitude_getter():
     """ Test the longitude setter property"""
     m = MapEngine.MapEngine()
@@ -380,3 +381,58 @@ def test_get_size():
     m._width = 800
     m._height = 600
     assert m.get_size() == (800, 600)
+
+
+def test_width_property():
+    """ Test the basic function of width property """
+    m = MapEngine.MapEngine()
+
+    ## Test getter
+    m._width = 250
+    m._height = 250
+    assert m.width == 250
+
+    m._width = 1920
+    m._height = 1080
+    assert m.width == 1920
+    
+    m._width = 800
+    m._height = 600
+    assert m.width == 800
+
+    ## Test Setter
+    m.width = 300
+    assert m._width == 300
+
+    m.width = 1
+    assert m._width == 1
+
+    m.width = 250
+    assert m._width == 250
+
+def test_height_property():
+    """ Test the basic function of height property """
+    m = MapEngine.MapEngine()
+
+    ## Test getter
+    m._width = 250
+    m._height = 250
+    assert m.height == 250
+
+    m._width = 1920
+    m._height = 1080
+    assert m.height == 1080
+    
+    m._width = 800
+    m._height = 600
+    assert m.height == 600
+
+    ## Test Setter
+    m.height = 300
+    assert m._height == 300
+
+    m.height = 1
+    assert m._height == 1
+
+    m.height = 250
+    assert m._height == 250
