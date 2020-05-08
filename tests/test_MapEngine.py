@@ -248,7 +248,7 @@ def test_get_location():
     assert lat == pytest.approx(-10.1, rel=1e-3) 
     assert lon == pytest.approx(43.4, rel=1e-3) 
 
-#! TODO: Merge getters and setters into same function
+#! TODO: Merge getters and setters into same test
 def test_longitude_getter():
     """ Test the longitude setter property"""
     m = MapEngine.MapEngine()
@@ -348,7 +348,6 @@ def test_get_scale():
     m.set_scale(50000.01)
     assert m.get_scale() == 50000.01
 
-
 def test_set_size():
     """ Test the set_size method """
     m = MapEngine.MapEngine()
@@ -365,7 +364,6 @@ def test_set_size():
     assert m._width == 800
     assert m._height == 600
 
-
 def test_get_size():
     """ Test the basic function of the get_size method """
     m = MapEngine.MapEngine()
@@ -381,7 +379,6 @@ def test_get_size():
     m._width = 800
     m._height = 600
     assert m.get_size() == (800, 600)
-
 
 def test_width_property():
     """ Test the basic function of width property """

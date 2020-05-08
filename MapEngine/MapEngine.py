@@ -13,8 +13,8 @@ import warnings
 
 class MapEngine:
     """
-    A class to manage map layers, state, and rendering.
-    #
+    A class to manage map layers, state, and rendering
+    
     Attributes:
         add_layer: Adds a MapLayer subclassed layer to layer list.
         remove_layer: Removes a layer from layer list.
@@ -66,13 +66,14 @@ class MapEngine:
         
     def add_layer(self, new_map_layer, index=0):
         """
-        Adds a map layer
+        Adds a given map layer to the map
 
         Adds given layer to MapEngines' layer list, and calls layers' activate function.
 
         Arguments:
             new_map_layer: The layer to add to the MapEngine layer list. Must be a MapLayer subclassed layer.
 
+            optional:
             index: Index where the new layer should be added. Defaults to 0, top of list.
         
         Returns:
@@ -86,9 +87,9 @@ class MapEngine:
 
     def remove_layer(self, index):
         """ 
-        Removes a map layer
+        Removes a specific map layer from the map
         
-        Removes layer at given index, and runs layers' deactivate method.
+        Removes map layer at given index, and runs layers' deactivate method.
 
         Arguments:
             index: The index of the layer to remove.
@@ -104,7 +105,7 @@ class MapEngine:
         """ 
         Returns a map layer
         
-        Returns the MapLayer Object at the given index, with removing it.
+        Returns the MapLayer Object at the given index, without removing it.
 
         Arguments:
             index: The index of the layer to return.
@@ -424,8 +425,8 @@ class MapEngine:
 
     def get_canvas_center(self):
         """ Returns a pixel point that is the center of the canvas. """
-        x = int(self._width/2)
-        y = int(self._height/2)
+        x = int(self._width / 2)
+        y = int(self._height / 2)
         return (x, y)
 
     ## Drawing and style methods
@@ -447,7 +448,7 @@ class MapEngine:
         self._background_color = input_color
 
 
-    ## Geo Functions
+    ## Projection space transformation methods
     def geo2proj(self, geo_x, geo_y):
         """
         Good
@@ -531,7 +532,8 @@ class MapEngine:
         return pix_x, pix_y
 
     def pix2geo(self, pixPoint):
-        """ """
+        """ 
+        """
         projPoint = self.pix2proj(pixPoint[0], pixPoint[1])
         geoPoint = self.proj2geo(projPoint[0], projPoint[1])
         return geoPoint
