@@ -433,3 +433,38 @@ def test_height_property():
 
     m.height = 250
     assert m._height == 250
+
+def test_get_canvas_center():
+    """ Test the basic function of get_canvas_center method """
+    m = MapEngine.MapEngine()
+
+    m.set_size(500,500)
+    rtrn = m.get_canvas_center()
+    assert rtrn[0] == 250
+    assert rtrn[1] == 250
+
+    m.set_size(8000, 6000)
+    rtrn = m.get_canvas_center()
+    assert rtrn[0] == 4000
+    assert rtrn[1] == 3000
+
+    m.set_size(1243, 3241)
+    rtrn = m.get_canvas_center()
+    assert rtrn[0] == 621
+    assert rtrn[1] == 1620
+
+def test_set_background_color():
+    """ Test basic function of set_background_color method """
+    m = MapEngine.MapEngine()
+
+    m.set_background_color('red')
+    assert m._background_color == 'red'
+
+    m.set_background_color('#ffffff')
+    assert m._background_color == '#ffffff'
+
+    m.set_background_color((132, 34, 55))
+    assert m._background_color == (132, 34, 55)
+
+    m.set_background_color((0.1, 0.23, 0.55))
+    assert m._background_color == (0.1, 0.23, 0.55)

@@ -417,19 +417,49 @@ class MapEngine:
     def height(self, new_height):
         self._height = new_height
   
+    def get_canvas_center(self): #! TODO: Make _ method
+        """ 
+        Returns the pixel at the center of the map canvas
+
+        Returns the pixel coordinate of the point that is at the center of the canvas.
+        
+        Arguments:
+            None
+        
+        Returns:
+            (pix_x, pix_y): A tuple with the x value and y value of the center pixel
+        """
+        pix_x = int(self._width / 2)
+        pix_y = int(self._height / 2)
+
+        #! TODO: Make return two values
+        return (pix_x, pix_y)
+
+    ## Drawing and style methods
+    def set_background_color(self, color_input):
+        """
+        Sets the background color of map
+        
+        Sets the background color of map from user defined color.
+
+        Arguments:
+            color_input: A color name string, color hex string, or set of values 
+            defining the color to set the map background to. Valid inputs include:
+            'lightblue', '#11c155', (0.1, 0.45, 0.1), and (34, 123, 32).
+        
+        Returns:
+            None
+        """
+        ## Set color value
+        self._background_color = color_input
+
+    
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
 
-    def get_canvas_center(self):
-        """ Returns a pixel point that is the center of the canvas. """
-        x = int(self._width / 2)
-        y = int(self._height / 2)
-        return (x, y)
-
-    ## Drawing and style methods
     def render(self, renderer, cr):
         """ """
         ## Draw background by drawing rectangle the size of canvas
@@ -438,15 +468,6 @@ class MapEngine:
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self._layer_list:
             layer.draw(renderer, cr)
-
-    def set_background_color(self, input_color):
-        """
-        Sets background color of map.
-        ...
-        """
-        ## Set RGB values
-        self._background_color = input_color
-
 
     ## Projection space transformation methods
     def geo2proj(self, geo_x, geo_y):
