@@ -5,6 +5,7 @@ Date:
 """
 import math #! TODO: Replace math.isclose with pytest.approx
 import pytest
+import numpy as np
 from unittest.mock import MagicMock
 import pyproj
 import MapEngine
@@ -505,3 +506,62 @@ def test_render():
     ## Check that all layers were run correct
     for l in m._layer_list:
         l.draw.assert_called_once_with(renderer, canvas)
+
+
+def test_geo2proj():
+    """ """
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
+
+    ## Test WGS84 pass through (input value should be )
+    m.set_projection("EPSG:4326")
+
+    geo_x, geo_y = 23, -27
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = -45.001323, -12.106783
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = [-45.001323, 38.43, 80.1], [-12.106783, 33.33103, 78.34565]
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = "test", "test" ## Anything should pass through
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    ## Test different projection
+    m.set_projection("EPSG:32023")
+
+    ## Test integer input with EPSG:32023
+    geo_x, geo_y = 23, -27
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == pytest.approx(53296437.286, rel=0.001)
+    assert proj_y == pytest.approx(4190499.797,  rel=0.001)
+
+    ## Test float input with EPSG:32023
+    geo_x, geo_y = -45.001323, -12.106783
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == pytest.approx(20888141.530, rel=0.001)
+    assert proj_y == pytest.approx(-16812218.556,  rel=0.001)
+
+    ## Test list input with EPSG:32023
+    geo_x, geo_y = [-45.001323, 38.43, 80.1], [-12.106783, 33.33103, 78.34565]
+    expct_x = [20888141.530, 28989822.199, 11406428.010]
+    expct_y = [-16812218.556, 19662642.984, 28228459.400]
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+
+    for e_x, e_y, p_x, p_y in zip(expct_x, expct_y, proj_x, proj_y):
+        assert p_x == pytest.approx(e_x, rel=0.001)
+        assert p_y == pytest.approx(e_y, rel=0.001)
+
+    ## Test if list result outputs np array
+    assert isinstance(proj_x, np.ndarray)
+    assert isinstance(proj_y, np.ndarray)
+

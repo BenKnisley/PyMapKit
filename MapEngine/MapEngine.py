@@ -476,37 +476,59 @@ class MapEngine:
         for layer in self._layer_list:
             layer.draw(renderer, canvas)
 
+    ## Projection space transformation methods
+    def geo2proj(self, geo_x, geo_y):
+        """
+        Convert geographic coordinates to projection coordinates
+
+        Converts given geographic coordinates into the corresponding projection coordinates of the 
+        current MapEngines projection. Input data can be pairs of ints, floats, lists, or NumPy arrays.
+        Output type matches input, except Python list returns a NumPy array.
+
+        Arguments:
+            geo_x: The x value(s) (Longitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            geo_y: The y value(s) (Latitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        
+        Returns:
+            proj_x: The x value(s) of the projected coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            proj_y: The y value(s) of the projected coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+        """
+        ## If current map projection is WGS84: No projection is needed, return input unchanged
+        if self._projection == self._WGS84:
+            return geo_x, geo_y
+
+        ## If input data is a single data pair: transform and return singlet values
+        if isinstance(geo_x, int) or isinstance(geo_x, float):
+            proj_x, proj_y = pyproj.transform(self._WGS84, self._projection, geo_y, geo_x)
+            return proj_x, proj_y
+
+        ## If input is a python list: convert to numpy arrays before processing
+        if isinstance(geo_x, list):
+            geo_x = np.array(geo_x)
+            geo_y = np.array(geo_y)
+
+        ## Project geographic numpy arrays to projection numpy arrays
+        proj_x, proj_y = pyproj.transform(self._WGS84, self._projection, geo_y, geo_x)
+
+        ## Replace all np.inf values with last real value (to prevent tearing during rendering)
+        while np.isinf(proj_x).any():
+            proj_x[np.where(np.isinf(proj_x))] = proj_x[np.where(np.isinf(proj_x))[0]-1]
+            proj_y[np.where(np.isinf(proj_y))] = proj_y[np.where(np.isinf(proj_y))[0]-1]
+
+        ## Return projected np arrays
+        return proj_x, proj_y
+
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
-
-    ## Projection space transformation methods
-    def geo2proj(self, geo_x, geo_y):
-        """
-        Good
-        """
-        ## If dest_proj is WGS84, no convert is needed, pass geo_data to output
-        if self._WGS84 == self._projection:
-            return geo_x, geo_y
-
-        if isinstance(geo_x, int) or isinstance(geo_x, float):
-            proj_x, proj_y = pyproj.transform(self._WGS84, self._projection, geo_y, geo_x)
-            return proj_x, proj_y
-
-        if isinstance(geo_x, list):
-            geo_x = np.array(geo_x)
-            geo_y = np.array(geo_y)
-
-        proj_x, proj_y = pyproj.transform(self._WGS84, self._projection, geo_y, geo_x)
-
-        ## Replace all inf with last good value
-        while np.isinf(proj_x).any():
-            proj_x[np.where(np.isinf(proj_x))] = proj_x[np.where(np.isinf(proj_x))[0]-1]
-            proj_y[np.where(np.isinf(proj_y))] = proj_y[np.where(np.isinf(proj_y))[0]-1]
-
-        return proj_x, proj_y
 
     def proj2geo(self, proj_x, proj_y):
         """ """
