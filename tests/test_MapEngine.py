@@ -5,8 +5,21 @@ Date:
 """
 import math #! TODO: Replace math.isclose with pytest.approx
 import pytest
+from unittest.mock import MagicMock
 import pyproj
 import MapEngine
+
+## Set up empty class for mocks
+class bare_class:
+    pass
+
+## Create a mock_layer class
+class mock_layer:
+    def __init__(self):
+        ## Create a mock draw function
+        self.draw = MagicMock()
+        self._activate = MagicMock()
+
 
 def _color_converter(input_color):
     """ Converts different color formats into single format.
@@ -468,3 +481,27 @@ def test_set_background_color():
 
     m.set_background_color((0.1, 0.23, 0.55))
     assert m._background_color == (0.1, 0.23, 0.55)
+
+
+def test_render():
+    """ Tests basic function of the render method """
+    ## Create a mock canvas
+    canvas = object()
+    
+    ## Create mock renderer
+    renderer = bare_class()
+    renderer.draw_background = MagicMock()
+
+    ## Run test
+    m = MapEngine.MapEngine()
+    m.add_layer(mock_layer())
+    m.add_layer(mock_layer())
+    m.add_layer(mock_layer())
+    m.render(renderer, canvas)
+
+    ## Assert draw background was called once and correct
+    renderer.draw_background.assert_called_once_with(canvas, m._background_color)
+
+    ## Check that all layers were run correct
+    for l in m._layer_list:
+        l.draw.assert_called_once_with(renderer, canvas)

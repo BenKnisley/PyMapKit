@@ -453,21 +453,34 @@ class MapEngine:
         ## Set color value
         self._background_color = color_input
 
-    
+    def render(self, renderer, canvas):
+        """
+        Renders the map image
+        
+        Renders map by drawing map background and calling draw function on all map layers.
+        Uses the renderer to draw onto the canvas object.
+
+        Arguments:
+            renderer: Module (passed as object) holding all map drawing functions used to 
+                draw on the canvas object.
+
+            canvas: A drawing librarys' canvas object to draw map onto.
+        
+        Returns:
+            None
+        """
+        ## Draw background by drawing rectangle the size of canvas
+        renderer.draw_background(canvas, self._background_color)
+
+        ## Draw each layer, pass renderer, and canvas to each object
+        for layer in self._layer_list:
+            layer.draw(renderer, canvas)
+
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
-
-    def render(self, renderer, cr):
-        """ """
-        ## Draw background by drawing rectangle the size of canvas
-        renderer.draw_background(cr, self._background_color)
-
-        ## Draw each layer, pass renderer, and canvas to each object
-        for layer in self._layer_list:
-            layer.draw(renderer, cr)
 
     ## Projection space transformation methods
     def geo2proj(self, geo_x, geo_y):
