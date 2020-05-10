@@ -524,21 +524,52 @@ class MapEngine:
         ## Return projected np arrays
         return proj_x, proj_y
 
+    def proj2geo(self, proj_x, proj_y):
+        """
+        Convert projection coordinates to geographic coordinates
+
+        Converts given projection coordinates into WGS86 geographic coordinates. 
+        Input data can be pairs of ints, floats, lists, or NumPy arrays.
+        Output type matches input, except Python list returns a NumPy array.
+
+        Arguments:
+            proj_x: The x value(s) of the projected coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            proj_y: The y value(s) of the projected coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        
+        Returns:
+            geo_x: The x value(s) (Longitude) of the geographic coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            geo_y: The y value(s) (Latitude) of the geographic coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+        """
+        ## If dest_proj is WGS84, no convert is needed, pass input to output
+        if self._WGS84 == self._projection:
+            return proj_x, proj_y
+
+        ## If input data is a single data pair: transform and return singlet values
+        if isinstance(proj_x, int) or isinstance(proj_x, float):
+            lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
+            return lon, lat
+
+        ## If input is a python list: convert to numpy arrays before processing
+        if isinstance(proj_x, list):
+            proj_x = np.array(proj_x)
+            proj_y = np.array(proj_y)
+
+        ## Project geographic numpy arrays to projection numpy arrays
+        lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
+
+        return lon, lat
+
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
-
-    def proj2geo(self, proj_x, proj_y):
-        """ """
-        ## If dest_proj is WGS84, no convert is needed, pass input to output
-        if self._WGS84 == self._projection:
-            return proj_x, proj_y
-
-        ## Convert proj coords to geo coord and return
-        lat, lon = pyproj.transform(self._projection, self._WGS84, proj_x, proj_y)
-        return lon, lat
 
     def proj2pix(self, proj_x, proj_y):
         """ """

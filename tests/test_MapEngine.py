@@ -565,3 +565,65 @@ def test_geo2proj():
     assert isinstance(proj_x, np.ndarray)
     assert isinstance(proj_y, np.ndarray)
 
+
+def test_proj2geo():
+    """ """
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
+
+    ## Test WGS84 pass through (input value should be )
+    m.set_projection("EPSG:4326")
+
+    geo_x, geo_y = 23, -27
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = -45.001323, -12.106783
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = [-45.001323, 38.43, 80.1], [-12.106783, 33.33103, 78.34565]
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    geo_x, geo_y = "test", "test" ## Anything should pass through
+    proj_x, proj_y = m.geo2proj(geo_x, geo_y)
+    assert proj_x == geo_x
+    assert proj_y == geo_y
+
+    ## Test different projection
+    m.set_projection("EPSG:32023")
+
+    ## Test integer input with EPSG:32023
+    proj_x, proj_y = 53296437, 4190499
+    geo_x, geo_y = m.proj2geo(proj_x, proj_y)
+    assert geo_x == pytest.approx(23, rel=0.001)
+    assert geo_y == pytest.approx(-27,  rel=0.001)
+
+
+    ## Test float input with EPSG:32023
+    proj_x, proj_y = 20888141.530, -16812218.556
+    geo_x, geo_y = m.proj2geo(proj_x, proj_y)
+    assert geo_x == pytest.approx(-45.001323, rel=0.001)
+    assert geo_y == pytest.approx(-12.106783,  rel=0.001)
+
+
+    ## Test list input with EPSG:32023
+    expct_x = [-45.001323, 38.43, 80.1]
+    expct_y = [-12.106783, 33.33103, 78.34565]
+    proj_x = [20888141.530, 28989822.199, 11406428.010]
+    proj_y = [-16812218.556, 19662642.984, 28228459.400]
+
+    geo_x, geo_y = m.proj2geo(proj_x, proj_y)
+
+    for e_x, e_y, g_x, g_y in zip(expct_x, expct_y, geo_x, geo_y):
+        assert g_x == pytest.approx(e_x, rel=0.001)
+        assert g_y == pytest.approx(e_y, rel=0.001)
+
+    ## Test if list result outputs np array
+    assert isinstance(geo_x, np.ndarray)
+    assert isinstance(geo_y, np.ndarray)
+
