@@ -565,18 +565,35 @@ class MapEngine:
 
         return lon, lat
 
-    """
-    ============================================
-    Write docs and tests for following functions
-    ============================================
-    """
-
     def proj2pix(self, proj_x, proj_y):
-        """ """
-        ## Unpack points
+        """
+        Convert projection coordinates to pixel coordinates
+
+        Converts given projection coordinates into pixel coordinates based around
+        geographic location and scale of map. Where the geographic location of map 
+        is the center of the map canvas. Input data can be pairs of ints, floats, 
+        lists, or NumPy arrays. Output type matches input, except Python list returns
+        a NumPy array.
+
+        Arguments:
+            proj_x: The x value(s) of the projected coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            proj_y: The y value(s) of the projected coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        
+        Returns:
+            pix_x: The x value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            pix_y: The y value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+        """
+        ## Unpack importent points
         focusX, focusY = self._projx, self._projy
         centerX, centerY = self.get_canvas_center()
 
+        ## If input is a Python list, convert to NumPy array
         if isinstance(proj_x, list):
             ## Convert lists of points to numpy arrays
             proj_x = np.array(proj_x)
@@ -593,7 +610,14 @@ class MapEngine:
         pix_x = np.rint(pix_x).astype(int)
         pix_y = np.rint(pix_y).astype(int)
 
+        ## Return pixel coord values
         return pix_x, pix_y
+
+    """
+    ============================================
+    Write docs and tests for following functions
+    ============================================
+    """
 
     def pix2proj(self, pix_x, pix_y):
         """ """

@@ -483,7 +483,6 @@ def test_set_background_color():
     m.set_background_color((0.1, 0.23, 0.55))
     assert m._background_color == (0.1, 0.23, 0.55)
 
-
 def test_render():
     """ Tests basic function of the render method """
     ## Create a mock canvas
@@ -507,9 +506,8 @@ def test_render():
     for l in m._layer_list:
         l.draw.assert_called_once_with(renderer, canvas)
 
-
 def test_geo2proj():
-    """ """
+    """ Tests basic function of the geo2proj method """
     ## Create new MapEngine object for test
     m = MapEngine.MapEngine()
 
@@ -565,9 +563,8 @@ def test_geo2proj():
     assert isinstance(proj_x, np.ndarray)
     assert isinstance(proj_y, np.ndarray)
 
-
 def test_proj2geo():
-    """ """
+    """ Tests basic function of the proj2geo method """
     ## Create new MapEngine object for test
     m = MapEngine.MapEngine()
 
@@ -610,7 +607,6 @@ def test_proj2geo():
     assert geo_x == pytest.approx(-45.001323, rel=0.001)
     assert geo_y == pytest.approx(-12.106783,  rel=0.001)
 
-
     ## Test list input with EPSG:32023
     expct_x = [-45.001323, 38.43, 80.1]
     expct_y = [-12.106783, 33.33103, 78.34565]
@@ -626,4 +622,73 @@ def test_proj2geo():
     ## Test if list result outputs np array
     assert isinstance(geo_x, np.ndarray)
     assert isinstance(geo_y, np.ndarray)
+
+def test_proj2pix():
+    """ Tests basic function of the proj2pix method """
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
+
+    ## Test with WGS86 projection and default scale
+    m.set_projection("EPSG:4326")
+
+    proj_x, proj_y = 23, -27
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+    assert pix_x == pytest.approx(301, rel=0.001)
+    assert pix_y == pytest.approx(310,  rel=0.001)
+
+
+    ## Test float input with EPSG:32023
+    proj_x, proj_y = 40.65, -13.23
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+    assert pix_x == pytest.approx(340, rel=0.001)
+    assert pix_y == pytest.approx(279,  rel=0.001)
+
+
+    ## Test list input
+    proj_x = [-45.001323, 38.43, 80.1]
+    proj_y = [-12.106783, 33.33103, 78.34565]
+    expct_x = [150, 335, 427]
+    expct_y = [277, 176, 77]
+
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+
+    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, pix_x, pix_y):
+        assert a_x == pytest.approx(e_x, rel=0.001)
+        assert a_y == pytest.approx(e_y, rel=0.001)
+
+    
+    ## Test different projection, location, and scale
+    m.set_projection("EPSG:32023")
+    m.set_scale(300)
+    m.set_location(40, -83)
+
+    ## Test integer input with EPSG:32023
+    proj_x, proj_y = 53296437, 4190499
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+    assert pix_x == pytest.approx(52510, rel=0.001)
+    assert pix_y == pytest.approx(-3267,  rel=0.001)
+
+
+    ## Test float input with EPSG:32023
+    proj_x, proj_y = 20888141.530, -16812218.556
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+    assert pix_x == pytest.approx(19583, rel=0.001)
+    assert pix_y == pytest.approx(18072,  rel=0.001)
+
+
+    ## Test list input with EPSG:32023
+    proj_x = [20888141.530, 28989822.199, 11406428.010]
+    proj_y = [-16812218.556, 19662642.984, 28228459.400]
+    expct_x = [19583, 27814, 9949]
+    expct_y = [18072, -18987, -27690]
+
+    pix_x, pix_y = m.proj2pix(proj_x, proj_y)
+
+    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, pix_x, pix_y):
+        assert a_x == pytest.approx(e_x, rel=0.001)
+        assert a_y == pytest.approx(e_y, rel=0.001)
+
+    ## Test if list result outputs np array
+    assert isinstance(pix_x, np.ndarray)
+    assert isinstance(pix_y, np.ndarray)
 
