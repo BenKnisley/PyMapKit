@@ -761,3 +761,10 @@ def test_pix2proj():
     assert isinstance(proj_x, np.ndarray)
     assert isinstance(proj_y, np.ndarray)
 
+def test_geo2pix():
+    """ Tests basic function of the geo2pix method """
+    pass
+
+def test_pix2geo():
+    """ Tests basic function of the pix2geo method """
+    pass
