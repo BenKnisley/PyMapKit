@@ -613,28 +613,51 @@ class MapEngine:
         ## Return pixel coord values
         return pix_x, pix_y
 
+    def pix2proj(self, pix_x, pix_y):
+        """
+        Convert pixel coordinates to projection coordinates
+
+        Converts given pixel coordinates into projection coordinates based around
+        current projection, location and scale of map. Where the geographic location 
+        of map is the center of the map canvas. Input data can be pairs of ints, floats, 
+        lists, or NumPy arrays. Output type matches input, except Python list returns
+        a NumPy array.
+
+        Arguments:
+            pix_x: The x value(s) of the pixel coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            pix_y: The y value(s) of the pixel coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        
+        Returns:
+            proj_x: The x value(s) of the projected coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            proj_y: The y value(s) of the projected coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+        """
+        ## Unpack points
+        focus_x, focus_y = self._projx, self._projy
+        center_x, center_y = self.get_canvas_center()
+
+        ## If Python list, convert to NumPy Array
+        if isinstance(pix_x, list):
+            pix_x = np.array(pix_x)
+            pix_y = np.array(pix_y)
+
+        ## Convert pixel values to projections values
+        proj_x = focus_x + ((pix_x - center_x) * self._proj_scale) 
+        proj_y = focus_y + ((pix_y - center_y) * self._proj_scale) 
+
+        ## Return projection values
+        return proj_x, proj_y
+
     """
     ============================================
     Write docs and tests for following functions
     ============================================
     """
-
-    def pix2proj(self, pix_x, pix_y):
-        """ """
-        ## Unpack points
-        focus_x, focus_y = self._projx, self._projy
-        center_x, center_y = self.get_canvas_center()
-
-        if isinstance(pix_x, list):
-            ## Convert lists of points to numpy arrays
-            pix_x = np.array(pix_x)
-            pix_y = np.array(pix_y)
-
-        ##
-        proj_x = ((pix_x - center_x) * self._proj_scale) + focus_x
-        proj_y = ((pix_y - center_y) * self._proj_scale) + focus_y
-
-        return proj_x, proj_y
 
     def geo2pix(self, geo_x, geo_y):
         """ """

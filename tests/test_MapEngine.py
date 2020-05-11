@@ -692,3 +692,72 @@ def test_proj2pix():
     assert isinstance(pix_x, np.ndarray)
     assert isinstance(pix_y, np.ndarray)
 
+def test_pix2proj():
+    """ Tests basic function of the pix2proj method """
+    #! TODO Rewrite test with better values
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
+
+    ## Test with WGS86 projection and default scale
+    m.set_projection("EPSG:4326")
+
+    pix_x, pix_y = 301, 310
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(23, rel=0.1)
+    assert proj_y == pytest.approx(27,  rel=0.1) #-
+
+
+    ## Test float input with EPSG:32023
+    pix_x, pix_y = 340, 279
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(40.65, rel=0.1)
+    assert proj_y == pytest.approx(13.23,  rel=0.1) #-
+
+
+    ## Test list input
+    pix_x = [150, 335, 427]
+    pix_y = [277, 176, 77]
+    expct_x = [-45.001323, 38.43, 80.1]
+    expct_y = [12.106783, -33.33103, -78.34565] #[-12.106783, 33.33103, 78.34565]
+
+    proj_x, pix_y = m.pix2proj(pix_x, pix_y)
+
+    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, proj_x, pix_y):
+        assert a_x == pytest.approx(e_x, rel=0.1)
+        assert a_y == pytest.approx(e_y, rel=0.1)
+
+    
+    ## Test different projection, location, and scale
+    m.set_projection("EPSG:32023")
+    m.set_scale(300)
+    m.set_location(40, -83)
+
+    ## Test integer input with EPSG:32023
+    pix_x, pix_y = 52510, -3267
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(53296437, rel=100)
+    assert proj_y == pytest.approx(4190499,  rel=100)
+
+    ## Test float input with EPSG:32023
+    pix_x, pix_y = 19583, 18072
+    proj_x, pix_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(20888141.530, rel=100)
+    assert proj_y == pytest.approx(-16812218.556,  rel=100)
+
+
+    ## Test list input with EPSG:32023
+    pix_x = [19583, 27814, 9949]
+    pix_y = [18072, -18987, -27690]
+    expct_x = [20888141.530, 28989822.199, 11406428.010]
+    expct_y = [16812218.556, -19662642.984, -28228459.400] #[-16812218.556, 19662642.984, 28228459.400]
+
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+
+    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, proj_x, proj_y):
+        assert a_x == pytest.approx(e_x, rel=0.1)
+        assert a_y == pytest.approx(e_y, rel=0.1)
+
+    ## Test if list result outputs np array
+    assert isinstance(proj_x, np.ndarray)
+    assert isinstance(proj_y, np.ndarray)
+
