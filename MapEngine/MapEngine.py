@@ -13,13 +13,7 @@ import warnings
 
 class MapEngine:
     """
-    A class to manage map layers, state, and rendering
-    
-    Attributes:
-        add_layer: Adds a MapLayer subclassed layer to layer list.
-        remove_layer: Removes a layer from layer list.
-        get_layer: Returns (but does not remove) layer in layer list.
-        ...
+    A class to manage map layers, state, and rendering.
     """
 
     def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500):
@@ -257,7 +251,6 @@ class MapEngine:
             None
         """
         self.set_location(self.get_location()[0], new_long)
-
 
     @property
     def latitude(self):
@@ -648,27 +641,67 @@ class MapEngine:
 
         ## Convert pixel values to projections values
         proj_x = focus_x + ((pix_x - center_x) * float(self._proj_scale)) 
-        proj_y = focus_y + ((pix_y - center_y) * float(self._proj_scale)) 
+        #proj_y = 0 - (focus_y + ((pix_y - center_y) * float(self._proj_scale)) ) ## Fixed
+        proj_y = (focus_y + ((pix_y - center_y) * float(self._proj_scale)) )
 
         ## Return projection values
         return proj_x, proj_y
 
-    """
-    ============================================
-    Write docs and tests for following functions
-    ============================================
-    """
-
     def geo2pix(self, geo_x, geo_y):
-        """ """
+        """
+        Convert geographic coordinates to pixel coordinates
+
+        Converts given geographic coordinates into pixel coordinates based around
+        current projection, location and scale of map. This method just dumps input
+        directly through geo2proj & proj2pix, so no optimization should be expected.
+        Input data can be pairs of ints, floats, lists, or NumPy arrays. Output type
+        matches input, except Python list returns a NumPy array.
+
+        Arguments:
+            geo_x: The x value(s) (Longitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            geo_y: The y value(s) (Latitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        
+        Returns:
+            pix_x: The x value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            pix_y: The y value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+        """
+        ## Daisy chain geo2proj and proj2pix
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         pix_x, pix_y = self.proj2pix(proj_x, proj_y)
         return pix_x, pix_y
 
-    def pix2geo(self, pixPoint):
-        """ 
+    def pix2geo(self, pix_x, pix_y):
         """
-        projPoint = self.pix2proj(pixPoint[0], pixPoint[1])
-        geoPoint = self.proj2geo(projPoint[0], projPoint[1])
+        Convert pixel coordinates to geographic coordinates
+
+        Converts given pixel coordinates into geographic coordinates based around
+        current projection, location and scale of map. This method just dumps input
+        directly through pix2proj & proj2geo, so no optimization should be expected.
+        Input data can be pairs of ints, floats, lists, or NumPy arrays. Output type
+        matches input, except Python list returns a NumPy array.
+
+        Arguments:
+            pix_x: The x value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+
+            pix_y: The y value(s) of the pixel coordinate(s). Depending on input, returns int, float, or
+                NumPy array.
+            
+        Returns:
+            geo_x: The x value(s) (Longitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+
+            geo_y: The y value(s) (Latitude) of the geographic coordinate(s). Can be an int, float, list, or
+                NumPy array.
+        """
+        ## Daisy chain pix2proj and proj2geo
+        proj_x, proj_y = self.pix2proj(pix_x, pix_y)
+        geoPoint = self.proj2geo(proj_x, proj_y)
         return geoPoint
 

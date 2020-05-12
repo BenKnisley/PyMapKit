@@ -694,12 +694,8 @@ def test_proj2pix():
 
 def test_pix2proj():
     """ Tests basic function of the pix2proj method """
-    #! TODO Rewrite test with better values
     ## Create new MapEngine object for test
     m = MapEngine.MapEngine()
-
-    ## Test with WGS86 projection and default scale
-    m.set_projection("EPSG:4326")
 
     ## Test that center of canvas is location
     pix_x, pix_y = 250, 250
@@ -726,11 +722,8 @@ def test_pix2proj():
     assert proj_x == pytest.approx(expc_x, rel=0.001)
     assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
-    ## Change projection
+    ## Change location,scale, and projection
     m.set_projection("EPSG:32023")
-
-
-    ## Change location and scale
     m.set_location(40.0, -83.0)
     m.set_scale(300)
 
@@ -755,12 +748,83 @@ def test_pix2proj():
     assert proj_x == pytest.approx(expc_x, rel=0.001)
     assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
-
-
-def _test_geo2pix():
+def test_geo2pix():
     """ Tests basic function of the geo2pix method """
-    pass
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
 
-def _test_pix2geo():
+    ## Test most basic, default proj, scale and loc
+    geo_x, geo_y = 0, 0
+    expc_x, expc_y = 250, 250
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with different values
+    geo_x, geo_y = 10, -43
+    expc_x, expc_y = 272, 345
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with float values
+    geo_x, geo_y = 37.89, -72.43
+    expc_x, expc_y = 334, 410
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Do tests with different projection, scale, and location
+    m.set_projection("EPSG:32023")
+    m.set_location(40.0, -83.0)
+    m.set_scale(300)
+
+    ## Test with most basic, default proj, scale and loc
+    geo_x, geo_y = -83.0, 40.0
+    expc_x, expc_y = 250, 250
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+    
+    ## Test with different values
+    geo_x, geo_y = -81.6697, 41.4822
+    expc_x, expc_y = 624, -299
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with different scale
+    m.set_scale(3000)
+    geo_x, geo_y = -81.6697, 41.4822
+    expc_x, expc_y = 287, 195
+    pix_x, pix_y = m.geo2pix(geo_x, geo_y)
+    assert pix_x == pytest.approx(expc_x, rel=0.001)
+    assert pix_y == pytest.approx(expc_y,  rel=0.001)
+
+def test_pix2geo():
     """ Tests basic function of the pix2geo method """
-    pass
+    ## Create new MapEngine object for test
+    m = MapEngine.MapEngine()
+
+    ## Test most basic, default proj, scale and loc
+    pix_x, pix_y = 250, 250
+    expc_x, expc_y = 0, 0
+    geo_x, geo_y = m.pix2geo(pix_x, pix_y)
+    assert geo_x == pytest.approx(expc_x, rel=0.001)
+    assert geo_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with different values
+    pix_x, pix_y = 25, -55
+    expc_x, expc_y = -101.746, -137.922
+    geo_x, geo_y = m.pix2geo(pix_x, pix_y)
+    assert geo_x == pytest.approx(expc_x, rel=0.001)
+    assert geo_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with float values
+    pix_x, pix_y = 334, 410
+    expc_x, expc_y = 37.89, 72.43
+    geo_x, geo_y = m.pix2geo(pix_x, pix_y)
+    assert geo_x == pytest.approx(expc_x, rel=0.01)
+    assert geo_y == pytest.approx(expc_y,  rel=0.01)
+
+    #! TODO: Add more tests
