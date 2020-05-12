@@ -6,18 +6,18 @@ Date: 17 March, 2020
 from setuptools import setup
 
 setup(
-    name = "MapEngine",
+    name = "PyMapKit",
     version = "0.0.0",
     author = "Ben Knisley",
     author_email = "benknisley@gmail.com",
-    description = ("A module for rendering maps."),
-    url = "https://github.com/BenKnisley/MapEngine",
+    description = ("A packages for rendering maps."),
+    url = "https://github.com/BenKnisley/PyMapKit",
     license = "MIT",
-    keywords = "GIS map MapEngine",
+    keywords = "GIS map PyMapKit MapEngine",
     #requires_python='>=3.6',
     #requires_external='GDAL (>=1.8)',
     install_requires=['numpy','pyproj'],
-    packages=["MapEngine",],
+    packages=["PyMapKit",],
     long_description="...",
     classifiers=[
         "Development Status :: 1 - Planning",
