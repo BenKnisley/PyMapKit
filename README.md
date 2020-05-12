@@ -1,9 +1,9 @@
-MapEngine
+PyMapKit
 ==
 #
 
 ## Intro
-MapEngine is a MIT-licensed Python toolkit for rendering maps and 
+PyMapKit is a MIT-licensed Python toolkit for rendering maps and 
 geospatial data. Designed to be simple to use and very extendable.
 
 ## Usage
@@ -12,7 +12,7 @@ Basic usage is very easy:
 
 ```python
 ## Import MapEngine Modules
-from MapEngine import MapEngine, CairoPainter, layer_from_file
+from PyMapKit import MapEngine, CairoPainter, layer_from_file
 
 ## Create MapEngine object
 m = MapEngine.MapEngine()
