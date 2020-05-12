@@ -647,8 +647,8 @@ class MapEngine:
             pix_y = np.array(pix_y)
 
         ## Convert pixel values to projections values
-        proj_x = focus_x + ((pix_x - center_x) * self._proj_scale) 
-        proj_y = focus_y + ((pix_y - center_y) * self._proj_scale) 
+        proj_x = focus_x + ((pix_x - center_x) * float(self._proj_scale)) 
+        proj_y = focus_y + ((pix_y - center_y) * float(self._proj_scale)) 
 
         ## Return projection values
         return proj_x, proj_y

@@ -701,70 +701,66 @@ def test_pix2proj():
     ## Test with WGS86 projection and default scale
     m.set_projection("EPSG:4326")
 
-    pix_x, pix_y = 301, 310
+    ## Test that center of canvas is location
+    pix_x, pix_y = 250, 250
+    expc_x, expc_y = 0.0, 0.0
     proj_x, proj_y = m.pix2proj(pix_x, pix_y)
-    assert proj_x == pytest.approx(23, rel=0.1)
-    assert proj_y == pytest.approx(27,  rel=0.1) #-
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
-
-    ## Test float input with EPSG:32023
-    pix_x, pix_y = 340, 279
-    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
-    assert proj_x == pytest.approx(40.65, rel=0.1)
-    assert proj_y == pytest.approx(13.23,  rel=0.1) #-
-
-
-    ## Test list input
-    pix_x = [150, 335, 427]
-    pix_y = [277, 176, 77]
-    expct_x = [-45.001323, 38.43, 80.1]
-    expct_y = [12.106783, -33.33103, -78.34565] #[-12.106783, 33.33103, 78.34565]
-
-    proj_x, pix_y = m.pix2proj(pix_x, pix_y)
-
-    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, proj_x, pix_y):
-        assert a_x == pytest.approx(e_x, rel=0.1)
-        assert a_y == pytest.approx(e_y, rel=0.1)
-
-    
-    ## Test different projection, location, and scale
-    m.set_projection("EPSG:32023")
+    ## Change location and scale
+    m.set_location(40.0, -83.0)
     m.set_scale(300)
-    m.set_location(40, -83)
 
-    ## Test integer input with EPSG:32023
-    pix_x, pix_y = 52510, -3267
+    ## Test with different loc and scale
+    pix_x, pix_y = 250, 250
+    expc_x, expc_y = -83.0, 40.0
     proj_x, proj_y = m.pix2proj(pix_x, pix_y)
-    assert proj_x == pytest.approx(53296437, rel=100)
-    assert proj_y == pytest.approx(4190499,  rel=100)
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
-    ## Test float input with EPSG:32023
-    pix_x, pix_y = 19583, 18072
-    proj_x, pix_y = m.pix2proj(pix_x, pix_y)
-    assert proj_x == pytest.approx(20888141.530, rel=100)
-    assert proj_y == pytest.approx(-16812218.556,  rel=100)
-
-
-    ## Test list input with EPSG:32023
-    pix_x = [19583, 27814, 9949]
-    pix_y = [18072, -18987, -27690]
-    expct_x = [20888141.530, 28989822.199, 11406428.010]
-    expct_y = [16812218.556, -19662642.984, -28228459.400] #[-16812218.556, 19662642.984, 28228459.400]
-
+    ## Test with different values
+    pix_x, pix_y = 100, 100
+    expc_x, expc_y = -83.407, 39.593
     proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
-    for e_x, e_y, a_x, a_y in zip(expct_x, expct_y, proj_x, proj_y):
-        assert a_x == pytest.approx(e_x, rel=0.1)
-        assert a_y == pytest.approx(e_y, rel=0.1)
+    ## Change projection
+    m.set_projection("EPSG:32023")
 
-    ## Test if list result outputs np array
-    assert isinstance(proj_x, np.ndarray)
-    assert isinstance(proj_y, np.ndarray)
 
-def test_geo2pix():
+    ## Change location and scale
+    m.set_location(40.0, -83.0)
+    m.set_scale(300)
+
+    ## Test with different loc and scale
+    pix_x, pix_y = 250, 250
+    expc_x, expc_y = 1859889.787, 728803.103
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with different values
+    pix_x, pix_y = 25, 166
+    expc_x, expc_y = 1638433.087, 646125.935
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
+
+    ## Test with different values
+    pix_x, pix_y = -104, 17
+    expc_x, expc_y = 1511464.579, 499472.387
+    proj_x, proj_y = m.pix2proj(pix_x, pix_y)
+    assert proj_x == pytest.approx(expc_x, rel=0.001)
+    assert proj_y == pytest.approx(expc_y,  rel=0.001)
+
+
+
+def _test_geo2pix():
     """ Tests basic function of the geo2pix method """
     pass
 
-def test_pix2geo():
+def _test_pix2geo():
     """ Tests basic function of the pix2geo method """
     pass
