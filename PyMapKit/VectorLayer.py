@@ -131,7 +131,7 @@ class VectorLayer:
         self._alpha = 1
         for feature in self._features:
             feature._activate(self)
-
+        
     def __len__(self):
         ## Return number of items in features list
         return len(self._features)
@@ -154,6 +154,19 @@ class VectorLayer:
         self._iter_indx += 1
         return feature
 
+    def remove_if(self, attrib, value):
+        """
+        Removes features that match inputs
+        """
+        new_f_list = []
+        for f in self._features:
+            if f[attrib] != value:
+                new_f_list.append(f)
+        self._features = new_f_list
+
+    
+    def apply_if(self, attrib, value, function):
+        pass
 
     def _activate(self, new_MapEngine):
         """ Function called when layer is added to a MapEngine layer list."""
