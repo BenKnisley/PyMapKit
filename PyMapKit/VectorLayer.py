@@ -122,15 +122,47 @@ class _PolygonFeature(_VectorFeature):
 
 class VectorLayer:
     """ """
-    def __init__(self, geotype, field_names, features):
+    def __init__(self, path=None):
         """ """
         self._MapEngine = None
+        self._geometry_type = None
+        self._field_list = []
+        self._features = []
+        self._alpha = 1
+
+        ## If path is None (default), return empty VectorLayer
+        if path == None:
+            return
+        
+        ## Load Gdal from file extension
+        driver_dict = {'.shp': 'ESRI Shapefile', '.geojson': 'GeoJSON'}
+        try:
+            driver = driver_dict[path[path.rindex('.'):]]
+        except KeyError as ext:
+            print("Bad file type:", ext)
+            exit()
+
+        ## Get GDAL layer from path
+        driver = ogr.GetDriverByName(driver)
+        data_file = driver.Open(path, 0)
+        if data_file == None: print("Bad File."); exit()
+        ogrlayer = data_file.GetLayer()
+
+
+        ## Get data from ogrlayer, and set layer attributes 
+        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+        self._load_data(geometry_type, fields, features)
+        
+
+    
+    def _load_data(self, geotype, field_names, features):
+        """ """
         self._geometry_type = geotype
         self._field_list = field_names
-        self._features = features
-        self._alpha = 1
-        for feature in self._features:
+        for feature in features:
             feature._activate(self)
+            self._features.append(feature)
+
         
     def __len__(self):
         ## Return number of items in features list
@@ -164,10 +196,6 @@ class VectorLayer:
                 new_f_list.append(f)
         self._features = new_f_list
 
-    
-    def apply_if(self, attrib, value, function):
-        pass
-
     def _activate(self, new_MapEngine):
         """ Function called when layer is added to a MapEngine layer list."""
         self._MapEngine = new_MapEngine
@@ -178,8 +206,12 @@ class VectorLayer:
         pass
 
     def _project_features(self):
+        ## 
+        if len(self._features) == 0:
+            return
+
         ## Clear existing projection lists
-        for feature in self:
+        for feature in self._features:
             feature._proj_x = np.array([])
             feature._proj_y = np.array([])
 
@@ -187,7 +219,7 @@ class VectorLayer:
         grand_geo_point_x_list = np.array([])
         grand_geo_point_y_list = np.array([])
 
-        for feature in self:
+        for feature in self._features:
             feature_len_list.append(len(feature))
             grand_geo_point_x_list = np.concatenate([grand_geo_point_x_list, feature._geo_x])
             grand_geo_point_y_list = np.concatenate([grand_geo_point_y_list, feature._geo_y])
@@ -205,6 +237,9 @@ class VectorLayer:
             pointer += p_count
 
     def _pixilize_points(self):
+        if len(self._features) == 0:
+            return
+
         self._pix_x_cache, self._pix_y_cache = self._MapEngine.proj2pix(self._proj_x_cache, self._proj_y_cache)
 
         pointer = 0
@@ -241,7 +276,10 @@ class VectorLayer:
 
         ## Get data from ogrlayer, and return new VectorLayer
         fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
-        return VectorLayer(geometry_type, fields, features)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(geometry_type, fields, features)
+        return new_lay
     
     @staticmethod
     def from_geojson(path):
@@ -257,7 +295,10 @@ class VectorLayer:
 
         ## Get data from ogrlayer, and return new VectorLayer
         fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
-        return VectorLayer(geometry_type, fields, features)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(geometry_type, fields, features)
+        return new_lay
 
 
 
