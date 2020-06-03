@@ -214,6 +214,39 @@ class VectorLayer:
         for feature in self._features:
             feature.draw(self, renderer, cr)
 
+    @staticmethod
+    def from_shapefile(path):
+        ## Setup driver for shapefile, open shapefile
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        shapefile = driver.Open(path, 0)
+
+        ## Test if file is readable
+        if shapefile == None: print("Bad File."); exit()
+
+        ## Get OGR data layer
+        ogrlayer = shapefile.GetLayer()
+
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+        return VectorLayer(geometry_type, fields, features)
+    
+    @staticmethod
+    def from_geojson(path):
+        ## Setup driver for shapefile, open shapefile
+        driver = ogr.GetDriverByName('GeoJSON')
+        datafile = driver.Open(path, 0)
+
+        ## Test if file is readable
+        if datafile == None: print("Bad File."); exit()
+
+        ## Get OGR data layer
+        ogrlayer = datafile.GetLayer()
+
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+        return VectorLayer(geometry_type, fields, features)
+
+
 
 # TODO: Refactor these to be bit cleaner
 def _get_geom_points(geom):
@@ -294,7 +327,7 @@ def _get_geom_points(geom):
 def _data_from_OGR_layer(ogrlayer):
     """ """
     ## Set int GetGeomType to string of geom type
-    geometry_type = [None, 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
+    geometry_type = [None, 'point', 'line', 'polygon', 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
 
     ## Create list of attributes field names from
     field_names = []
@@ -333,6 +366,7 @@ def _data_from_OGR_layer(ogrlayer):
     #return field_names, attributes_list, geometry_type, geometrys_list
     return field_names, geometry_type, features
 
+'''
 def from_shapefile(shapefile_path):
     """
     """
@@ -349,6 +383,7 @@ def from_shapefile(shapefile_path):
     ## Get data from ogrlayer, and return new VectorLayer
     fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
     return VectorLayer(geometry_type, fields, features)
+'''
 
 def _color_converter(input_color):
     """ Converts different color formats into single format.
