@@ -127,6 +127,10 @@ class VectorLayer:
         self._MapEngine = None
         self._geometry_type = None
         self._field_list = []
+        
+        self._focus_point = (0,0)
+        self._extent = (0,0,0,0)
+        
         self._features = []
         self._alpha = 1
 
@@ -153,8 +157,6 @@ class VectorLayer:
         fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
         self._load_data(geometry_type, fields, features)
         
-
-    
     def _load_data(self, geotype, field_names, features):
         """ """
         self._geometry_type = geotype
@@ -163,7 +165,6 @@ class VectorLayer:
             feature._activate(self)
             self._features.append(feature)
 
-        
     def __len__(self):
         ## Return number of items in features list
         return len(self._features)
@@ -204,6 +205,14 @@ class VectorLayer:
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
         pass
+    
+    
+    def focus(self):
+        """ """
+        self._MapEngine._projx, self._MapEngine._projy = self._focus_point
+        s = (self._extent[1] - self._extent[0]) / min(self._MapEngine.width, self._MapEngine.height)
+        self._MapEngine.set_scale(s)
+
 
     def _project_features(self):
         ## 
@@ -225,6 +234,17 @@ class VectorLayer:
             grand_geo_point_y_list = np.concatenate([grand_geo_point_y_list, feature._geo_y])
 
         grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
+
+        ## Get layer extents and focus point
+        self._extent = (np.amin(grand_proj_point_x_list), 
+                        np.amax(grand_proj_point_x_list),
+                        np.amin(grand_proj_point_y_list), 
+                        np.amax(grand_proj_point_y_list))
+
+        cent_x = (self._extent[0] + self._extent[1])/2
+        cent_y = (self._extent[2] + self._extent[3])/2
+
+        self._focus_point = (cent_x, cent_y)
 
         self._feature_len_cache = np.array(feature_len_list)
         self._proj_x_cache = grand_proj_point_x_list.copy()
@@ -379,7 +399,7 @@ def _get_geom_points(geom):
     return feature_struct, np.array(feature_points)
 
 def _data_from_OGR_layer(ogrlayer):
-    """ """
+    """ REWRITE THIS FUNCTION """
     ## Set int GetGeomType to string of geom type
     geometry_type = [None, 'point', 'line', 'polygon', 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
 
@@ -391,8 +411,7 @@ def _data_from_OGR_layer(ogrlayer):
         field_data = attrib_data.GetFieldDefn(indx)
         field_names.append(field_data.GetName())
 
-
-    feature_class = {"point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
+    feature_class = {None: _LineFeature, "point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
     features = list()
     ## Loop through all OGR features, creating _VectorFeatures
     for feature_ogr in ogrlayer:
