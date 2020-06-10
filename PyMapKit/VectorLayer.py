@@ -126,7 +126,6 @@ class VectorLayer:
     def __init__(self, path=None):
         """ """
         self._MapEngine = None
-        self._geometry_type = None
         self._field_list = []
         
         self._focus_point = (0,0)
@@ -155,12 +154,11 @@ class VectorLayer:
 
 
         ## Get data from ogrlayer, and set layer attributes 
-        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
-        self._load_data(geometry_type, fields, features)
+        fields, features = _data_from_OGR_layer(ogrlayer)
+        self._load_data(fields, features)
         
-    def _load_data(self, geotype, field_names, features):
+    def _load_data(self, field_names, features):
         """ """
-        #self._geometry_type = geotype
         self._field_list = field_names
         for feature in features:
             feature._activate(self)
@@ -196,14 +194,12 @@ class VectorLayer:
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
         pass
-    
-    
+        
     def focus(self):
         """ """
         self._MapEngine._projx, self._MapEngine._projy = self._focus_point
         s = (self._extent[1] - self._extent[0]) / min(self._MapEngine.width, self._MapEngine.height)
         self._MapEngine.set_scale(s)
-
 
     def _project_features(self):
         ## 
@@ -286,10 +282,10 @@ class VectorLayer:
         ogrlayer = shapefile.GetLayer()
 
         ## Get data from ogrlayer, and return new VectorLayer
-        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+        fields, features = _data_from_OGR_layer(ogrlayer)
 
         new_lay = VectorLayer(None)
-        new_lay._load_data(geometry_type, fields, features)
+        new_lay._load_data(fields, features)
         return new_lay
     
     @staticmethod
@@ -305,10 +301,10 @@ class VectorLayer:
         ogrlayer = datafile.GetLayer()
 
         ## Get data from ogrlayer, and return new VectorLayer
-        fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
+        fields, features = _data_from_OGR_layer(ogrlayer)
 
         new_lay = VectorLayer(None)
-        new_lay._load_data(geometry_type, fields, features)
+        new_lay._load_data(fields, features)
         return new_lay
 
 
@@ -333,11 +329,27 @@ def _get_geom_points(geom):
     feature_point_stuct = []
 
     if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
-        subgeom_struct = []
-        for point in geom.GetPoints():
-             subgeom_struct.append(point)
-        feature_point_stuct.append(subgeom_struct)
+        ## Plain point
+        if geom.GetGeometryCount() == 0:
+            subgeom_struct = []
 
+            for point in geom.GetPoints():
+                subgeom_struct.append(point)
+
+            feature_point_stuct.append(subgeom_struct)
+        
+        ## Muti Point
+        else:
+            for indx in range(geom.GetGeometryCount()):
+                subpoly_geom = geom.GetGeometryRef(indx)
+                subgeom_struct = []
+
+                for point in subpoly_geom.GetPoints():
+                    subgeom_struct.append(point)
+
+                feature_point_stuct.append(subgeom_struct)
+
+    
 
     elif geom.GetGeometryName() in ("LINESTRING", "MULTILINESTRING"):
         geocount = geom.GetGeometryCount()
@@ -386,13 +398,10 @@ def _get_geom_points(geom):
         for point in subfeat:
             feature_points.append(point)
 
-
     return feature_struct, np.array(feature_points)
 
 def _data_from_OGR_layer(ogrlayer):
     """ REWRITE THIS FUNCTION """
-    ## Set int GetGeomType to string of geom type
-    geometry_type = [None, 'point', 'line', 'polygon', 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
 
     ## Create list of attributes field names from
     field_names = []
@@ -402,20 +411,30 @@ def _data_from_OGR_layer(ogrlayer):
         field_data = attrib_data.GetFieldDefn(indx)
         field_names.append(field_data.GetName())
 
-    feature_class = {None: _PolygonFeature, "point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
+
     features = list()
+
     ## Loop through all OGR features, creating _VectorFeatures
     for feature_ogr in ogrlayer:
 
-        ## Extract attribute from ogr feature into list
+        ## Extract attribute from ogr feature into feature_attributes list
         feature_attributes = []
         for indx in range(field_count):
             feature_attributes.append(feature_ogr.GetField(indx))
 
+        feature_geom = feature_ogr.GetGeometryRef()
+        feature_class = {"POINT": _PointFeature, 
+                         "MULTIPOINT": _PointFeature,
+                         "LINESTRING": _LineFeature, 
+                         "MULTILINESTRING": _LineFeature, 
+                         "POLYGON": _PolygonFeature,
+                         "LINEARRING": _PolygonFeature,
+                         "MULTIPOLYGON": _PolygonFeature}[feature_geom.GetGeometryName()]
+
         ## Create new VectorFeature to store
         new_feature = feature_class()
         new_feature._attributes = feature_attributes
-        geoStruct, geo_points = _get_geom_points(feature_ogr.GetGeometryRef())
+        geoStruct, geo_points = _get_geom_points(feature_geom)
 
         new_feature._geom_struct = np.array(geoStruct)
 
@@ -427,8 +446,8 @@ def _data_from_OGR_layer(ogrlayer):
         features.append(new_feature)
 
     ## Return New vector Layer
-    #return field_names, attributes_list, geometry_type, geometrys_list
-    return field_names, geometry_type, features
+    #return field_names, attributes_list, geometrys_list
+    return field_names, features
 
 '''
 def from_shapefile(shapefile_path):
