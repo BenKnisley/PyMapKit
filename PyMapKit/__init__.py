@@ -9,7 +9,8 @@ from .MapEngine import MapEngine
 
 ## Import Vector Layer Functions
 from .VectorLayer import VectorLayer
-#from .VectorLayer import from_shapefile as layer_from_shapefile
+
+from .VectorLayer import _data_from_OGR_layer
 
 ## Import Cario Functions
 from .CairoPainter import draw_point
