@@ -198,8 +198,9 @@ class VectorLayer:
     def focus(self):
         """ """
         self._MapEngine._projx, self._MapEngine._projy = self._focus_point
-        s = (self._extent[1] - self._extent[0]) / min(self._MapEngine.width, self._MapEngine.height)
-        self._MapEngine.set_scale(s)
+        s_x = (self._extent[1] - self._extent[0]) / self._MapEngine.width
+        s_y = (self._extent[3] - self._extent[2]) / self._MapEngine.height
+        self._MapEngine.set_scale( max(s_x, s_y) )
 
     def _project_features(self):
         ## 
@@ -269,6 +270,17 @@ class VectorLayer:
         for feature in self._features:
             feature.draw(self, renderer, cr)
 
+
+    @staticmethod
+    def from_gdal_layer(gdal_layer):
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, features = _data_from_OGR_layer(gdal_layer)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(fields, features)
+        return new_lay
+
+
     @staticmethod
     def from_shapefile(path):
         ## Setup driver for shapefile, open shapefile
@@ -313,17 +325,6 @@ class VectorLayer:
 def _get_geom_points(geom):
     """
     Given a OGR geometry, returns a list structure of points.
-
-    Maybe use recurcion
-
-    WKBGeometryTypes
-    wkbPoint = 1,
-    wkbLineString = 2,
-    wkbPolygon = 3,
-    wkbMultiPoint = 4,
-    wkbMultiLineString = 5,
-    wkbMultiPolygon = 6,
-    wkbGeometryCollection = 7
     """
     ## Create root point list
     feature_point_stuct = []
