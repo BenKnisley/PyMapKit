@@ -9,13 +9,9 @@ from .MapEngine import MapEngine
 
 ## Import Vector Layer Functions
 from .VectorLayer import VectorLayer
+from .RasterLayer import RasterLayer
+from .TextLayer import TextLayer
 
-from .VectorLayer import _data_from_OGR_layer
-
-## Import Cario Functions
-from .CairoPainter import draw_point
-from .CairoPainter import draw_line
-from .CairoPainter import draw_polygon
 
 
 __author__ = "Ben Knisley (benknisley@gmail.com)"
