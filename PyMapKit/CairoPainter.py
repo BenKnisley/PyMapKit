@@ -55,6 +55,31 @@ def draw_image(cr, path, TL_x, TL_y, scale_x, scale_y):
     pass
 
 
+def draw_text(cr, text_line, x_pos, y_pos):
+    """ """
+    if text_line.italic:
+        slant = cairo.FONT_SLANT_ITALIC
+    else:
+        slant = cairo.FONT_SLANT_NORMAL
+
+
+    if text_line.bold:
+        boldness = cairo.FONT_WEIGHT_BOLD
+    else:
+        boldness = cairo.FONT_WEIGHT_NORMAL
+
+    
+    cr.select_font_face(text_line.font, slant, boldness)
+    cr.set_font_size(text_line.size)
+    cr.set_source_rgba(*color_converter(text_line.color), 1)
+
+    cr.move_to(x_pos, y_pos)
+    cr.show_text(text_line.text)
+
+    
+
+
+
 def color_converter(input_color):
     """ Converts different color formats into single format.
 
