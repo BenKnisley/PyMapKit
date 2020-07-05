@@ -2,6 +2,13 @@
 """
 Author: Ben Knisley [benknisley@gmail.com]
 Date: Febuary 8, 2020
+
+Notes:
+
+Add a VectorLayer.run method that takes a function to style
+features.
+
+Remove _color_converter function, and add color cache for each color
 """
 from osgeo import ogr
 import numpy as np
@@ -163,6 +170,10 @@ class VectorLayer:
         for feature in features:
             feature._activate(self)
             self._features.append(feature)
+
+
+    def need_redrawn(self):
+        return False
 
     def __len__(self):
         ## Return number of items in features list
