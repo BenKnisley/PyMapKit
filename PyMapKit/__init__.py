@@ -10,9 +10,10 @@ from .MapEngine import MapEngine
 ## Import Vector Layer Functions
 from .VectorLayer import VectorLayer
 from .RasterLayer import RasterLayer
+from .TileLayer import TileLayer
 from .TextLayer import TextLayer
 
-
+from .CairoPainter import *
 
 __author__ = "Ben Knisley (benknisley@gmail.com)"
 __license__ = "MIT"
