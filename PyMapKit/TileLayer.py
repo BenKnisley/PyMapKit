@@ -80,15 +80,23 @@ class _tile:
         cr.restore()
         #"""
 
-class TileCache:
-    def __init__(self, parent):
-        self.parent = parent
+class TileLayer:
+    """ """
+    def __init__(self, url, blocking=True):
+        """ 
+        url format: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        """
+        ## Init MapEngine object
+        self._MapEngine = None
+        #self.tile_cache = TileCache(self) #! <---------------
+
+        self.url = url
         self.tile_store = {}
         self.requested_tiles = []
         self.executor = ThreadPoolExecutor(max_workers=8)
-        self.url = "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        ## Flag if layer should block while downloading tiles
+        self.blocking = blocking
 
-    
     def fetch_tile(self, zoom_lvl, tile_x, tile_y, blocking=True):
 
         if (zoom_lvl, tile_x, tile_y) in self.tile_store:
@@ -110,7 +118,7 @@ class TileCache:
     def start_download(self, tile_data):
         zoom_lvl, tile_x, tile_y = tile_data
         path = self.download_tile(tile_data)
-        new_tile = _tile(self.parent._MapEngine, path, zoom_lvl, tile_x, tile_y)
+        new_tile = _tile(self._MapEngine, path, zoom_lvl, tile_x, tile_y)
         self.tile_store[(zoom_lvl, tile_x, tile_y)] = new_tile
 
 
@@ -135,26 +143,12 @@ class TileCache:
         return file
 
 
-
-
-class TileLayer:
-    """ """
-    def __init__(self, blocking=True):
-        """ """
-        ## Init MapEngine object
-        self._MapEngine = None
-        self.tile_cache = TileCache(self)
-
-        ## Flag if layer should block while downloading tiles
-        self.blocking = blocking
-
-        ## Add mutithreading 
-        self.executor = ThreadPoolExecutor(max_workers=8)
-        self.requested_tiles = []
-
+    """
+    ====================================
+    """
 
     def need_redrawn(self):
-        return len(self.tile_cache.requested_tiles) != len(self.tile_cache.tile_store)
+        return len(self.requested_tiles) != len(self.tile_store)
 
 
     def _activate(self, new_MapEngine):
@@ -167,8 +161,8 @@ class TileLayer:
     def draw(self, renderer, cr):
         """ """
         ## Get number of tiles to cover width and height of canvas
-        tile_x_size = int(self._MapEngine.width / 255) + 4
-        tile_y_size = int(self._MapEngine.height / 255) + 4
+        tile_x_size = int(self._MapEngine.width / 256) + 4
+        tile_y_size = int(self._MapEngine.height / 256) + 4
 
         ## Get tile at map location
         init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self._MapEngine.get_location(), self._MapEngine.get_scale())
@@ -188,7 +182,7 @@ class TileLayer:
                 #tile = self.get_tile(zoom_lvl, tile_x, tile_y)
                 #tile.draw(cr)
 
-                tile = self.tile_cache.fetch_tile(zoom_lvl, tile_x, tile_y, blocking=self.blocking)
+                tile = self.fetch_tile(zoom_lvl, tile_x, tile_y, blocking=self.blocking)
 
                 if isinstance(tile, _tile):
                     tile.draw(cr)
