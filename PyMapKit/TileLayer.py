@@ -4,17 +4,13 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: July 1, 2020
 """
 import os
-from osgeo import ogr
-import numpy as np
-import gdal
-import pyproj
-import tempfile
-import cairo
 import math
 import requests
+from io import BytesIO
 from PIL import Image
-
+import cairo
 from concurrent.futures import ThreadPoolExecutor
+
 
 def zoom2scale(zoom):
     return 156543.03392 / math.pow(2, zoom)
@@ -131,16 +127,17 @@ class TileLayer:
         url = url.replace('{x}', str(tile_x))
         url = url.replace('{y}', str(tile_y))
 
-        file = f"./tiles/{zoom_lvl}.{tile_x}.{tile_y}.png" 
+        path = f"./tiles/{zoom_lvl}.{tile_x}.{tile_y}.png" 
 
-        if os.path.isfile(file):
-            return file
+        if os.path.isfile(path):
+            return path
         
         response  = requests.get(url, headers={'User-agent': 'PyMapKit/0.1'})
-        print(response)
-        with open(file, 'wb') as f:
-            f.write(response.content)
-        return file
+
+        img = Image.open(BytesIO(response.content))
+        img.save(path)
+
+        return path
 
 
     """
