@@ -224,14 +224,20 @@ class VectorLayer:
             feature._proj_y = np.array([])
 
         feature_len_list = []
-        grand_geo_point_x_list = np.array([])
-        grand_geo_point_y_list = np.array([])
+        grand_geo_point_x_list = []
+        grand_geo_point_y_list = []
 
+        ## Add all points from each feature to grand point lists
         for feature in self._features:
             feature_len_list.append(len(feature))
-            grand_geo_point_x_list = np.concatenate([grand_geo_point_x_list, feature._geo_x])
-            grand_geo_point_y_list = np.concatenate([grand_geo_point_y_list, feature._geo_y])
+            grand_geo_point_x_list.extend(feature._geo_x)
+            grand_geo_point_y_list.extend(feature._geo_y)
 
+        ## Convert grand point lists to Numpy Arrays
+        grand_geo_point_x_list = np.array(grand_geo_point_x_list)
+        grand_geo_point_y_list = np.array(grand_geo_point_y_list)
+        
+        ## Project grand point lists
         grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
 
         ## Get layer extents and focus point
