@@ -9,6 +9,9 @@ Add a VectorLayer.run method that takes a function to style
 features.
 
 Remove _color_converter function, and add color cache for each color
+
+
+Remove numpy arrays and use python lists instead in some places
 """
 from osgeo import ogr
 import numpy as np
