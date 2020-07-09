@@ -6,6 +6,7 @@ Date: July 1, 2020
 import os
 import math
 import requests
+import tempfile
 from io import BytesIO
 from PIL import Image
 import cairo
@@ -93,6 +94,11 @@ class TileLayer:
         ## Flag if layer should block while downloading tiles
         self.blocking = blocking
 
+        ## Create temp directory to store tiles
+        self.temp_dir = tempfile.mkdtemp()
+
+
+
     def fetch_tile(self, zoom_lvl, tile_x, tile_y, blocking=True):
 
         if (zoom_lvl, tile_x, tile_y) in self.tile_store:
@@ -126,8 +132,8 @@ class TileLayer:
         url = url.replace('{z}', str(zoom_lvl))
         url = url.replace('{x}', str(tile_x))
         url = url.replace('{y}', str(tile_y))
-
-        path = f"./tiles/{zoom_lvl}.{tile_x}.{tile_y}.png" 
+ 
+        path = f"{self.temp_dir}/{zoom_lvl}.{tile_x}.{tile_y}.png" 
 
         if os.path.isfile(path):
             return path
