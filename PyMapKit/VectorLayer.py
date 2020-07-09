@@ -118,7 +118,7 @@ class _PolygonFeature(_VectorFeature):
     def draw(self, layer, renderer, cr):
         """ """
         ## Calulate pixel values
-        """ ## Full layer vectorization proj2pix optimization
+        #""" ## Full layer vectorization proj2pix optimization
         pix_x, pix_y = self._pix_x, self. _pix_y
         """ ## Single Vector iteration proj2pix
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
@@ -269,8 +269,8 @@ class VectorLayer:
 
         pointer = 0
         for feature, lenght in zip(self._features, self._feature_len_cache):
-            feature._pix_x = self._pix_x_cache[pointer:pointer+lenght]
-            feature._pix_y = self._pix_y_cache[pointer:pointer+lenght]
+            feature._pix_x = list( self._pix_x_cache[pointer:pointer+lenght] ) ## Better performance from python list
+            feature._pix_y = list( self._pix_y_cache[pointer:pointer+lenght] ) ## Better performance from python list
             pointer += lenght
 
     def set_opacity(self, opacity_val):
