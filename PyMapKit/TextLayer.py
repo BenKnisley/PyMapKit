@@ -67,7 +67,6 @@ class _text_line:
     def set_italic(self, is_italic):
         self.italic = is_italic
 
-
 class _text_feature:
     """ """
     def __init__(self, text_string, x_pos, y_pos):
@@ -154,7 +153,7 @@ class _text_feature:
                 y_pos += sum(map(lambda line: line.line_height(), self.lines[:i]))
 
             elif  self.y_pos in ('b', 'bottom'):
-                y_pos = self.layer._MapEngine.width #- y_margin
+                y_pos = self.layer._MapEngine.height #- y_margin
                 y_pos -= sum(map(lambda line: line.line_height(), self.lines[i:]))
                 #y_pos += line.line_height()
 
@@ -164,7 +163,6 @@ class _text_feature:
 
             ## Draw with renderer
             renderer.draw_text(cr, line, x_pos, y_pos)
-
 
 class TextLayer:
     """ """
