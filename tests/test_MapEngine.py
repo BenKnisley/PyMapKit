@@ -105,9 +105,9 @@ def test_add_layer():
     """ Test basic function of add_layer method """
     m = PyMapKit.MapEngine()
     
-    v1 = PyMapKit.VectorLayer(None, [], [])
-    v2 = PyMapKit.VectorLayer(None, [], [])
-    v3 = PyMapKit.VectorLayer(None, [], [])
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
     
     m.add_layer(v1)
     assert len(m._layer_list) == 1
@@ -128,9 +128,9 @@ def test_remove_layer():
     """ Test basic function of remove_layer method """
     m = PyMapKit.MapEngine()
     
-    v1 = PyMapKit.VectorLayer(None, [], [])
-    v2 = PyMapKit.VectorLayer(None, [], [])
-    v3 = PyMapKit.VectorLayer(None, [], [])
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
     
     m.add_layer(v1)
     m.add_layer(v2)
@@ -157,9 +157,10 @@ def test_remove_layer():
 def test_get_layer():
     """ Test basic function of get_layer method """
     m = PyMapKit.MapEngine()
-    v1 = PyMapKit.VectorLayer(None, [], [])
-    v2 = PyMapKit.VectorLayer(None, [], [])
-    v3 = PyMapKit.VectorLayer(None, [], [])
+    
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
 
     m.add_layer(v1)
     m.add_layer(v2)
