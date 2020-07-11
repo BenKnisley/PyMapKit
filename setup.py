@@ -23,7 +23,7 @@ setup(
     long_description=long_desc_txt,
     url = "https://github.com/BenKnisley/PyMapKit",
     
-    install_requires=['numpy','pyproj==2.6.1'],
+    install_requires=['pyproj', 'numpy', 'requests', 'pillow'],
     packages=["PyMapKit",],
 
     keywords = "GIS Geography GeoSpatial MapTiles PyMapKit MapEngine",
