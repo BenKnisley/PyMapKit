@@ -16,7 +16,7 @@ setup(
     keywords = "GIS map PyMapKit MapEngine",
     #requires_python='>=3.6',
     #requires_external='GDAL (>=1.8)',
-    install_requires=['numpy','pyproj'],
+    install_requires=['numpy','pyproj==2.6.1'],
     packages=["PyMapKit",],
     long_description="...",
     classifiers=[
