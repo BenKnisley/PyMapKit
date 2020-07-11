@@ -1,46 +1,74 @@
 PyMapKit
 ==
-#
 
-## Intro
-PyMapKit is a MIT-licensed Python toolkit for rendering maps and 
-geospatial data. Designed to be simple to use and very extendable.
+PyMapKit is a Python based open-source mapping toolkit.
+It can be used for creating maps, visualizing geospatial data, and developing GIS applications.
+It is built to be modular: so it can be very simple to use, but also to be integrated into complex mapping applications.
 
-## Usage
-
-Basic usage is very easy:
-
+## Basic Usage
 ```python
 ## Import MapEngine Modules
-from PyMapKit import MapEngine, CairoPainter, layer_from_file
+import PyMapKit
+from PyMapKit import CairoPainter as renderer
 
 ## Create MapEngine object
-m = MapEngine.MapEngine()
+m = PyMapKit.MapEngine()
 
 ## Set Map Attributes
+m.set_size(500, 500)
 m.set_location(40.0, -81.0)
 m.set_scale(500)
-m.set_size(500, 500)
+
+## Add tile layer
+tile_layer = TileLayer("https://tileserver.com/tile/{z}/{y}/{x}")
 
 ## Create data layers
-lay1 = MapEngine.layer_from_file(path1)
-lay2 = MapEngine.layer_from_file(path2)
-lay3 = MapEngine.layer_from_file(path3)
+vect_layer = PyMapKit.VectorLayer("./path/to/file.shp")
+rast_layer = PyMapKit.VectorLayer("./path/to/file.tiff")
 
 ## Add layers to Map Object
-m.add_layer(lay1)
-m.add_layer(lay2)
-m.add_layer(lay3)
+m.add_layer(tile_layer)
+m.add_layer(vect_layer)
+m.add_layer(rast_layer)
 
-
+## Using PyCairo for rendering
 sf = cairo.ImageSurface(cairo.Format.RGB24, m.width, m.height)
 cr = cairo.Context(surface)
 
-## Render onto canvas
-map_obj.render(cr)
+## Render onto canvas using CairoPainter as renderer
+m.render(renderer, cr)
 
 ## Save output file
-sf.save_png(out_path)
+sf.save_png("./map.png")
 ```
 
 ## Installation
+PyMapKit has only been used and tested on Ubuntu. Windows and OSX support will be implemented in the future.
+
+#### Prerequisites
+
+Linux/Ubuntu
+```bash
+sudo apt install python3-gdal python3-cairo
+```
+
+#### Install
+
+
+```bash
+pip install PyMapKit
+```
+
+## Data Types
+As of right now PyMapKit has layers to support:
+* Vector data
+* Raster data
+* Map Tiles
+* Simple text labels
+
+It will support:
+* Geo referenced text labels
+
+
+## Backends
+At the moment: PyMapKit can only use PyCario as rendering backend. 

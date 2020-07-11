@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 import pyproj
-import MapEngine
+import PyMapKit
 
 ## Set up empty class for mocks
 class bare_class:
@@ -72,11 +72,11 @@ def _color_converter(input_color):
 
 def test_init():
     """ Test initiation of MapEngine Object  """
-    m = MapEngine.MapEngine()
-    assert isinstance(m, MapEngine.MapEngine), "MapEngine object was not created."
+    m = PyMapKit.MapEngine()
+    assert isinstance(m, PyMapKit.MapEngine), "MapEngine object was not created."
 
 def test_init_defaults(): 
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
     assert m._WGS84 == pyproj.Proj("EPSG:4326"), "_WGS84 projection not EPSG:4326"
     assert isinstance(m._layer_list, list), "_layer_list not type list"
     assert len(m._layer_list) == 0, "_layer_list already has content"
@@ -92,7 +92,7 @@ def test_init_defaults():
     assert m._background_color == '#0C0C0C', "Default background color not correct"
 
 def test_init_args():
-    m = MapEngine.MapEngine( projection="EPSG:3735", scale=500, longitude=-82.1, latitude=40.0, width=600, height=500)
+    m = PyMapKit.MapEngine( projection="EPSG:3735", scale=500, longitude=-82.1, latitude=40.0, width=600, height=500)
     assert m._WGS84 == pyproj.Proj("EPSG:4326")
     assert m._projection == pyproj.Proj("EPSG:3735")
     assert m._scale == 500, "scale did not set correctly"
@@ -103,11 +103,11 @@ def test_init_args():
 
 def test_add_layer():
     """ Test basic function of add_layer method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
     
-    v1 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v2 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v3 = MapEngine.VectorLayer.VectorLayer(None, [], [])
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
     
     m.add_layer(v1)
     assert len(m._layer_list) == 1
@@ -115,22 +115,22 @@ def test_add_layer():
 
     m.add_layer(v2)
     assert len(m._layer_list) == 2
-    assert m._layer_list[0] == v2
+    assert m._layer_list[0] == v1
+    assert m._layer_list[1] == v2
 
-    
     m.add_layer(v3, 1)
     assert len(m._layer_list) == 3
-    assert m._layer_list[0] == v2
+    assert m._layer_list[0] == v1
     assert m._layer_list[1] == v3
-    assert m._layer_list[2] == v1
+    assert m._layer_list[2] == v2
 
 def test_remove_layer():
     """ Test basic function of remove_layer method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
     
-    v1 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v2 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v3 = MapEngine.VectorLayer.VectorLayer(None, [], [])
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
     
     m.add_layer(v1)
     m.add_layer(v2)
@@ -142,7 +142,7 @@ def test_remove_layer():
     m.remove_layer(0)
     assert len(m._layer_list) == 2
     assert m._layer_list[0] == v2
-    assert m._layer_list[1] == v1
+    assert m._layer_list[1] == v3
 
     m.remove_layer(1)
     assert len(m._layer_list) == 1
@@ -156,10 +156,12 @@ def test_remove_layer():
 
 def test_get_layer():
     """ Test basic function of get_layer method """
-    m = MapEngine.MapEngine()
-    v1 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v2 = MapEngine.VectorLayer.VectorLayer(None, [], [])
-    v3 = MapEngine.VectorLayer.VectorLayer(None, [], [])
+    m = PyMapKit.MapEngine()
+    
+    v1 = PyMapKit.VectorLayer()
+    v2 = PyMapKit.VectorLayer()
+    v3 = PyMapKit.VectorLayer()
+
     m.add_layer(v1)
     m.add_layer(v2)
     m.add_layer(v3)
@@ -167,10 +169,10 @@ def test_get_layer():
     with pytest.raises(Exception):
         m.get_layer(3)
     
-    assert m.get_layer(0) == v3
+    assert m.get_layer(0) == v1
     assert len(m._layer_list) == 3
     
-    assert m.get_layer(2) == v1
+    assert m.get_layer(2) == v3
     assert len(m._layer_list) == 3
 
     assert m.get_layer(1) == v2
@@ -178,7 +180,7 @@ def test_get_layer():
 
 def test_get_projection():
     """ Test basic function of get_projection method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test default 
     assert m.get_projection() == pyproj.Proj("EPSG:4326").srs
@@ -189,7 +191,7 @@ def test_get_projection():
 
 def test_set_projection():
     """ Test basic function of set_projection method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Set new projection from string
     m.set_projection("EPSG:3735")
@@ -211,7 +213,7 @@ def test_set_projection():
 
 def test_get_proj_coordinate():
     """ Test retrieval of projection coords """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test default 
     assert m.get_proj_coordinate()[0] == 0
@@ -224,7 +226,7 @@ def test_get_proj_coordinate():
 
 def test_set_proj_coordinate():
     """ Test retrieval of projection coords """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_proj_coordinate(18853, -45670)
     assert m.get_proj_coordinate()[0] == 18853
@@ -236,7 +238,7 @@ def test_set_proj_coordinate():
 
 def test_set_location():
     """ Test setting location from geo coord"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_location(40.0, -83.0)
     lat, lon = m.get_location()
@@ -250,7 +252,7 @@ def test_set_location():
 
 def test_get_location():
     """ Test getting location from geo coord"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_location(40.0, -83.0)
     lat, lon = m.get_location()
@@ -265,7 +267,7 @@ def test_get_location():
 #! TODO: Merge getters and setters into same test
 def test_longitude_getter():
     """ Test the longitude setter property"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_location(40.0, -83.1)
     assert m.longitude == pytest.approx(-83.1, rel=1e-3)
@@ -275,7 +277,7 @@ def test_longitude_getter():
 
 def test_longitude_setter():
     """ Test the longitude setter property"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.longitude = 21.1
     assert m.longitude == pytest.approx(21.1, rel=1e-3)
@@ -285,7 +287,7 @@ def test_longitude_setter():
 
 def test_latitude_getter():
     """ Test the latitude setter property"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_location(40.0, -83.1)
     assert m.latitude == pytest.approx(40.0, rel=1e-3)
@@ -295,7 +297,7 @@ def test_latitude_getter():
 
 def test_latitude_setter():
     """ Test the latitude setter property"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.latitude = -102.1
     assert m.latitude == pytest.approx(-102.1, rel=1e-3)
@@ -305,7 +307,7 @@ def test_latitude_setter():
 
 def test_set_scale():
     """ Test the set_scale method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Set projection to one with degrees as units
     m.set_projection("EPSG:4326")
@@ -348,7 +350,7 @@ def test_set_scale():
 
 def test_get_scale():
     """ Test the get scale method"""
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_scale(30)
     assert m.get_scale() == 30
@@ -364,7 +366,7 @@ def test_get_scale():
 
 def test_set_size():
     """ Test the set_size method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_size(250, 250)
     assert m._width == 250
@@ -380,7 +382,7 @@ def test_set_size():
 
 def test_get_size():
     """ Test the basic function of the get_size method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m._width = 250
     m._height = 250
@@ -396,7 +398,7 @@ def test_get_size():
 
 def test_width_property():
     """ Test the basic function of width property """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test getter
     m._width = 250
@@ -423,7 +425,7 @@ def test_width_property():
 
 def test_height_property():
     """ Test the basic function of height property """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test getter
     m._width = 250
@@ -450,7 +452,7 @@ def test_height_property():
 
 def test_get_canvas_center():
     """ Test the basic function of get_canvas_center method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_size(500,500)
     rtrn = m.get_canvas_center()
@@ -469,7 +471,7 @@ def test_get_canvas_center():
 
 def test_set_background_color():
     """ Test basic function of set_background_color method """
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     m.set_background_color('red')
     assert m._background_color == 'red'
@@ -493,7 +495,7 @@ def test_render():
     renderer.draw_background = MagicMock()
 
     ## Run test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
     m.add_layer(mock_layer())
     m.add_layer(mock_layer())
     m.add_layer(mock_layer())
@@ -509,7 +511,7 @@ def test_render():
 def test_geo2proj():
     """ Tests basic function of the geo2proj method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test WGS84 pass through (input value should be )
     m.set_projection("EPSG:4326")
@@ -566,7 +568,7 @@ def test_geo2proj():
 def test_proj2geo():
     """ Tests basic function of the proj2geo method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test WGS84 pass through (input value should be )
     m.set_projection("EPSG:4326")
@@ -626,7 +628,7 @@ def test_proj2geo():
 def test_proj2pix():
     """ Tests basic function of the proj2pix method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test with WGS86 projection and default scale
     m.set_projection("EPSG:4326")
@@ -695,7 +697,7 @@ def test_proj2pix():
 def test_pix2proj():
     """ Tests basic function of the pix2proj method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test that center of canvas is location
     pix_x, pix_y = 250, 250
@@ -751,7 +753,7 @@ def test_pix2proj():
 def test_geo2pix():
     """ Tests basic function of the geo2pix method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test most basic, default proj, scale and loc
     geo_x, geo_y = 0, 0
@@ -804,7 +806,7 @@ def test_geo2pix():
 def test_pix2geo():
     """ Tests basic function of the pix2geo method """
     ## Create new MapEngine object for test
-    m = MapEngine.MapEngine()
+    m = PyMapKit.MapEngine()
 
     ## Test most basic, default proj, scale and loc
     pix_x, pix_y = 250, 250

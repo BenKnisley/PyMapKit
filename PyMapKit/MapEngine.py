@@ -58,7 +58,7 @@ class MapEngine:
         ## Set projection coords from default or input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
         
-    def add_layer(self, new_map_layer, index=0):
+    def add_layer(self, new_map_layer, index=-1):
         """
         Adds a given map layer to the map
 
@@ -77,7 +77,10 @@ class MapEngine:
         new_map_layer._activate(self)
 
         ## Add layer to layer_list
-        self._layer_list.insert(index, new_map_layer) 
+        if index == -1:
+            self._layer_list.insert(len(self._layer_list), new_map_layer)
+        else:
+            self._layer_list.insert(index, new_map_layer)
 
     def remove_layer(self, index):
         """ 

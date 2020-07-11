@@ -5,20 +5,28 @@ Date: 17 March, 2020
 """
 from setuptools import setup
 
+## Extract version from package __init__.py
+from PyMapKit import __version__ as version
+
+## Get long description from readme file
+with open('README.md') as f:
+    long_desc_txt = f.read()
+
 setup(
     name = "PyMapKit",
-    version = "0.1",
+    license = "MIT",
+    version = version,
     author = "Ben Knisley",
     author_email = "benknisley@gmail.com",
-    description = ("A packages for rendering maps."),
+    
+    description = ("A Python based open-source mapping toolkit"),
+    long_description=long_desc_txt,
     url = "https://github.com/BenKnisley/PyMapKit",
-    license = "MIT",
-    keywords = "GIS map PyMapKit MapEngine",
-    #requires_python='>=3.6',
-    #requires_external='GDAL (>=1.8)',
-    install_requires=['numpy','pyproj'],
+    
+    install_requires=['pyproj', 'numpy', 'requests', 'pillow'],
     packages=["PyMapKit",],
-    long_description="...",
+
+    keywords = "GIS Geography GeoSpatial MapTiles PyMapKit MapEngine",
     classifiers=[
         "Development Status :: 1 - Planning",
         "Topic :: Scientific/Engineering :: GIS",

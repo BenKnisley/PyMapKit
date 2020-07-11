@@ -8,17 +8,16 @@ from __future__ import absolute_import
 from .MapEngine import MapEngine
 
 ## Import Vector Layer Functions
-from .VectorLayer import from_shapefile as layer_from_shapefile
+from .VectorLayer import VectorLayer
+from .RasterLayer import RasterLayer
+from .TileLayer import TileLayer
+from .TextLayer import TextLayer
 
-## Import Cario Functions
-from .CairoPainter import draw_point
-from .CairoPainter import draw_line
-from .CairoPainter import draw_polygon
-
+from .CairoPainter import *
 
 __author__ = "Ben Knisley (benknisley@gmail.com)"
 __license__ = "MIT"
-__version__ = "0.0.0"
+__version__ = "0.1.1"
 
 
 

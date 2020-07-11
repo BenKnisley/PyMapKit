@@ -2,6 +2,16 @@
 """
 Author: Ben Knisley [benknisley@gmail.com]
 Date: Febuary 8, 2020
+
+Notes:
+
+Add a VectorLayer.run method that takes a function to style
+features.
+
+Remove _color_converter function, and add color cache for each color
+
+
+Remove numpy arrays and use python lists instead in some places
 """
 from osgeo import ogr
 import numpy as np
@@ -111,7 +121,7 @@ class _PolygonFeature(_VectorFeature):
     def draw(self, layer, renderer, cr):
         """ """
         ## Calulate pixel values
-        """ ## Full layer vectorization proj2pix optimization
+        #""" ## Full layer vectorization proj2pix optimization
         pix_x, pix_y = self._pix_x, self. _pix_y
         """ ## Single Vector iteration proj2pix
         pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
@@ -120,17 +130,53 @@ class _PolygonFeature(_VectorFeature):
         ## Call on renderer to render polygon
         renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._bgcolor, self._line_width, self._line_color, layer._alpha)
 
+
 class VectorLayer:
     """ """
-    def __init__(self, geotype, field_names, features):
+    def __init__(self, path=None):
         """ """
         self._MapEngine = None
-        self._geometry_type = geotype
-        self._field_list = field_names
-        self._features = features
+        self._field_list = []
+        
+        self._focus_point = (0,0)
+        self._extent = (0,0,0,0)
+        
+        self._features = []
         self._alpha = 1
-        for feature in self._features:
+
+        ## If path is None (default), return empty VectorLayer
+        if path == None:
+            return
+        
+        ## Load Gdal from file extension
+        driver_dict = {'.shp': 'ESRI Shapefile', '.geojson': 'GeoJSON'}
+        try:
+            driver = driver_dict[path[path.rindex('.'):]]
+        except KeyError as ext:
+            print("Bad file type:", ext)
+            exit()
+
+        ## Get GDAL layer from path
+        driver = ogr.GetDriverByName(driver)
+        data_file = driver.Open(path, 0)
+        if data_file == None: print("Bad File."); exit()
+        ogrlayer = data_file.GetLayer()
+
+
+        ## Get data from ogrlayer, and set layer attributes 
+        fields, features = _data_from_OGR_layer(ogrlayer)
+        self._load_data(fields, features)
+        
+    def _load_data(self, field_names, features):
+        """ """
+        self._field_list = field_names
+        for feature in features:
             feature._activate(self)
+            self._features.append(feature)
+
+
+    def need_redrawn(self):
+        return False
 
     def __len__(self):
         ## Return number of items in features list
@@ -154,7 +200,6 @@ class VectorLayer:
         self._iter_indx += 1
         return feature
 
-
     def _activate(self, new_MapEngine):
         """ Function called when layer is added to a MapEngine layer list."""
         self._MapEngine = new_MapEngine
@@ -163,23 +208,51 @@ class VectorLayer:
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
         pass
+        
+    def focus(self):
+        """ """
+        self._MapEngine._projx, self._MapEngine._projy = self._focus_point
+        s_x = (self._extent[1] - self._extent[0]) / self._MapEngine.width
+        s_y = (self._extent[3] - self._extent[2]) / self._MapEngine.height
+        self._MapEngine.set_scale( max(s_x, s_y) )
 
     def _project_features(self):
+        ## 
+        if len(self._features) == 0:
+            return
+
         ## Clear existing projection lists
-        for feature in self:
+        for feature in self._features:
             feature._proj_x = np.array([])
             feature._proj_y = np.array([])
 
         feature_len_list = []
-        grand_geo_point_x_list = np.array([])
-        grand_geo_point_y_list = np.array([])
+        grand_geo_point_x_list = []
+        grand_geo_point_y_list = []
 
-        for feature in self:
+        ## Add all points from each feature to grand point lists
+        for feature in self._features:
             feature_len_list.append(len(feature))
-            grand_geo_point_x_list = np.concatenate([grand_geo_point_x_list, feature._geo_x])
-            grand_geo_point_y_list = np.concatenate([grand_geo_point_y_list, feature._geo_y])
+            grand_geo_point_x_list.extend(feature._geo_x)
+            grand_geo_point_y_list.extend(feature._geo_y)
 
+        ## Convert grand point lists to Numpy Arrays
+        grand_geo_point_x_list = np.array(grand_geo_point_x_list)
+        grand_geo_point_y_list = np.array(grand_geo_point_y_list)
+        
+        ## Project grand point lists
         grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
+
+        ## Get layer extents and focus point
+        self._extent = (np.amin(grand_proj_point_x_list), 
+                        np.amax(grand_proj_point_x_list),
+                        np.amin(grand_proj_point_y_list), 
+                        np.amax(grand_proj_point_y_list))
+
+        cent_x = (self._extent[0] + self._extent[1])/2
+        cent_y = (self._extent[2] + self._extent[3])/2
+
+        self._focus_point = (cent_x, cent_y)
 
         self._feature_len_cache = np.array(feature_len_list)
         self._proj_x_cache = grand_proj_point_x_list.copy()
@@ -192,12 +265,15 @@ class VectorLayer:
             pointer += p_count
 
     def _pixilize_points(self):
+        if len(self._features) == 0:
+            return
+
         self._pix_x_cache, self._pix_y_cache = self._MapEngine.proj2pix(self._proj_x_cache, self._proj_y_cache)
 
         pointer = 0
         for feature, lenght in zip(self._features, self._feature_len_cache):
-            feature._pix_x = self._pix_x_cache[pointer:pointer+lenght]
-            feature._pix_y = self._pix_y_cache[pointer:pointer+lenght]
+            feature._pix_x = list( self._pix_x_cache[pointer:pointer+lenght] ) ## Better performance from python list
+            feature._pix_y = list( self._pix_y_cache[pointer:pointer+lenght] ) ## Better performance from python list
             pointer += lenght
 
     def set_opacity(self, opacity_val):
@@ -215,31 +291,86 @@ class VectorLayer:
             feature.draw(self, renderer, cr)
 
 
+    @staticmethod
+    def from_gdal_layer(gdal_layer):
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, features = _data_from_OGR_layer(gdal_layer)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(fields, features)
+        return new_lay
+
+
+    @staticmethod
+    def from_shapefile(path):
+        ## Setup driver for shapefile, open shapefile
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        shapefile = driver.Open(path, 0)
+
+        ## Test if file is readable
+        if shapefile == None: print("Bad File."); exit()
+
+        ## Get OGR data layer
+        ogrlayer = shapefile.GetLayer()
+
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, features = _data_from_OGR_layer(ogrlayer)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(fields, features)
+        return new_lay
+    
+    @staticmethod
+    def from_geojson(path):
+        ## Setup driver for shapefile, open shapefile
+        driver = ogr.GetDriverByName('GeoJSON')
+        datafile = driver.Open(path, 0)
+
+        ## Test if file is readable
+        if datafile == None: print("Bad File."); exit()
+
+        ## Get OGR data layer
+        ogrlayer = datafile.GetLayer()
+
+        ## Get data from ogrlayer, and return new VectorLayer
+        fields, features = _data_from_OGR_layer(ogrlayer)
+
+        new_lay = VectorLayer(None)
+        new_lay._load_data(fields, features)
+        return new_lay
+
+
+
 # TODO: Refactor these to be bit cleaner
 def _get_geom_points(geom):
     """
     Given a OGR geometry, returns a list structure of points.
-
-    Maybe use recurcion
-
-    WKBGeometryTypes
-    wkbPoint = 1,
-    wkbLineString = 2,
-    wkbPolygon = 3,
-    wkbMultiPoint = 4,
-    wkbMultiLineString = 5,
-    wkbMultiPolygon = 6,
-    wkbGeometryCollection = 7
     """
     ## Create root point list
     feature_point_stuct = []
 
     if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
-        subgeom_struct = []
-        for point in geom.GetPoints():
-             subgeom_struct.append(point)
-        feature_point_stuct.append(subgeom_struct)
+        ## Plain point
+        if geom.GetGeometryCount() == 0:
+            subgeom_struct = []
 
+            for point in geom.GetPoints():
+                subgeom_struct.append(point)
+
+            feature_point_stuct.append(subgeom_struct)
+        
+        ## Muti Point
+        else:
+            for indx in range(geom.GetGeometryCount()):
+                subpoly_geom = geom.GetGeometryRef(indx)
+                subgeom_struct = []
+
+                for point in subpoly_geom.GetPoints():
+                    subgeom_struct.append(point)
+
+                feature_point_stuct.append(subgeom_struct)
+
+    
 
     elif geom.GetGeometryName() in ("LINESTRING", "MULTILINESTRING"):
         geocount = geom.GetGeometryCount()
@@ -288,13 +419,10 @@ def _get_geom_points(geom):
         for point in subfeat:
             feature_points.append(point)
 
-
     return feature_struct, np.array(feature_points)
 
 def _data_from_OGR_layer(ogrlayer):
-    """ """
-    ## Set int GetGeomType to string of geom type
-    geometry_type = [None, 'point', 'line', 'polygon'][ogrlayer.GetGeomType()]
+    """ REWRITE THIS FUNCTION """
 
     ## Create list of attributes field names from
     field_names = []
@@ -305,20 +433,29 @@ def _data_from_OGR_layer(ogrlayer):
         field_names.append(field_data.GetName())
 
 
-    feature_class = {"point": _PointFeature, "line": _LineFeature, "polygon":_PolygonFeature}[geometry_type]
     features = list()
+
     ## Loop through all OGR features, creating _VectorFeatures
     for feature_ogr in ogrlayer:
 
-        ## Extract attribute from ogr feature into list
+        ## Extract attribute from ogr feature into feature_attributes list
         feature_attributes = []
         for indx in range(field_count):
             feature_attributes.append(feature_ogr.GetField(indx))
 
+        feature_geom = feature_ogr.GetGeometryRef()
+        feature_class = {"POINT": _PointFeature, 
+                         "MULTIPOINT": _PointFeature,
+                         "LINESTRING": _LineFeature, 
+                         "MULTILINESTRING": _LineFeature, 
+                         "POLYGON": _PolygonFeature,
+                         "LINEARRING": _PolygonFeature,
+                         "MULTIPOLYGON": _PolygonFeature}[feature_geom.GetGeometryName()]
+
         ## Create new VectorFeature to store
         new_feature = feature_class()
         new_feature._attributes = feature_attributes
-        geoStruct, geo_points = _get_geom_points(feature_ogr.GetGeometryRef())
+        geoStruct, geo_points = _get_geom_points(feature_geom)
 
         new_feature._geom_struct = np.array(geoStruct)
 
@@ -330,9 +467,10 @@ def _data_from_OGR_layer(ogrlayer):
         features.append(new_feature)
 
     ## Return New vector Layer
-    #return field_names, attributes_list, geometry_type, geometrys_list
-    return field_names, geometry_type, features
+    #return field_names, attributes_list, geometrys_list
+    return field_names, features
 
+'''
 def from_shapefile(shapefile_path):
     """
     """
@@ -349,6 +487,7 @@ def from_shapefile(shapefile_path):
     ## Get data from ogrlayer, and return new VectorLayer
     fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
     return VectorLayer(geometry_type, fields, features)
+'''
 
 def _color_converter(input_color):
     """ Converts different color formats into single format.
