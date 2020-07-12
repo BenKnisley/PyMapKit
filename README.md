@@ -43,32 +43,43 @@ sf.save_png("./map.png")
 ```
 
 ## Installation
-PyMapKit has only been used and tested on Ubuntu. Windows and OSX support will be implemented in the future.
 
-#### Prerequisites
+### External Dependencies
+PyMapKit requires two external libraries that require a non Python component installed. You will need to install these on your system before installing PyMapKit. These dependencies are:
 
-Linux/Ubuntu
+* [GDAL/OGR](https://gdal.org/): for loading geospatial data, and warping raster datasets
+* [Cario](https://www.cairographics.org/pycairo/): For drawing operations
+
+#### Linux/Ubuntu:
 ```bash
 sudo apt install python3-gdal python3-cairo
 ```
 
-#### Install
+#### Windows:
+```bash
+Comming soon
+```
 
+#### Mac OSx:
+```bash
+Comming soon
+```
 
+### Installing PyMapKit
+To install PyMapKit from PyPI simply run: 
 ```bash
 pip install PyMapKit
 ```
 
-## Data Types
-As of right now PyMapKit has layers to support:
-* Vector data
-* Raster data
-* Map Tiles
-* Simple text labels
+Or to install from the GitHub repo:
+```bash
+git clone https://github.com/BenKnisley/PyMapKit.git
+pip install -r ./PyMapKit/requirements.txt
+pip install ./PyMapKit
+```
 
-It will support:
-* Geo referenced text labels
-
-
-## Backends
-At the moment: PyMapKit can only use PyCario as rendering backend. 
+#### Developer Extras
+If you are contributing to PyMapKit make sure you also install the dev requirements as well.
+```bash
+pip install -r requirements_dev.txt
+```
