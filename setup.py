@@ -21,6 +21,7 @@ setup(
     
     description = ("A Python based open-source mapping toolkit"),
     long_description=long_desc_txt,
+    long_description_content_type='text/markdown',
     url = "https://github.com/BenKnisley/PyMapKit",
     
     install_requires=['pyproj', 'numpy', 'requests', 'pillow'],
