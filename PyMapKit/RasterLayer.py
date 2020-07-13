@@ -44,29 +44,27 @@ class RasterLayer:
         temp_tiff = gdal.Open(temp_tif.name)
         self._proj_x, self._scale_x, _, self._proj_y, _, self._scale_y = temp_tiff.GetGeoTransform()
 
-        #Image.MAX_IMAGE_PIXELS = 9331200000000
+        #image.MAX_IMAGE_PIXELS = 9331200000000
         
         ## Load image data with PIL
         image = Image.open(temp_tif.name)
 
         ## If clear_nodata flag is set, make nodata pixels transparent
         if self.clear_nodata:
-            ## Convert to RGBA colorspace, and get image_data
+            ## Convert to RGBA colorspace
             image = image.convert("RGBA")
-            image_data = image.getdata()
             
             ## Loop through all pixels: loading them into new_image_data
             new_image_data = []
-            for pixel in image_data:
-                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
-                    new_image_data.append( (255, 255, 255, 0) )
-                else:
-                    new_image_data.append(pixel)
-
-            ## Put manipulated data into image
+            for pixel in image.getdata():
+                if pixel == (0,0,0,255):
+                    pixel = (0, 0, 0, 0)
+                new_image_data.append(pixel)
+            
+            ## Put updated image data into image 
             image.putdata(new_image_data)
         
-        ## Save image data into a tempfile, converting into PNG
+        ## Save image into a tempfile, converting into PNG
         temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         image.save(temp_png.name, "PNG")
         
@@ -75,7 +73,12 @@ class RasterLayer:
 
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
-        pass
+        self._MapEngine = None
+        self._image_surface = None
+        self._proj_x = None
+        self._proj_y = None
+        self._scale_x = None
+        self._scale_y = None
 
     def draw(self, renderer, cr):
         """ """
