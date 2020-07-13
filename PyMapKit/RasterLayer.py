@@ -84,18 +84,9 @@ class RasterLayer:
         """ """
         pix_x, pix_y = self._MapEngine.proj2pix(self._proj_x, self._proj_y)
 
-        cr.save()
+        scale_x = abs( self._scale_x / self._MapEngine._scale )
+        scale_y = abs( self._scale_y / self._MapEngine._scale )
         
-        scale_fact_x = abs( self._scale_x / self._MapEngine._scale )
-        scale_fact_y = abs( self._scale_y / self._MapEngine._scale )
-        
-        cr.translate(pix_x, pix_y)
-        cr.scale(scale_fact_x, scale_fact_y)
-
-        cr.set_source_surface(self._image_surface)
-
-        cr.paint()
-        cr.restore()
-
+        renderer.draw_image(cr, self._image_surface, pix_x, pix_y, scale_x, scale_y)
 
 

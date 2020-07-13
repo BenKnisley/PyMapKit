@@ -97,9 +97,14 @@ def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color
     cr.set_line_width(l_weight)
     cr.stroke()
 
-def draw_image(cr, path, TL_x, TL_y, scale_x, scale_y):
+def draw_image(cr, img_surface, pix_x, pix_y, scale_x, scale_y):
     """ """
-    pass
+    cr.save()
+    cr.translate(pix_x, pix_y)
+    cr.scale(scale_x, scale_x)
+    cr.set_source_surface(img_surface, 0, 0)
+    cr.paint()
+    cr.restore()
 
 def draw_text(cr, text_line, x_pos, y_pos):
     """ """

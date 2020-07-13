@@ -50,32 +50,14 @@ class _tile:
         self.lat, self.lon = tile2geo(zoom_lvl, self.tile_x, self.tile_y)
         self.proj_x, self.proj_y = map_engine.geo2proj(self.lon, self.lat)
 
-    def draw(self, cr):
+    def draw(self, renderer, cr):
         ## Get pixel coord of tile
         pix_x, pix_y = self._MapEngine.proj2pix(self.proj_x, self.proj_y)
 
         scaling_factor = zoom2scale(self.zoom_lvl) / self._MapEngine.get_scale()
         scaling_factor += (0.005 * (1/scaling_factor))
         
-        #"""
-        cr.save()
-        cr.translate(pix_x, pix_y)
-        cr.scale(scaling_factor, scaling_factor)
-        cr.rectangle(0, 0, 256, 256)
-        cr.set_source_surface(self.image, 0, 0)
-        cr.fill()
-        cr.restore()
-
-        """
-
-        cr.save()
-        cr.translate(pix_x, pix_y)
-        cr.scale(scaling_factor, scaling_factor)
-        #img = cairo.ImageSurface.create_from_png(self.path)
-        cr.set_source_surface(self.image)
-        cr.paint()
-        cr.restore()
-        #"""
+        renderer.draw_image(cr, self.image, pix_x, pix_y, scaling_factor, scaling_factor)
 
 class TileLayer:
     """ """
@@ -188,6 +170,6 @@ class TileLayer:
                 tile = self.fetch_tile(zoom_lvl, tile_x, tile_y, blocking=self.blocking)
 
                 if isinstance(tile, _tile):
-                    tile.draw(cr)
+                    tile.draw(renderer, cr)
                 else:
                     pass
