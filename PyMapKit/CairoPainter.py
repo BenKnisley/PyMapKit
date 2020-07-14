@@ -97,6 +97,10 @@ def draw_polygon(cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color
     cr.set_line_width(l_weight)
     cr.stroke()
 
+def get_image_obj(path):
+    ''' '''
+    return cairo.ImageSurface.create_from_png(path)
+
 def draw_image(cr, img_surface, pix_x, pix_y, scale_x, scale_y):
     """ """
     cr.save()

@@ -5,12 +5,11 @@ Date: February 8, 2020
 """
 import gdal
 import tempfile
-import cairo
 from PIL import Image
  
 class RasterLayer:
     """ """
-    def __init__(self, path, clear_nodata=True):
+    def __init__(self, path, clear_nodata=False):
         """ """
         ## Open path with GDAL, if it fails raise exception
         self._gdal_raster = gdal.Open(path)
@@ -25,6 +24,7 @@ class RasterLayer:
 
         ## Setup placeholder values
         self._MapEngine = None
+        self._img_path = None
         self._image_surface = None
         self._proj_x = None
         self._proj_y = None
@@ -68,8 +68,8 @@ class RasterLayer:
         temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         image.save(temp_png.name, "PNG")
         
-        ## Cache image data
-        self._image_surface = cairo.ImageSurface.create_from_png(temp_png.name)
+        ## Keep path of image data to cache during draw 
+        self._img_path = temp_png.name
 
     def _deactivate(self):
         """ Function called when layer is added to a MapEngine """
@@ -82,6 +82,9 @@ class RasterLayer:
 
     def draw(self, renderer, cr):
         """ """
+        if self._image_surface == None:
+            self._image_surface = renderer.get_image_obj(self._img_path)
+
         pix_x, pix_y = self._MapEngine.proj2pix(self._proj_x, self._proj_y)
 
         scale_x = abs( self._scale_x / self._MapEngine._scale )

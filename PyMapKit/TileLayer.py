@@ -9,7 +9,6 @@ import requests
 import tempfile
 from io import BytesIO
 from PIL import Image
-import cairo
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -41,7 +40,7 @@ class _tile:
     def __init__(self, map_engine, path, zoom_lvl, tile_x, tile_y):
         self._MapEngine = map_engine
         self.path = path
-        self.image = cairo.ImageSurface.create_from_png(self.path)
+        self.image = None
 
         self.zoom_lvl = zoom_lvl
         self.tile_x = tile_x
@@ -51,6 +50,9 @@ class _tile:
         self.proj_x, self.proj_y = map_engine.geo2proj(self.lon, self.lat)
 
     def draw(self, renderer, cr):
+        if self.image == None:
+            self.image = renderer.get_image_obj(self.path)
+
         ## Get pixel coord of tile
         pix_x, pix_y = self._MapEngine.proj2pix(self.proj_x, self.proj_y)
 
