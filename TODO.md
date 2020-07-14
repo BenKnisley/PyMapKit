@@ -36,6 +36,8 @@ Todo List
 
 
 ## TileLayer
+* Add projection support
+* Add preload next zoom levels
 #
 
 

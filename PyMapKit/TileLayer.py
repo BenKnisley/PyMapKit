@@ -129,11 +129,6 @@ class TileLayer:
 
         return path
 
-
-    """
-    ====================================
-    """
-
     def need_redrawn(self):
         return len(self.requested_tiles) != len(self.tile_store)
 
@@ -144,19 +139,18 @@ class TileLayer:
     def _deactivate(self):
         self._MapEngine = None
     
-
     def draw(self, renderer, cr):
         """ """
         ## Get number of tiles to cover width and height of canvas
-        tile_x_size = int(self._MapEngine.width / 256) + 4
-        tile_y_size = int(self._MapEngine.height / 256) + 4
+        tile_x_size = int(self._MapEngine.width / 256) + 6
+        tile_y_size = int(self._MapEngine.height / 256) + 6
 
         ## Get tile at map location
         init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self._MapEngine.get_location(), self._MapEngine.get_scale())
 
         ## Find top left tile
-        start_tile_x = init_tile_x - int(tile_x_size / 4) - 2
-        start_tile_y = init_tile_y - int(tile_y_size / 4) - 2
+        start_tile_x = init_tile_x - int(tile_x_size / 4) - 4
+        start_tile_y = init_tile_y - int(tile_y_size / 4) - 4
 
         ## Find bottom right tile
         end_tile_x = int(start_tile_x + tile_x_size)
