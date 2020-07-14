@@ -25,6 +25,10 @@ Todo List
 * Cleanup data import functions
 * Add a SpatiaLite query import function 
 * Add a PostGIS query import function 
+* Add Line Dash feature
+* Remove pre _ from should be public vars
+* Add icons for points features
+* Add a VectorLayer.run method that takes a function to style features.
 #
 
 
