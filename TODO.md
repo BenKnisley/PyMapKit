@@ -33,6 +33,7 @@ Todo List
 #### - Make loading raster more efficient
 #### - Make removing nodata pixels more efficient
 #### - Remove cairo.ImageSurface.create_from_png and cairo import
+#### - Rename clear_nodata flag
 #
 
 
