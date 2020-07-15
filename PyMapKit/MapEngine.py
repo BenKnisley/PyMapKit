@@ -15,8 +15,7 @@ class MapEngine:
     """
     A class to manage map layers, state, and rendering.
     """
-
-    def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500):
+    def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
         """
         Initializes new MapEngine object.
         
@@ -55,9 +54,23 @@ class MapEngine:
         self._width = width
         self._height = height
 
+        ## Ser Renderer placeholder, and call set_backend
+        self.renderer = None
+        self.set_backend(backend)
+
         ## Set projection coords from default or input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
-        
+    
+    def set_backend(self, backend):
+        """
+        """
+        if backend in ('cairo', 'pycairo'):
+            from .CairoPainter import CairoBackend
+            self.renderer = CairoBackend()
+        else:
+            self.renderer = backend
+
+
     def add_layer(self, new_map_layer, index=-1):
         """
         Adds a given map layer to the map
@@ -449,7 +462,7 @@ class MapEngine:
         ## Set color value
         self._background_color = color_input
 
-    def render(self, renderer, canvas):
+    def render(self, canvas):
         """
         Renders the map image
         
@@ -466,11 +479,11 @@ class MapEngine:
             None
         """
         ## Draw background by drawing rectangle the size of canvas
-        renderer.draw_background(canvas, self._background_color)
+        self.renderer.draw_background(canvas, self._background_color)
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self._layer_list:
-            layer.draw(renderer, canvas)
+            layer.draw(self.renderer, canvas)
 
     ## Projection space transformation methods
     def geo2proj(self, geo_x, geo_y):
