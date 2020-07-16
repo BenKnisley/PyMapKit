@@ -490,7 +490,7 @@ class MapEngine:
             canvas = target
         else:
            canvas = self.renderer.create_canvas(self.width, self.height)
-           output = target
+           output_file = target
         
         ## Draw background
         self.renderer.draw_background(canvas, self._background_color)
