@@ -63,10 +63,16 @@ class MapEngine:
     
     def set_backend(self, backend):
         """
+        Add Docs here
         """
         if backend in ('cairo', 'pycairo'):
             from .CairoPainter import CairoBackend
             self.renderer = CairoBackend()
+        
+        elif backend in ('tk', 'tkcanvas', 'tkinter'):
+            from .TkPainter import TkBackend
+            self.renderer = TkBackend()
+        
         else:
             self.renderer = backend
 

@@ -35,7 +35,6 @@ def geo2tile(lat, lon, scale):
 
     return x_tile, y_tile, zoom_lvl
 
-
 class _tile:
     def __init__(self, map_engine, path, zoom_lvl, tile_x, tile_y):
         self._MapEngine = map_engine
