@@ -500,7 +500,7 @@ class MapEngine:
             layer.draw(self.renderer, canvas)
         
         ## Save or display canvas
-        self.renderer.save(canvas, output)
+        self.renderer.save(canvas, output_file)
         
 
     ## Projection space transformation methods
