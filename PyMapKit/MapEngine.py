@@ -76,7 +76,6 @@ class MapEngine:
         else:
             self.renderer = backend
 
-
     def add_layer(self, new_map_layer, index=-1):
         """
         Adds a given map layer to the map
