@@ -8,9 +8,29 @@ import tkinter as tk
 from PIL import Image, ImageTk
 
 class TkBackend:
-    """ """
-    def __init__(self):
-        pass
+    """
+    """    
+    def create_canvas(self, width, height):
+        """ """
+        self.surface = tk.Tk()
+        canvas = tk.Canvas(self.surface, width=width, height=height)
+        canvas.pack()
+        self.surface.update()
+        return canvas
+
+    def can_render_to(self, target):
+        """
+        Returns if backend can render directly to target
+        """
+        return isinstance(target, tk.Canvas)
+
+    def save(self, canvas, target):
+        """ """
+        if target:
+            self.surface.update()    
+            canvas.postscript(file=target)
+        else:
+            self.surface.mainloop()
 
     def color_converter(self, input_color):
         """ Converts different color formats into single format.
@@ -39,6 +59,7 @@ class TkBackend:
     def draw_background(self, canvas, color):
         ''' '''
         canvas.configure(bg=color)
+        canvas.create_rectangle(0,0,5000,5000, fill=color)
 
     def draw_point(self, canvas, geomstruct, x_values, y_values, color, radius, alpha):
         """ """

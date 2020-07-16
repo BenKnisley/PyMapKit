@@ -2,8 +2,6 @@
 """
 MapEngine - A module for rendering maps
 """
-from __future__ import absolute_import
-
 ## Import MapEngine
 from .MapEngine import MapEngine
 
@@ -16,6 +14,5 @@ from .TextLayer import TextLayer
 __author__ = "Ben Knisley (benknisley@gmail.com)"
 __license__ = "MIT"
 __version__ = "0.1.2"
-
 
 

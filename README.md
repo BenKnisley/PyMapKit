@@ -9,7 +9,6 @@ It is built to be modular: so it can be very simple to use, but also to be integ
 ```python
 ## Import MapEngine Modules
 import PyMapKit
-from PyMapKit import CairoPainter as renderer
 
 ## Create MapEngine object
 m = PyMapKit.MapEngine()
@@ -35,11 +34,9 @@ m.add_layer(rast_layer)
 sf = cairo.ImageSurface(cairo.Format.RGB24, m.width, m.height)
 cr = cairo.Context(surface)
 
-## Render onto canvas using CairoPainter as renderer
-m.render(renderer, cr)
+## Render to file
+m.render("map.png")
 
-## Save output file
-sf.save_png("./map.png")
 ```
 
 ## Installation
@@ -57,12 +54,12 @@ sudo apt install python3-gdal python3-cairo
 
 #### Windows:
 ```bash
-Comming soon
+Coming soon
 ```
 
 #### Mac OSx:
 ```bash
-Comming soon
+Coming soon
 ```
 
 ### Installing PyMapKit

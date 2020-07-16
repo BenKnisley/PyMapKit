@@ -10,6 +10,24 @@ class CairoBackend:
     def __init__(self):
         pass
 
+    def create_canvas(self, width, height):
+        self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+        canvas = cairo.Context(self.surface)
+        return canvas
+
+    def can_render_to(self, target):
+        """
+        Returns if backend can render directly to target
+        """
+        return isinstance(target, cairo.Context)
+
+    def save(self, canvas, target):
+        """ 
+        Backend has to support target being None
+        """
+        if target:
+            self.surface.write_to_png(target)
+
     def color_converter(self, input_color):
         """ Converts different color formats into single format.
 

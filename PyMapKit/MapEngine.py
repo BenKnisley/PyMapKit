@@ -468,7 +468,7 @@ class MapEngine:
         ## Set color value
         self._background_color = color_input
 
-    def render(self, canvas):
+    def render(self, target=None):
         """
         Renders the map image
         
@@ -484,12 +484,24 @@ class MapEngine:
         Returns:
             None
         """
-        ## Draw background by drawing rectangle the size of canvas
+        output_file = None
+        
+        if self.renderer.can_render_to(target):
+            canvas = target
+        else:
+           canvas = self.renderer.create_canvas(self.width, self.height)
+           output = target
+        
+        ## Draw background
         self.renderer.draw_background(canvas, self._background_color)
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self._layer_list:
             layer.draw(self.renderer, canvas)
+        
+        ## Save or display canvas
+        self.renderer.save(canvas, output)
+        
 
     ## Projection space transformation methods
     def geo2proj(self, geo_x, geo_y):

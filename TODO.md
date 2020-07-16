@@ -13,6 +13,7 @@ Todo List
 
 
 ## MapEngine
+* Rename MapEngine to Map
 * Replace NumPy arrays with Python lists in geo2proj, proj2pix, etc methods
 * [Maybe] Move geo2tile and scale2zoom from TileLayer to MapEngine
 #
@@ -47,4 +48,9 @@ Todo List
 
 ## TextLayer
 * Maybe add image support
+#
+
+
+## CairoBackend
+* Remove use of color_converter method inside drawing methods to improve render time
 #
