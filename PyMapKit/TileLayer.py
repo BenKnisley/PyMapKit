@@ -7,6 +7,7 @@ import os
 import math
 import requests
 import tempfile
+import pyproj ## Only needed to check projection
 from io import BytesIO
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
@@ -133,6 +134,7 @@ class TileLayer:
 
 
     def _activate(self, new_MapEngine):
+        assert new_MapEngine._projection == pyproj.Proj("EPSG:3785"), "Projection must be EPSG:3785 to display tiles."
         self._MapEngine = new_MapEngine
 
     def _deactivate(self):
