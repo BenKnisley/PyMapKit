@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Backend submodule __init__ file
+Function: Provide 'backend' namespace and get_backend function.
 Author: Ben Knisley [benknisley@gmail.com]
-Date: July 17, 2020
+Created: 17 July, 2020
 """
 
 def get_backend(backend):

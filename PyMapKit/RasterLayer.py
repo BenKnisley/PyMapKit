@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Raster Data Layer
+Function: Provides a class that can display raster based geospatial data.
 Author: Ben Knisley [benknisley@gmail.com]
-Date: February 8, 2020
+Created: 8 February, 2020
 """
 import gdal
 import tempfile

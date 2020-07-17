@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Vector Layer
+Function: Provides a class that can display vector based geospatial data.
 Author: Ben Knisley [benknisley@gmail.com]
-Created: February 8, 2020
+Created: 8 February, 2020
 """
 from osgeo import ogr
 import numpy as np

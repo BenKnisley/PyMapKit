@@ -1,9 +1,9 @@
 """
-Title: Map Class Definition
 Project: PyMapKit
-Function: Define Map class and all methods.
-Created: 8 December, 2019
+Title: Map Class Definition
+Function: Define Map class that PyMapKit project is build around.
 Author: Ben Knisley [benknisley@gmail.com]
+Created: 8 December, 2019
 """
 import pyproj
 import numpy as np

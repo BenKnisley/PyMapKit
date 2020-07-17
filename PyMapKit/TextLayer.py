@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Text Layer
+Function: Provides a class that can display static text.
 Author: Ben Knisley [benknisley@gmail.com]
-Created: June 16, 2020
+Created: 16 June, 2020
 """
 
 class _text_line:

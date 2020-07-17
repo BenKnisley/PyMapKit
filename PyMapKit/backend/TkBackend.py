@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Tkinter Rendering Backend
+Function: Define TkBackend class and contain all Tk drawing functionality.
 Author: Ben Knisley [benknisley@gmail.com]
-Created: July 15, 2020
+Created: 15 July, 2020
 """
 import numpy as np
 import tkinter as tk

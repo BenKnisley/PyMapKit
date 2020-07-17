@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Cairo Rendering Backend
+Function: Define CairoBackend class and contain all cairo drawing functionality.
 Author: Ben Knisley [benknisley@gmail.com]
-Date: January 1, 2020
+Created: 1 January, 2020
 """
 import numpy as np
 import cairo

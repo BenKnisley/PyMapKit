@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
+Project: PyMapKit Tests
+Title: Map Class Test Cases
+Function: Provide unit tests for all Map class methods.
 Author: Ben Knisley [benknisley@gmail.com]
-Date:
+Date: 30 March, 2020
 """
 import math #! TODO: Replace math.isclose with pytest.approx
 import pytest

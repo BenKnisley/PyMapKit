@@ -1,5 +1,9 @@
 """
-PyMapKit - A Python based open-source mapping toolkit.
+Project: PyMapKit
+Title: PyMapKit
+Function: PyMapKit is a Python based open-source mapping toolkit.
+Author: Ben Knisley [benknisley@gmail.com]
+Created:1 January, 2020
 """
 ## Define metadata
 __author__ = "Ben Knisley"

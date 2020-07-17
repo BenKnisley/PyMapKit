@@ -1,6 +1,9 @@
 """
+Project: PyMapKit
+Title: Tile Layer
+Function: Provides a class that can display map tiles from a server.
 Author: Ben Knisley [benknisley@gmail.com]
-Date: July 1, 2020
+Date: 1 July, 2020
 """
 import os
 import math
