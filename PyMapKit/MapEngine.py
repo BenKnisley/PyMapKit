@@ -9,7 +9,7 @@ Author: Ben Knisley [benknisley@gmail.com]
 import pyproj
 import numpy as np
 import warnings
-
+from .backend import get_backend
 
 class MapEngine:
     """
@@ -54,9 +54,8 @@ class MapEngine:
         self._width = width
         self._height = height
 
-        ## Ser Renderer placeholder, and call set_backend
-        self.renderer = None
-        self.set_backend(backend)
+        ## Get backend from backend module
+        self.renderer = get_backend(backend)
 
         ## Set projection coords from default or input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
@@ -65,16 +64,7 @@ class MapEngine:
         """
         Add Docs here
         """
-        if backend in ('cairo', 'pycairo'):
-            from .CairoPainter import CairoBackend
-            self.renderer = CairoBackend()
-        
-        elif backend in ('tk', 'tkcanvas', 'tkinter'):
-            from .TkPainter import TkBackend
-            self.renderer = TkBackend()
-        
-        else:
-            self.renderer = backend
+        self.renderer = get_backend(backend)
 
     def add_layer(self, new_map_layer, index=-1):
         """
