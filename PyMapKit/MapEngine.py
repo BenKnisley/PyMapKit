@@ -13,7 +13,10 @@ from .backend import get_backend
 
 class MapEngine:
     """
-    A class to manage map layers, state, and rendering.
+    A class representing a map.
+
+    Stores info about map state: such as location, projection, and scale.
+    Map object also holds map layer objects such as vector data and tile layers.
     """
     def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
         """
