@@ -22,7 +22,7 @@ class RasterLayer:
         self.clear_nodata = clear_nodata
 
         ## Setup placeholder values
-        self._MapEngine = None
+        self.parent = None
         self._img_path = None
         self._image_surface = None
         self._proj_x = None
@@ -30,14 +30,13 @@ class RasterLayer:
         self._scale_x = None
         self._scale_y = None
 
-    def _activate(self, new_MapEngine):
-        """ Function called when layer is added to a MapEngine layer list."""
-        ## Update MapEngine 
-        self._MapEngine = new_MapEngine
+    def _activate(self, new_parent_map):
+        """ Function called when layer is added to a Map Object."""
+        self.parent = new_parent_map
 
-        ## Warp (transform) the original raster to new_MapEngine srs into a tempfile  
+        ## Warp (transform) the original raster to parent maps srs into a tempfile  
         temp_tif = tempfile.NamedTemporaryFile(suffix='.tif', delete=False)
-        gdal.Warp(temp_tif.name, self._gdal_raster, dstSRS=self._MapEngine.get_projection())
+        gdal.Warp(temp_tif.name, self._gdal_raster, dstSRS=self.parent.get_projection())
 
         ## Open the tempfile with GDAL and extract proj coords and scale
         temp_tiff = gdal.Open(temp_tif.name)
@@ -71,8 +70,8 @@ class RasterLayer:
         self._img_path = temp_png.name
 
     def _deactivate(self):
-        """ Function called when layer is added to a MapEngine """
-        self._MapEngine = None
+        """ Function called when layer is removed from a Map object"""
+        self.parent = None
         self._image_surface = None
         self._proj_x = None
         self._proj_y = None
@@ -84,10 +83,10 @@ class RasterLayer:
         if self._image_surface == None:
             self._image_surface = renderer.get_image_obj(self._img_path)
 
-        pix_x, pix_y = self._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        pix_x, pix_y = self.parent.proj2pix(self._proj_x, self._proj_y)
 
-        scale_x = abs( self._scale_x / self._MapEngine._scale )
-        scale_y = abs( self._scale_y / self._MapEngine._scale )
+        scale_x = abs( self._scale_x / self.parent._scale )
+        scale_y = abs( self._scale_y / self.parent._scale )
         
         renderer.draw_image(cr, self._image_surface, pix_x, pix_y, scale_x, scale_y)
 

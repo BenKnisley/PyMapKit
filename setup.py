@@ -27,7 +27,7 @@ setup(
     install_requires=['pyproj', 'numpy', 'requests', 'pillow'],
     packages=["PyMapKit",],
 
-    keywords = "GIS Geography GeoSpatial MapTiles PyMapKit MapEngine",
+    keywords = "GIS Geography GeoSpatial MapTiles PyMapKit",
     classifiers=[
         "Development Status :: 1 - Planning",
         "Topic :: Scientific/Engineering :: GIS",

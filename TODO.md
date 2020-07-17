@@ -9,11 +9,10 @@ Todo List
 * Write Tests for project
 #
 
-### MapEngine Class
-* Rename MapEngine to Map
+### Map Class
 * Add docs & tests to set_backend
 * Replace NumPy arrays with Python lists in geo2proj, proj2pix, etc methods
-* [Maybe] Move geo2tile and scale2zoom from TileLayer to MapEngine
+* [Maybe] Move geo2tile and scale2zoom from TileLayer to Map object
 #
 
 
@@ -23,7 +22,7 @@ Todo List
 * Add layer to add scale bar, compass rose, and other basic map elements
 #
 
-### VectorLayer
+### VectorLayer Class
 * Replace NumPy arrays with Python lists where efficient
 * Cleanup _project_features method
 * Cleanup data import functions
@@ -36,18 +35,18 @@ Todo List
 * Try out storing features in a R-tree for fast spatial indexing
 #
 
-### RasterLayer
+### RasterLayer Class
 * Make loading raster more efficient
 * Make removing nodata pixels more efficient
 * Rename clear_nodata flag
 #
 
-### TileLayer
+### TileLayer Class
 * Add projection support, and remove projection warning
 * Add preload next zoom levels
 #
 
-### TextLayer
+### TextLayer Class
 * Maybe add image support
 #
 

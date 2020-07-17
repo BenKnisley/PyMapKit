@@ -36,8 +36,8 @@ def geo2tile(lat, lon, scale):
     return x_tile, y_tile, zoom_lvl
 
 class _tile:
-    def __init__(self, map_engine, path, zoom_lvl, tile_x, tile_y):
-        self._MapEngine = map_engine
+    def __init__(self, parent_map, path, zoom_lvl, tile_x, tile_y):
+        self.parent_map = map_engine
         self.path = path
         self.image = None
 
@@ -53,9 +53,9 @@ class _tile:
             self.image = renderer.get_image_obj(self.path)
 
         ## Get pixel coord of tile
-        pix_x, pix_y = self._MapEngine.proj2pix(self.proj_x, self.proj_y)
+        pix_x, pix_y = self.parent_map.proj2pix(self.proj_x, self.proj_y)
 
-        scaling_factor = zoom2scale(self.zoom_lvl) / self._MapEngine.get_scale()
+        scaling_factor = zoom2scale(self.zoom_lvl) / self.parent_map.get_scale()
         scaling_factor += (0.005 * (1/scaling_factor))
         
         renderer.draw_image(cr, self.image, pix_x, pix_y, scaling_factor, scaling_factor)
@@ -66,8 +66,8 @@ class TileLayer:
         """ 
         url format: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
         """
-        ## Init MapEngine object
-        self._MapEngine = None
+        ## Create placeholder for parent Map Object
+        self.parent = None
         #self.tile_cache = TileCache(self) #! <---------------
 
         self.url = url
@@ -101,7 +101,7 @@ class TileLayer:
     def start_download(self, tile_data):
         zoom_lvl, tile_x, tile_y = tile_data
         path = self.download_tile(tile_data)
-        new_tile = _tile(self._MapEngine, path, zoom_lvl, tile_x, tile_y)
+        new_tile = _tile(self.parent, path, zoom_lvl, tile_x, tile_y)
         self.tile_store[(zoom_lvl, tile_x, tile_y)] = new_tile
 
     def download_tile(self, tile_data):
@@ -127,21 +127,21 @@ class TileLayer:
     def need_redrawn(self):
         return len(self.requested_tiles) != len(self.tile_store)
 
-    def _activate(self, new_MapEngine):
-        assert new_MapEngine._projection == pyproj.Proj("EPSG:3785"), "Projection must be EPSG:3785 to display tiles."
-        self._MapEngine = new_MapEngine
+    def _activate(self, new_parent_map):
+        assert new_parent_map._projection == pyproj.Proj("EPSG:3785"), "Projection must be EPSG:3785 to display tiles."
+        self.parent = new_parent_map
 
     def _deactivate(self):
-        self._MapEngine = None
+        self.parent = None
     
     def draw(self, renderer, cr):
         """ """
         ## Get number of tiles to cover width and height of canvas
-        tile_x_size = int(self._MapEngine.width / 256) + 6
-        tile_y_size = int(self._MapEngine.height / 256) + 6
+        tile_x_size = int(self.parent.width / 256) + 6
+        tile_y_size = int(self.parent.height / 256) + 6
 
         ## Get tile at map location
-        init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self._MapEngine.get_location(), self._MapEngine.get_scale())
+        init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self.parent.get_location(), self.parent.get_scale())
 
         ## Find top left tile
         start_tile_x = init_tile_x - int(tile_x_size / 4) - 4

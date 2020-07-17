@@ -135,9 +135,9 @@ class _text_feature:
             if self.x_pos in ('l', 'left'):
                 x_pos = x_margin
             elif self.x_pos in ('c', 'center', 'centre'):
-                x_pos = (self.layer._MapEngine.width / 2) - (self.lines[i].line_width() / 2)
+                x_pos = (self.layer.parent.width / 2) - (self.lines[i].line_width() / 2)
             elif  self.x_pos in ('r', 'right'):
-                x_pos = self.layer._MapEngine.width - x_margin
+                x_pos = self.layer.parent.width - x_margin
             else:
                 x_pos = self.x_pos
 
@@ -148,11 +148,11 @@ class _text_feature:
                 y_pos += line.line_height()
 
             elif self.y_pos in ('c', 'center', 'centre'):
-                y_pos = self.layer._MapEngine.height / 2
+                y_pos = self.layer.parent.height / 2
                 y_pos += sum(map(lambda line: line.line_height(), self.lines[:i]))
 
             elif  self.y_pos in ('b', 'bottom'):
-                y_pos = self.layer._MapEngine.height #- y_margin
+                y_pos = self.layer.parent.height #- y_margin
                 y_pos -= sum(map(lambda line: line.line_height(), self.lines[i:]))
                 #y_pos += line.line_height()
 
@@ -167,7 +167,7 @@ class TextLayer:
     """ """
     def __init__(self, text=""):
         """ """
-        self._MapEngine = None
+        self.parent = None
         self.features = []
 
         if text: ## If new text is given
@@ -195,13 +195,13 @@ class TextLayer:
         new_feature._activate(self)        
         return new_feature
 
-    def _activate(self, new_MapEngine):
-        """ Function called when layer is added to a MapEngine layer list."""
-        self._MapEngine = new_MapEngine
+    def _activate(self, new_parent_map):
+        """ Function called when layer is added to Map Object."""
+        self.parent = new_parent_map
 
     def _deactivate(self):
-        """ Function called when layer is added to a MapEngine """
-        self._MapEngine = None
+        """ Function called when layer is removed from a Map Object """
+        self.parent = None
 
     def set_color(self, color):
         _text_line.color = color

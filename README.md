@@ -7,11 +7,11 @@ It is built to be modular: so it can be very simple to use, but also to be integ
 
 ## Basic Usage
 ```python
-## Import MapEngine Modules
+## Import PyMapKit
 import PyMapKit
 
-## Create MapEngine object
-m = PyMapKit.MapEngine()
+## Create a PyMapKit Map object
+m = PyMapKit.Map()
 
 ## Set Map Attributes
 m.set_size(500, 500)

@@ -69,7 +69,7 @@ class _PointFeature(_VectorFeature):
             self._cached_color = renderer.color_converter(self._color)
 
         ## Calculate pixel values
-        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        pix_x, pix_y = layer.parent.proj2pix(self._proj_x, self._proj_y)
 
         ## Draw point
         renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._cached_color, self._radius, layer._alpha)
@@ -98,7 +98,7 @@ class _LineFeature(_VectorFeature):
             self._cached_color = renderer.color_converter(self._color)
 
         ## Calculate pixel values
-        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        pix_x, pix_y = layer.parent.proj2pix(self._proj_x, self._proj_y)
         renderer.draw_line(cr, self._geom_struct, pix_x, pix_y, self._width, self._cached_color, layer._alpha)
 
 class _PolygonFeature(_VectorFeature):
@@ -140,7 +140,7 @@ class _PolygonFeature(_VectorFeature):
         #""" ## Full layer vectorization proj2pix optimization
         pix_x, pix_y = self._pix_x, self. _pix_y
         """ ## Single Vector iteration proj2pix
-        pix_x, pix_y = layer._MapEngine.proj2pix(self._proj_x, self._proj_y)
+        pix_x, pix_y = layer.parent.proj2pix(self._proj_x, self._proj_y)
         #"""
 
         ## Call on renderer to render polygon
@@ -151,7 +151,9 @@ class VectorLayer:
     """ """
     def __init__(self, path=None):
         """ """
-        self._MapEngine = None
+        ## Create placeholder for parent map obj
+        self.parent = None
+
         self._field_list = []
         
         self._focus_point = (0,0)
@@ -216,21 +218,21 @@ class VectorLayer:
         self._iter_indx += 1
         return feature
 
-    def _activate(self, new_MapEngine):
-        """ Function called when layer is added to a MapEngine layer list."""
-        self._MapEngine = new_MapEngine
+    def _activate(self, new_parent_map):
+        """ Function called by Map object when layer is added to itself."""
+        self.parent = new_parent_map
         self._project_features()
 
     def _deactivate(self):
-        """ Function called when layer is added to a MapEngine """
+        """ Function called when layer is removed from Map object """
         pass
         
     def focus(self):
         """ """
-        self._MapEngine._projx, self._MapEngine._projy = self._focus_point
-        s_x = (self._extent[1] - self._extent[0]) / self._MapEngine.width
-        s_y = (self._extent[3] - self._extent[2]) / self._MapEngine.height
-        self._MapEngine.set_scale( max(s_x, s_y) )
+        self.parent._projx, self.parent._projy = self._focus_point
+        s_x = (self._extent[1] - self._extent[0]) / self.parent.width
+        s_y = (self._extent[3] - self._extent[2]) / self.parent.height
+        self.parent.set_scale( max(s_x, s_y) )
 
     def _project_features(self):
         ## 
@@ -257,7 +259,7 @@ class VectorLayer:
         grand_geo_point_y_list = np.array(grand_geo_point_y_list)
         
         ## Project grand point lists
-        grand_proj_point_x_list, grand_proj_point_y_list = self._MapEngine.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
+        grand_proj_point_x_list, grand_proj_point_y_list = self.parent.geo2proj(grand_geo_point_y_list, grand_geo_point_x_list)
 
         ## Get layer extents and focus point
         self._extent = (np.amin(grand_proj_point_x_list), 
@@ -284,7 +286,7 @@ class VectorLayer:
         if len(self._features) == 0:
             return
 
-        self._pix_x_cache, self._pix_y_cache = self._MapEngine.proj2pix(self._proj_x_cache, self._proj_y_cache)
+        self._pix_x_cache, self._pix_y_cache = self.parent.proj2pix(self._proj_x_cache, self._proj_y_cache)
 
         pointer = 0
         for feature, lenght in zip(self._features, self._feature_len_cache):
