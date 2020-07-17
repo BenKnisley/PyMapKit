@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
 Date: July 17, 2020
@@ -19,4 +18,5 @@ def get_backend(backend):
         return TkBackend()
 
     else:
+        ## If backend is not found, assume user is using there own
         return backend

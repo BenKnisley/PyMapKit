@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
-Date: June 16, 2020
+Created: June 16, 2020
 """
 
 class _text_line:

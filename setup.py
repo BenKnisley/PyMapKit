@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
-Date: 17 March, 2020
+Created: 17 March, 2020
 """
 from setuptools import setup
 

@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
 """
-Title: MapEngine Class Definition
-Project: MapEngine
-Function: Define MapEngine class and all methods.
+Title: Map Class Definition
+Project: PyMapKit
+Function: Define Map class and all methods.
 Created: 8 December, 2019
 Author: Ben Knisley [benknisley@gmail.com]
 """
@@ -11,7 +10,7 @@ import numpy as np
 import warnings
 from .backend import get_backend
 
-class MapEngine:
+class Map:
     """
     A class representing a map.
 
@@ -20,7 +19,7 @@ class MapEngine:
     """
     def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
         """
-        Initializes new MapEngine object.
+        Initializes new Map object.
         
         Arguments:
             projection: Input defining which projection the map should use. Takes a string as either a EPSG code
@@ -73,10 +72,10 @@ class MapEngine:
         """
         Adds a given map layer to the map
 
-        Adds given layer to MapEngines' layer list, and calls layers' activate function.
+        Adds given layer to Maps' layer list, and calls layers' activate function.
 
         Arguments:
-            new_map_layer: The layer to add to the MapEngine layer list. Must be a MapLayer subclassed layer.
+            new_map_layer: The layer to add to the Map layer list. Must be a MapLayer subclassed layer.
 
             optional:
             index: Index where the new layer should be added. Defaults to 0, top of list.
@@ -501,7 +500,7 @@ class MapEngine:
         Convert geographic coordinates to projection coordinates
 
         Converts given geographic coordinates into the corresponding projection coordinates of the 
-        current MapEngines projection. Input data can be pairs of ints, floats, lists, or NumPy arrays.
+        current map's projection. Input data can be pairs of ints, floats, lists, or NumPy arrays.
         Output type matches input, except Python list returns a NumPy array.
 
         Arguments:

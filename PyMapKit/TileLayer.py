@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
 Date: July 1, 2020
@@ -81,8 +80,6 @@ class TileLayer:
         ## Create temp directory to store tiles
         self.temp_dir = tempfile.mkdtemp()
 
-
-
     def fetch_tile(self, zoom_lvl, tile_x, tile_y, blocking=True):
 
         if (zoom_lvl, tile_x, tile_y) in self.tile_store:
@@ -107,8 +104,6 @@ class TileLayer:
         new_tile = _tile(self._MapEngine, path, zoom_lvl, tile_x, tile_y)
         self.tile_store[(zoom_lvl, tile_x, tile_y)] = new_tile
 
-
-
     def download_tile(self, tile_data):
         zoom_lvl, tile_x, tile_y = tile_data
         
@@ -131,7 +126,6 @@ class TileLayer:
 
     def need_redrawn(self):
         return len(self.requested_tiles) != len(self.tile_store)
-
 
     def _activate(self, new_MapEngine):
         assert new_MapEngine._projection == pyproj.Proj("EPSG:3785"), "Projection must be EPSG:3785 to display tiles."

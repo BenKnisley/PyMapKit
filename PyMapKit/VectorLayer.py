@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
-Date: February 8, 2020
-
+Created: February 8, 2020
 """
 from osgeo import ogr
 import numpy as np
