@@ -40,7 +40,7 @@ def geo2tile(lat, lon, scale):
 
 class _tile:
     def __init__(self, parent_map, path, zoom_lvl, tile_x, tile_y):
-        self.parent_map = map_engine
+        self.parent_map = parent_map
         self.path = path
         self.image = None
 
@@ -49,7 +49,7 @@ class _tile:
         self.tile_y = tile_y
 
         self.lat, self.lon = tile2geo(zoom_lvl, self.tile_x, self.tile_y)
-        self.proj_x, self.proj_y = map_engine.geo2proj(self.lon, self.lat)
+        self.proj_x, self.proj_y = parent_map.geo2proj(self.lon, self.lat)
 
     def draw(self, renderer, cr):
         if self.image == None:
