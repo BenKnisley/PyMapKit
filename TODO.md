@@ -2,18 +2,14 @@ Todo List
 ===
 #
 
+
 ## General Project
-* Create a Geo Referenced Label Feature
+---
 * Write docs for project
 * Write Tests for project
-* Add feature to add scale bar, compass rose, and other basic map elements
-* Create a QT backend
-* Create a PIL backend
-* Figure out a clean way to select which backend to use
 #
 
-
-## MapEngine
+### MapEngine Class
 * Rename MapEngine to Map
 * Add docs & tests to set_backend
 * Replace NumPy arrays with Python lists in geo2proj, proj2pix, etc methods
@@ -21,7 +17,13 @@ Todo List
 #
 
 
-## VectorLayer
+## Data Layers
+---
+* Create a Geo Referenced Label Feature
+* Add layer to add scale bar, compass rose, and other basic map elements
+#
+
+### VectorLayer
 * Replace NumPy arrays with Python lists where efficient
 * Cleanup _project_features method
 * Cleanup data import functions
@@ -34,31 +36,33 @@ Todo List
 * Try out storing features in a R-tree for fast spatial indexing
 #
 
-
-## RasterLayer
+### RasterLayer
 * Make loading raster more efficient
 * Make removing nodata pixels more efficient
 * Rename clear_nodata flag
 #
 
-
-## TileLayer
+### TileLayer
 * Add projection support, and remove projection warning
 * Add preload next zoom levels
 #
 
-
-## TextLayer
+### TextLayer
 * Maybe add image support
 #
 
 
-## CairoBackend
+## Backend Renderers
+---
+* Create a PIL backend
+* Create a QT backend
+
+### CairoBackend
 * Remove use of color_converter method inside drawing methods to improve render time
 * Rename refactor variables 
 #
 
-## TkBackend
+### TkBackend
 * Rename refactor variables 
 #
 
