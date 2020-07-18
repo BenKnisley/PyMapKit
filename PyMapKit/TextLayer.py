@@ -244,4 +244,4 @@ class TextLayer:
         """ """
         for feature in self.features:
             feature.draw(renderer, cr)
-        
+

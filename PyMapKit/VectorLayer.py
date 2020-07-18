@@ -76,7 +76,7 @@ class _PointFeature(_VectorFeature):
 
         ## Draw point
         renderer.draw_point(cr, self._geom_struct, pix_x, pix_y, self._cached_color, self._radius, layer._alpha)
-        
+
 class _LineFeature(_VectorFeature):
     """ """
     def __init__(self):
@@ -149,9 +149,10 @@ class _PolygonFeature(_VectorFeature):
         ## Call on renderer to render polygon
         renderer.draw_polygon(cr, self._geom_struct, pix_x, pix_y, self._cached_bgcolor, self._line_width, self._cached_line_color, layer._alpha)
 
-
 class VectorLayer:
-    """ """
+    """
+    """
+
     def __init__(self, path=None):
         """ """
         ## Create placeholder for parent map obj
@@ -183,13 +184,13 @@ class VectorLayer:
         if data_file == None: print("Bad File."); exit()
         ogrlayer = data_file.GetLayer()
 
-
         ## Get data from ogrlayer, and set layer attributes 
         fields, features = _data_from_OGR_layer(ogrlayer)
         self._load_data(fields, features)
         
     def _load_data(self, field_names, features):
-        """ """
+        """
+        """
         self._field_list = field_names
         for feature in features:
             feature._activate(self)
