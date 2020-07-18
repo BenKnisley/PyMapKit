@@ -483,8 +483,10 @@ class Map:
            canvas = self.renderer.create_canvas(self.width, self.height)
            output_file = target
         
-        ## Draw background
-        self.renderer.draw_background(canvas, self._background_color)
+        ## If not None
+        if self._background_color:
+            ## Draw background
+            self.renderer.draw_background(canvas, self._background_color)
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self._layer_list:
