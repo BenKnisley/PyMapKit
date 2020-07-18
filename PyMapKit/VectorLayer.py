@@ -5,8 +5,10 @@ Function: Provides a class that can display vector based geospatial data.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 8 February, 2020
 """
+import warnings
 from osgeo import ogr
 import numpy as np
+
 
 class _VectorFeature:
     """ """
@@ -236,7 +238,33 @@ class VectorLayer:
         self.parent._projx, self.parent._projy = self._focus_point
         s_x = (self._extent[1] - self._extent[0]) / self.parent.width
         s_y = (self._extent[3] - self._extent[2]) / self.parent.height
-        self.parent.set_scale( max(s_x, s_y) )
+        new_scale =  max(s_x, s_y)
+
+
+        ## Get projection crs dict, ignore all warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            crs_dict = self.parent._projection.crs.to_dict()
+
+        ## If units not defined in crs_dict the units are degrees
+        if 'units' not in crs_dict:
+            ## Convert scale to m/pix from deg
+            new_scale = new_scale * 110570
+
+        elif crs_dict['units'] == 'us-ft':
+                new_scale = new_scale / 3.28084
+        
+        else:
+            pass ## Is meters :) scale is already in m/pix
+    
+        new_scale = new_scale * 1.25
+
+        ## Set processed newscale
+        print(new_scale)
+        self.parent.set_scale(new_scale)
+
+
+
 
     def _project_features(self):
         ## 
