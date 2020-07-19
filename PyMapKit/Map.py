@@ -12,11 +12,14 @@ from .backend import get_backend
 
 class Map:
     """
-    A class representing a map.
+    A class used to represent a map, and PyMapKit's central class.
 
-    Stores info about map state: such as location, projection, and scale.
-    Map object also holds map layer objects such as vector data and tile layers.
+    The Map class has three primary functions:
+        - Store and manage map state: such as, location, projection, and scale
+        - Hold and manage map layers added to it
+        - Serve as entry point of rendering pipline
     """
+
     def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
         """
         Initializes new Map object.
@@ -35,8 +38,11 @@ class Map:
             width: The width in pixels of the map. Defaults to 500px. 
 
             height: The height in pixels of the map. Defaults to 500px.
+
+            backend: The rendering backend to use. Defaults to PyCairo.
         """
-        ## Keep an internal reference WGS84 projection on hand
+        ## Keep an internal reference of WGS84 projection on hand
+        ## For lat lon conversion
         self._WGS84 = pyproj.Proj("EPSG:4326")
 
         ## Create list to hold MapLayers
@@ -61,68 +67,10 @@ class Map:
 
         ## Set projection coords from default or input lat, lon
         self._projx, self._projy = self.geo2proj(longitude, latitude)
-    
-    def set_backend(self, backend):
-        """
-        Add Docs here
-        """
-        self.renderer = get_backend(backend)
 
-    def add_layer(self, new_map_layer, index=-1):
-        """
-        Adds a given map layer to the map
-
-        Adds given layer to Maps' layer list, and calls layers' activate function.
-
-        Arguments:
-            new_map_layer: The layer to add to the Map layer list. Must be a MapLayer subclassed layer.
-
-            optional:
-            index: Index where the new layer should be added. Defaults to 0, top of list.
-        
-        Returns:
-            None
-        """
-        ## Call new_map_layer activate function
-        new_map_layer._activate(self)
-
-        ## Add layer to layer_list
-        if index == -1:
-            self._layer_list.insert(len(self._layer_list), new_map_layer)
-        else:
-            self._layer_list.insert(index, new_map_layer)
-
-    def remove_layer(self, index):
-        """ 
-        Removes a specific map layer from the map
-        
-        Removes map layer at given index, and runs layers' deactivate method.
-
-        Arguments:
-            index: The index of the layer to remove.
-        
-        Returns:
-            none
-        """
-        ## Pop off layer at index, and call deactivate method
-        layer = self._layer_list.pop(index)
-        layer._deactivate()
-
-    def get_layer(self, index):
-        """ 
-        Returns a map layer
-        
-        Returns the MapLayer Object at the given index, without removing it.
-
-        Arguments:
-            index: The index of the layer to return.
-
-        Returns:
-            MapLayer object at given index
-        """
-        ## Look up layer at index and return it 
-        layer = self._layer_list[index]
-        return layer
+    ###################
+    ## Map Properties Methods
+    ###################
 
     def get_projection(self):
         """ 
@@ -295,7 +243,6 @@ class Map:
         """
         self.set_location(new_lat, self.get_location()[1])
 
-    ## Scale methods
     def set_scale(self, new_scale):
         """ 
         Sets the scale of the map
@@ -345,7 +292,70 @@ class Map:
         """
         return self._scale
 
-    ## Size methods
+    ################### 
+    ## Layer Methods
+    ###################
+
+    def add_layer(self, new_map_layer, index=-1):
+        """
+        Adds a given map layer to the map
+
+        Adds given layer to Maps' layer list, and calls layers' activate function.
+
+        Arguments:
+            new_map_layer: The layer to add to the Map layer list. Must be a MapLayer subclassed layer.
+
+            optional:
+            index: Index where the new layer should be added. Defaults to 0, top of list.
+        
+        Returns:
+            None
+        """
+        ## Call new_map_layer activate function
+        new_map_layer._activate(self)
+
+        ## Add layer to layer_list
+        if index == -1:
+            self._layer_list.insert(len(self._layer_list), new_map_layer)
+        else:
+            self._layer_list.insert(index, new_map_layer)
+
+    def remove_layer(self, index):
+        """ 
+        Removes a specific map layer from the map
+        
+        Removes map layer at given index, and runs layers' deactivate method.
+
+        Arguments:
+            index: The index of the layer to remove.
+        
+        Returns:
+            none
+        """
+        ## Pop off layer at index, and call deactivate method
+        layer = self._layer_list.pop(index)
+        layer._deactivate()
+
+    def get_layer(self, index):
+        """ 
+        Returns a map layer
+        
+        Returns the MapLayer Object at the given index, without removing it.
+
+        Arguments:
+            index: The index of the layer to return.
+
+        Returns:
+            MapLayer object at given index
+        """
+        ## Look up layer at index and return it 
+        layer = self._layer_list[index]
+        return layer
+
+    ################### 
+    ## Rendering Methods
+    ###################
+
     def set_size(self, new_width, new_height): # size tuple (width, height)
         """ 
         Changes the size of the map drawing area.
@@ -441,7 +451,6 @@ class Map:
         #! TODO: Make return two values
         return (pix_x, pix_y)
 
-    ## Drawing and style methods
     def set_background_color(self, color_input):
         """
         Sets the background color of map
@@ -459,19 +468,47 @@ class Map:
         ## Set color value
         self._background_color = color_input
 
+    def set_backend(self, backend):
+        """
+        Changes the current rendering backend of the map.
+
+        Sets the rendering backend of the map to the backend associated with the users input.
+        
+        This method calls get_backend function in PyMapKit's backend submodule. The get_backend 
+        function will import only the required backend modules, and will then return a usable 
+        backend object. See docs for PyMapKit.backend.get_backend for more info.
+        
+        Arguments:
+            backend: A string representing the backend to use. Or the actual backend object to use.
+
+        Returns:
+            None
+        """
+        ## Set renderer to result of .backend.get_backend
+        self.renderer = get_backend(backend)
+
     def render(self, target=None):
         """
-        Renders the map image
-        
-        Renders map by drawing map background and calling draw function on all map layers.
-        Uses the renderer to draw onto the canvas object.
+        Renders the map
+
+        Renders the map with the current backend to the given target. The entrypoint of the 
+        rendering pipeline. Draws map background, then passes renderer to each MapLayer in
+        map_layer_list.
 
         Arguments:
-            renderer: Module (passed as object) holding all map drawing functions used to 
-                draw on the canvas object.
+            optional:
+                target: The destination of the final rendered map. Can be a backend canvas, or
+                    path of a output file. 
 
-            canvas: A drawing library's' canvas object to draw map onto.
-        
+                    - target=None: If no target is given; render will still run as normal but 
+                        no output is guaranteed.(Tk backend will show map on a window, cairo 
+                        backend will not). 
+                    
+                    - target=canvas: If a canvas the backend can draw on is given; render will
+                        draw map on that object.
+
+                    - target=path: If a path string is given: backend will create a new canvas,
+                        draw map onto that, and save result to image at given path. 
         Returns:
             None
         """
@@ -494,9 +531,12 @@ class Map:
         
         ## Save or display canvas
         self.renderer.save(canvas, output_file)
-        
+    
 
-    ## Projection space transformation methods
+    ###################
+    ## Projection Transformation Methods
+    ###################
+
     def geo2proj(self, geo_x, geo_y):
         """
         Convert geographic coordinates to projection coordinates
