@@ -495,17 +495,22 @@ def test_render():
     
     ## Create mock renderer
     renderer = bare_class()
+    renderer.can_render_to = MagicMock()
     renderer.draw_background = MagicMock()
+    renderer.save = MagicMock()
 
     ## Run test
-    m = PyMapKit.Map()
+    m = PyMapKit.Map(backend=renderer)
+
     m.add_layer(mock_layer())
     m.add_layer(mock_layer())
     m.add_layer(mock_layer())
-    m.render(renderer, canvas)
+    m.render(canvas)
 
     ## Assert draw background was called once and correct
+    renderer.can_render_to.assert_called_once_with(canvas)
     renderer.draw_background.assert_called_once_with(canvas, m._background_color)
+    renderer.save.assert_called_once_with(canvas, None)
 
     ## Check that all layers were run correct
     for l in m._layer_list:

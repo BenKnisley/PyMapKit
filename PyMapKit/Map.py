@@ -470,7 +470,7 @@ class Map:
             renderer: Module (passed as object) holding all map drawing functions used to 
                 draw on the canvas object.
 
-            canvas: A drawing librarys' canvas object to draw map onto.
+            canvas: A drawing library's' canvas object to draw map onto.
         
         Returns:
             None
