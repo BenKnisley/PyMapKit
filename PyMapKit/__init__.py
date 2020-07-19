@@ -11,7 +11,7 @@ __maintainer__ = "Ben Knisley"
 __email__ = "benknisley@gmail.com"
 __copyright__ = "Copyright 2020, Ben Knisley"
 __license__ = "MIT"
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __status__ = "Planning"
 
 
