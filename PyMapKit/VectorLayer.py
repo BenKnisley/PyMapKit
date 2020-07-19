@@ -320,10 +320,10 @@ class VectorLayer:
         self._pix_x_cache, self._pix_y_cache = self.parent.proj2pix(self._proj_x_cache, self._proj_y_cache)
 
         pointer = 0
-        for feature, lenght in zip(self._features, self._feature_len_cache):
-            feature._pix_x = list( self._pix_x_cache[pointer:pointer+lenght] ) ## Better performance from python list
-            feature._pix_y = list( self._pix_y_cache[pointer:pointer+lenght] ) ## Better performance from python list
-            pointer += lenght
+        for feature, length in zip(self._features, self._feature_len_cache):
+            feature._pix_x = list( self._pix_x_cache[pointer:pointer+length] ) ## Better performance from python list
+            feature._pix_y = list( self._pix_y_cache[pointer:pointer+length] ) ## Better performance from python list
+            pointer += length
 
     def set_opacity(self, opacity_val):
         """ """
@@ -387,7 +387,6 @@ class VectorLayer:
         new_lay = VectorLayer(None)
         new_lay._load_data(fields, features)
         return new_lay
-
 
 
 # TODO: Refactor these to be bit cleaner
@@ -519,21 +518,3 @@ def _data_from_OGR_layer(ogrlayer):
     #return field_names, attributes_list, geometrys_list
     return field_names, features
 
-'''
-def from_shapefile(shapefile_path):
-    """
-    """
-    ## Setup driver for shapefile, open shapefile
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    shapefile = driver.Open(shapefile_path, 0)
-
-    ## Test if file is readable
-    if shapefile == None: print("Bad File."); exit()
-
-    ## Get OGR data layer
-    ogrlayer = shapefile.GetLayer()
-
-    ## Get data from ogrlayer, and return new VectorLayer
-    fields, geometry_type, features = _data_from_OGR_layer(ogrlayer)
-    return VectorLayer(geometry_type, fields, features)
-'''

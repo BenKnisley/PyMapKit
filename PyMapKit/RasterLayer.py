@@ -24,8 +24,10 @@ class RasterLayer:
         #$ clear_nodata flag says whether to make nodata pixels transparent 
         self.clear_nodata = clear_nodata
 
-        ## Setup placeholder values
         self.parent = None
+        self.alpha = 1
+
+        ## Setup placeholder values
         self._img_path = None
         self._image_surface = None
         self._proj_x = None
@@ -80,6 +82,16 @@ class RasterLayer:
         self._proj_y = None
         self._scale_x = None
         self._scale_y = None
+
+    def set_transparency(self, new_transparency):
+        """
+        """
+        self.alpha = new_transparency
+    
+    def focus(self):
+        """
+        """
+        pass
 
     def draw(self, renderer, cr):
         """ """
