@@ -20,7 +20,7 @@ class Map:
         - Serve as entry point of rendering pipline
     """
 
-    def __init__(self, projection="EPSG:4326", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
+    def __init__(self, projection="EPSG:3785", scale=50000.0, latitude=0.0, longitude=0.0, width=500, height=500, backend='pycairo'):
         """
         Initializes new Map object.
         
