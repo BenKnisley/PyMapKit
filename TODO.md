@@ -29,11 +29,13 @@ Todo List
 * Cleanup data import functions
 * Add a SpatiaLite query import function 
 * Add a PostGIS query import function 
-* Add Line Dash feature
 * Remove pre _ from should be public vars
+* Add Line Dash feature
 * Add icons for points features
+* Add line_color and line_width for point features
 * Add a VectorLayer.run method that takes a function to style features.
 * Try out storing features in a R-tree for fast spatial indexing
+* Add focus to VectorFeature base class
 #
 
 ### RasterLayer Class
