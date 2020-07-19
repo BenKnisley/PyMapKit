@@ -488,6 +488,20 @@ def test_set_background_color():
     m.set_background_color((0.1, 0.23, 0.55))
     assert m._background_color == (0.1, 0.23, 0.55)
 
+def test_set_backend():
+    """ Test basic function of set_backend method """
+    m = PyMapKit.Map(backend='pycairo')
+    assert isinstance(m.renderer, type(PyMapKit.backend.get_backend('cairo')))
+
+    m.set_backend('tk')
+    assert isinstance(m.renderer, type(PyMapKit.backend.get_backend('tk')))
+
+    FakeBackend = type('fake_backend', (), {})
+    backend = FakeBackend()
+
+    m.set_backend(backend)
+    assert isinstance(m.renderer, FakeBackend)
+
 def test_render():
     """ Tests basic function of the render method """
     ## Create a mock canvas
