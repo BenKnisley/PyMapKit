@@ -21,6 +21,11 @@ class VectorFeature:
         for field_name, attribute in zip(self.parent.fields, attributes):
             self.attribute_dict[field_name] = attribute
     
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            key = self.parent.fields.index(key)
+            return self._attributes[key]
+        
     def from_gdal_feature(self, feature):
         for field in self.parent.fields:
             self.attribute_dict[field] = feature.GetField(field)
