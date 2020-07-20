@@ -257,7 +257,6 @@ class VectorLayer:
 
             self.from_gdal_layer(ogrlayer)
 
-
     def _activate(self, new_parent):
         self.parent = new_parent
 
@@ -271,6 +270,31 @@ class VectorLayer:
         new_feature = PointFeature(self)
         self.features.append(new_feature)
         return new_feature
+
+    def set_opacity(self, new_opacity):
+        self._alpha = new_opacity
+
+    def __len__(self):
+        ## Return number of items in features list
+        return len(self.features)
+
+    def __getitem__(self, key):
+        return self.features[key]
+
+    def __iter__(self):
+        ## Create index for iteration and return self
+        self._iter_indx = 0
+        return self
+
+    def __next__(self):
+        ## If there are no more feature then stop iteration
+        if self._iter_indx == len(self.features):
+            raise StopIteration
+
+        ## Return next feature from features list
+        feature = self.features[self._iter_indx]
+        self._iter_indx += 1
+        return feature
 
     def box_select(self, min_x, min_y, max_x, max_y):
         for geometry in self.features:
