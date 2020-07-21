@@ -349,8 +349,18 @@ class VectorLayer:
 
     def draw(self, renderer, cr):
         """ """
-        for feature in self.features:
+        min_x, min_y = self.parent.pix2proj(0,0)
+        max_x, max_y = self.parent.pix2proj(self.parent.width, self.parent.height)
+
+
+        in_features = list(self.box_select(min_x, min_y, max_x, max_y))
+        print(len(in_features))
+        for feature in in_features:
             feature.draw(self, renderer, cr)
+
+
+        #for feature in self.features:
+        #    feature.draw(self, renderer, cr)
 
 
     def from_gdal_layer(self, gdal_layer):
