@@ -3,9 +3,11 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
 """
-import ogr
-import numpy as np
+import sys
+import math
 import warnings
+import numpy as np
+import ogr
 
 
 class VectorFeature:
@@ -100,7 +102,7 @@ class VectorFeature:
         return len(self.geom_struct)
     
     def get_subgeometry(self, index):
-        init_point = sum(self.geom_struct[:index])
+        init_point = self.init_address + sum(self.geom_struct[:index])
         geom_size = self.geom_struct[index]
         term_point = init_point + geom_size
         x_points = self.parent.x_list[init_point:term_point]
@@ -129,6 +131,14 @@ class PointFeature(VectorFeature):
         self._cached_color = None
         self._radius = 2
 
+    def point_within(self, test_x, test_y):
+        for x_points, y_points in self.get_subgeometries():
+            for point_x, point_y in zip(x_points, y_points):
+                if(math.isclose(test_x, point_x, abs_tol=self.parent.parent._proj_scale*5) and
+                    math.isclose(test_y, point_y, abs_tol=self.parent.parent._proj_scale*5)):
+                    return True
+        return False
+
     def set_color(self, input_color):
         """ """
         self._color = input_color
@@ -137,16 +147,21 @@ class PointFeature(VectorFeature):
     def set_size(self, input):
         self._radius = input / 2
 
-    def draw(self, layer, renderer, cr):
+    def draw(self, layer, renderer, cr, color_over_ride=None):
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color)
+        
+        if color_over_ride:
+            color = renderer.color_converter(color_over_ride)
+        else:
+            color = self._cached_color
 
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
 
         ## Draw point
-        renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, self._cached_color, self._radius, layer._alpha)
+        renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, layer._alpha)
 
 class LineFeature(VectorFeature):
     """ """
@@ -158,6 +173,45 @@ class LineFeature(VectorFeature):
 
         self._width = 1
 
+    def point_within(self, test_x, test_y):
+        ## Loop through each subgeom
+        for x_points, y_points in self.get_subgeometries(): 
+            ## Set first set of compair points to first point of subgeom
+            x1, y1 = x_points[0], y_points[0]
+            ## Compair each set of points to the last
+            for x2, y2 in zip(x_points, y_points): 
+                ## Only compair if points are different
+                if (x1,y1) != (x2,y2):
+                    ## Find distance between compare points (ab)
+                    base = (( (x2-x1)**2 + (y2-y1)**2 )**0.5)
+
+                    ## Find distances from test point to both compair points 
+                    ac = (( (x1-test_x)**2 + (y1-test_y)**2 )**0.5)
+                    bc = (( (x2-test_x)**2 + (y2-test_y)**2 )**0.5)
+
+                    ## Only proceed if both ac & bc are smaller than base 
+                    if (ac < base) and (bc < base):
+                        ## Find area of triangle
+                        area = ( x1*(y2-test_y) + x2*(test_y-y1) + test_x*(y1-y2) )/2
+
+                        ## Find distance of test point from base line (height of triangle)
+                        dist = (2*area) / base
+                        ## Convert to pixel distance
+                        pix_dist = dist / self.parent.parent._proj_scale
+
+                        ## If distance is less than 10 pixels, then point is near enough
+                        if pix_dist < 10:
+                            return True
+                ## Increment last point
+                x1,y1 = x2,y2 
+        return False
+
+                    #if (area / squr_area) < 0.0001:
+                    #   return True
+
+
+        return False
+
     def set_color(self, input_color):
         """ """
         self._color = input_color
@@ -167,14 +221,20 @@ class LineFeature(VectorFeature):
         """ """
         self._width = input_width
 
-    def draw(self, layer, renderer, cr):
+    def draw(self, layer, renderer, cr, color_over_ride=None):
+        """ """
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color)
+        
+        if color_over_ride:
+            color = renderer.color_converter(color_over_ride)
+        else:
+            color = self._cached_color
 
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
-        renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, self._cached_color, layer._alpha)
+        renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, color, layer._alpha)
 
 class PolygonFeature(VectorFeature):
     """ """
@@ -188,29 +248,52 @@ class PolygonFeature(VectorFeature):
        
         self._line_width = 1
 
+    def point_within(self, test_x, test_y):
+        ## Loop through each subgeom
+        for x_points, y_points in self.get_subgeometries():
+            inside = False
+            n = len(x_points)
+            p1x,p1y = x_points[0], y_points[0]
+            for i in range(n+1):
+                p2x, p2y = x_points[i % n], y_points[i % n]
+                if test_y > min(p1y,p2y):
+                    if test_y <= max(p1y,p2y):
+                        if test_x <= max(p1x,p2x):
+                            if p1y != p2y:
+                                xints = (test_y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                            if p1x == p2x or test_x <= xints:
+                                inside = not inside
+                p1x,p1y = p2x,p2y
+            if inside:
+                return True
+        return False
+
     def set_color(self, input_color):
         """ """
         self._bgcolor = input_color
         self._cached_bgcolor = None
-        
 
     def set_line_color(self, input_color):
         """ """
         self._line_color = input_color
         self._cached_line_color = None
 
-
     def set_line_width(self, input_width):
         """ """
         self._line_width = input_width
 
-    def draw(self, layer, renderer, cr):
+    def draw(self, layer, renderer, cr, color_over_ride=None):
         """ """
         if self._cached_line_color == None:
             self._cached_line_color = renderer.color_converter(self._line_color)
 
         if self._cached_bgcolor == None:
             self._cached_bgcolor = renderer.color_converter(self._bgcolor)
+
+        if color_over_ride:
+            bg_color = renderer.color_converter(color_over_ride)
+        else:
+            bg_color = self._cached_bgcolor
 
         ## Calculate pixel values
         #""" ## Full layer vectorization proj2pix optimization
@@ -223,7 +306,7 @@ class PolygonFeature(VectorFeature):
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
         
         ## Call on renderer to render polygon
-        renderer.draw_polygon(cr, self.geom_struct, pix_x, pix_y, self._cached_bgcolor, self._line_width, self._cached_line_color, layer._alpha)
+        renderer.draw_polygon(cr, self.geom_struct, pix_x, pix_y, bg_color, self._line_width, self._cached_line_color, layer._alpha)
 
 class VectorLayer:
     def __init__(self, path=None):
@@ -297,20 +380,36 @@ class VectorLayer:
         return feature
 
     def box_select(self, min_x, min_y, max_x, max_y):
-        for geometry in self.features:
-            g_min_x, g_min_y, g_max_x, g_max_y = geometry.get_extent()
+        """ Returns features within a given box """
+        selected_features = []
+        for feature in self.features:
+            g_min_x, g_min_y, g_max_x, g_max_y = feature.get_extent()
 
             if (
                 ## Geometry completely or partially within selector 
                 ((g_max_x >= min_x and g_min_x <= max_x) and (g_max_y >= min_y and g_min_y <= max_y)) 
                 or
                 ## Selector completely within geometry
-                (g_min_x <= min_x and g_max_x >= max_x and (g_min_y <= min_y and g_max_y >= max_y))
-                ):
-                yield geometry
+                (g_min_x <= min_x and g_max_x >= max_x and (g_min_y <= min_y and g_max_y >= max_y))):
+                    selected_features.append(feature)
 
-    def point_select(self, x, y):
-        return self.box_select(x,y,x,y)
+        return selected_features
+
+    def point_select(self, proj_x, proj_y):
+        """ Selects feature at exact point """
+        ## Box select small two pixel sized box into shortlist
+        min_x = proj_x - self.parent._proj_scale * 2
+        min_y = proj_y - self.parent._proj_scale * 2
+        max_x = proj_x + self.parent._proj_scale * 2
+        max_y = proj_y + self.parent._proj_scale * 2
+        short_list = self.box_select(min_x, min_y, max_x, max_y)
+
+        ## If point is is within feature, added to final list
+        selected_features = []
+        for feature in short_list:
+            if feature.point_within(proj_x, proj_y):
+                selected_features.append(feature)
+        return selected_features
 
     def get_extent(self):
         return min(self.x_list), min(self.y_list), max(self.x_list), max(self.y_list)
@@ -353,15 +452,14 @@ class VectorLayer:
         max_x, max_y = self.parent.pix2proj(self.parent.width, self.parent.height)
 
 
-        in_features = list(self.box_select(min_x, min_y, max_x, max_y))
-        print(len(in_features))
-        for feature in in_features:
+        #'''
+        ## Only Draw features in view
+        for feature in self.box_select(min_x, min_y, max_x, max_y):
             feature.draw(self, renderer, cr)
-
-
-        #for feature in self.features:
-        #    feature.draw(self, renderer, cr)
-
+        '''
+        for feature in self.features:
+            feature.draw(self, renderer, cr)
+        #'''
 
     def from_gdal_layer(self, gdal_layer):
         """
