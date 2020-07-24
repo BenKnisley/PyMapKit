@@ -3,6 +3,7 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
 """
+import os
 import sys
 import math
 import warnings
@@ -313,6 +314,8 @@ class VectorLayer:
         self.parent = None
         self._alpha = 1
 
+        self.name = "VectorLayer"
+
         ## Create list to hold features
         self.features = []
         
@@ -338,6 +341,8 @@ class VectorLayer:
             if data_file == None: print("Bad File."); exit()
             ogrlayer = data_file.GetLayer()
 
+            self.name = os.path.splitext(os.path.basename(path))[0] ## (name, ext) #! Maybe move this and use ext
+            
             self.from_gdal_layer(ogrlayer)
 
     def _activate(self, new_parent):
