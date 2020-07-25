@@ -73,6 +73,9 @@ class TileLayer:
         self.parent = None
         #self.tile_cache = TileCache(self) #! <---------------
 
+        ## Create Name property
+        self.name = "TileLayer"
+
         self.url = url
         self.tile_store = {}
         self.requested_tiles = []

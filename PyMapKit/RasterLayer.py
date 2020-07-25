@@ -21,6 +21,9 @@ class RasterLayer:
         ## Set variables from args 
         self.path = path
 
+        ## Create a name property
+        self.name = "RasterLayer"
+
         #$ clear_nodata flag says whether to make nodata pixels transparent 
         self.clear_nodata = clear_nodata
 
