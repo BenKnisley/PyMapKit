@@ -126,6 +126,42 @@ class VectorFeature:
         x_points, y_points = self.get_points()
         return min(x_points), min(y_points), max(x_points), max(y_points)
 
+    def focus(self):
+        min_x, min_y, max_x, max_y = self.get_extent()
+
+        self.parent.parent._projx = (max_x + min_x)/2
+        self.parent.parent._projy = (max_y + min_y)/2
+
+        if (max_x - min_x) == 0 or (max_y - min_y) == 0:
+            return
+
+        s_x = (max_x - min_x) / self.parent.parent.width
+        s_y = (max_y - min_y) / self.parent.parent.height
+
+        new_scale =  max(s_x, s_y)
+
+        ## Get projection crs dict, ignore all warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            crs_dict = self.parent.parent._projection.crs.to_dict()
+
+        ## If units not defined in crs_dict the units are degrees
+        if 'units' not in crs_dict:
+            ## Convert scale to m/pix from deg
+            new_scale = new_scale * 110570
+
+        elif crs_dict['units'] == 'us-ft':
+                new_scale = new_scale / 3.28084
+        
+        else:
+            pass ## Is meters :) scale is already in m/pix
+    
+        new_scale = new_scale * 1.25
+
+        ## Set processed newscale
+        self.parent.parent.set_scale(new_scale)
+
+
 class PointFeature(VectorFeature):
     """ """
     def __init__(self, parent):
