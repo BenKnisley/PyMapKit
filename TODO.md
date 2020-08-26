@@ -10,6 +10,7 @@ Todo List
 #
 
 ### Map Class
+* Make remove_layer take a layer as input
 * Add docs & tests to set_backend
 * Replace NumPy arrays with Python lists in geo2proj, proj2pix, etc methods
 * [Maybe] Move geo2tile and scale2zoom from TileLayer to Map object
