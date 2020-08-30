@@ -6,7 +6,6 @@ Function: Provide unit tests for all Map class methods.
 Author: Ben Knisley [benknisley@gmail.com]
 Date: 30 March, 2020
 """
-import math #! TODO: Replace math.isclose with pytest.approx
 import pytest
 import numpy as np
 from unittest.mock import MagicMock
@@ -23,6 +22,7 @@ class mock_layer:
         ## Create a mock draw function
         self.draw = MagicMock()
         self._activate = MagicMock()
+        self._deactivate = MagicMock()
 
 
 def _color_converter(input_color):
@@ -83,9 +83,9 @@ def test_init_defaults():
     assert m._WGS84 == pyproj.Proj("EPSG:4326"), "_WGS84 projection not EPSG:4326"
     assert isinstance(m._layer_list, list), "_layer_list not type list"
     assert len(m._layer_list) == 0, "_layer_list already has content"
-    assert m._projection == pyproj.Proj("EPSG:4326"), "Default projection not EPSG:4326" 
+    assert m._projection == pyproj.Proj("EPSG:3785"), "Default projection not EPSG:3785" 
     assert m._scale == 50000.0, "Default scale is not 50000.0"
-    assert math.isclose(m._proj_scale, 0.452202225, rel_tol=1e-9, abs_tol=0.0), "_proj_scale is not correct"
+    assert m._proj_scale == 50000.0, "_proj_scale is not correct"
     assert m.height == 500, "Default height is not 500 pixels"
     assert m.width == 500, "Default width is not 500 pixels"
     assert m.longitude == 0.0, "Default longitude is not 0 degrees"
@@ -101,55 +101,62 @@ def test_init_args():
     assert m._scale == 500, "scale did not set correctly"
     assert m.width == 600, "width did not set correctly"
     assert m.height == 500, "height did not set correctly"
-    assert math.isclose(m.longitude, -82.1, rel_tol=1e-9, abs_tol=0.0), "longitude did not set correctly"
-    assert math.isclose(m.latitude, 40.0, rel_tol=1e-9, abs_tol=0.0),  "latitude did not set correctly"
+    assert m.longitude == pytest.approx(-82.1, abs=0.01), "longitude did not set correctly"
+    assert m.latitude == pytest.approx(40.0, abs=0.01),  "latitude did not set correctly"
+    
+    
 
 def test_add_layer():
     """ Test basic function of add_layer method """
     m = PyMapKit.Map()
     
-    v1 = PyMapKit.VectorLayer()
-    v2 = PyMapKit.VectorLayer()
-    v3 = PyMapKit.VectorLayer()
+    l1 = mock_layer()
+    l2 = mock_layer()
+    l3 = mock_layer()
     
-    m.add_layer(v1)
+    m.add_layer(l1)
     assert len(m._layer_list) == 1
-    assert m._layer_list[0] == v1
+    assert m._layer_list[0] == l1
 
-    m.add_layer(v2)
+    m.add_layer(l2)
     assert len(m._layer_list) == 2
-    assert m._layer_list[0] == v1
-    assert m._layer_list[1] == v2
+    assert m._layer_list[0] == l1
+    assert m._layer_list[1] == l2
 
-    m.add_layer(v3, 1)
+    m.add_layer(l3, 1)
     assert len(m._layer_list) == 3
-    assert m._layer_list[0] == v1
-    assert m._layer_list[1] == v3
-    assert m._layer_list[2] == v2
+    assert m._layer_list[0] == l1
+    assert m._layer_list[1] == l3
+    assert m._layer_list[2] == l2
+
+    ## Assert that _activate method was called
+    l1._activate.assert_called_once_with(m)
+    l2._activate.assert_called_once_with(m)
+    l3._activate.assert_called_once_with(m)
 
 def test_remove_layer():
     """ Test basic function of remove_layer method """
     m = PyMapKit.Map()
     
-    v1 = PyMapKit.VectorLayer()
-    v2 = PyMapKit.VectorLayer()
-    v3 = PyMapKit.VectorLayer()
+    l1 = mock_layer()
+    l2 = mock_layer()
+    l3 = mock_layer()
     
-    m.add_layer(v1)
-    m.add_layer(v2)
-    m.add_layer(v3)
+    m.add_layer(l1)
+    m.add_layer(l2)
+    m.add_layer(l3)
     
     with pytest.raises(Exception):
         m.remove_layer(3)
 
     m.remove_layer(0)
     assert len(m._layer_list) == 2
-    assert m._layer_list[0] == v2
-    assert m._layer_list[1] == v3
+    assert m._layer_list[0] == l2
+    assert m._layer_list[1] == l3
 
     m.remove_layer(1)
     assert len(m._layer_list) == 1
-    assert m._layer_list[0] == v2
+    assert m._layer_list[0] == l2
 
     m.remove_layer(0)
     assert len(m._layer_list) == 0
@@ -157,28 +164,62 @@ def test_remove_layer():
     with pytest.raises(Exception):
         m.remove_layer(0)
 
+    ## Assert that _deactivate method was called
+    l1._deactivate.assert_called_once()
+    l2._deactivate.assert_called_once()
+    l3._deactivate.assert_called_once()
+
+    ## Test Removing layers directly
+    l1 = mock_layer()
+    l2 = mock_layer()
+    l3 = mock_layer()
+    
+    m.add_layer(l1)
+    m.add_layer(l2)
+    m.add_layer(l3)
+
+    m.remove_layer(l1)
+    assert len(m._layer_list) == 2
+    assert m._layer_list[0] == l2
+    assert m._layer_list[1] == l3
+
+    m.remove_layer(l3)
+    assert len(m._layer_list) == 1
+    assert m._layer_list[0] == l2
+
+    m.remove_layer(l2)
+    assert len(m._layer_list) == 0
+
+    with pytest.raises(Exception):
+        m.remove_layer(0)
+    
+    ## Assert that _deactivate method was called
+    l1._deactivate.assert_called_once()
+    l2._deactivate.assert_called_once()
+    l3._deactivate.assert_called_once()
+
 def test_get_layer():
     """ Test basic function of get_layer method """
     m = PyMapKit.Map()
     
-    v1 = PyMapKit.VectorLayer()
-    v2 = PyMapKit.VectorLayer()
-    v3 = PyMapKit.VectorLayer()
+    l1 = mock_layer()
+    l2 = mock_layer()
+    l3 = mock_layer()
 
-    m.add_layer(v1)
-    m.add_layer(v2)
-    m.add_layer(v3)
+    m.add_layer(l1)
+    m.add_layer(l2)
+    m.add_layer(l3)
     
     with pytest.raises(Exception):
         m.get_layer(3)
     
-    assert m.get_layer(0) == v1
+    assert m.get_layer(0) == l1
     assert len(m._layer_list) == 3
     
-    assert m.get_layer(2) == v3
+    assert m.get_layer(2) == l3
     assert len(m._layer_list) == 3
 
-    assert m.get_layer(1) == v2
+    assert m.get_layer(1) == l2
     assert len(m._layer_list) == 3
 
 def test_get_projection():
@@ -186,7 +227,7 @@ def test_get_projection():
     m = PyMapKit.Map()
 
     ## Test default 
-    assert m.get_projection() == pyproj.Proj("EPSG:4326").srs
+    assert m.get_projection() == pyproj.Proj("EPSG:3785").srs
 
     ## Set new and test get projection  
     m.set_projection("EPSG:3735")
@@ -302,8 +343,8 @@ def test_latitude_setter():
     """ Test the latitude setter property"""
     m = PyMapKit.Map()
 
-    m.latitude = -102.1
-    assert m.latitude == pytest.approx(-102.1, rel=1e-3)
+    m.latitude = -73.81
+    assert m.latitude == pytest.approx(-73.81, rel=1e-3)
 
     m.latitude = 23.12
     assert m.latitude == pytest.approx(23.12, rel=1e-3)
@@ -734,14 +775,14 @@ def test_pix2proj():
 
     ## Test with different loc and scale
     pix_x, pix_y = 250, 250
-    expc_x, expc_y = -83.0, 40.0
+    expc_x, expc_y = -9239517.735841706, 4865942.279503176
     proj_x, proj_y = m.pix2proj(pix_x, pix_y)
     assert proj_x == pytest.approx(expc_x, rel=0.001)
     assert proj_y == pytest.approx(expc_y,  rel=0.001)
 
     ## Test with different values
     pix_x, pix_y = 100, 100
-    expc_x, expc_y = -83.407, 39.593
+    expc_x, expc_y = -9284517.735841706, 4820942.279503176
     proj_x, proj_y = m.pix2proj(pix_x, pix_y)
     assert proj_x == pytest.approx(expc_x, rel=0.001)
     assert proj_y == pytest.approx(expc_y,  rel=0.001)
@@ -786,14 +827,14 @@ def test_geo2pix():
 
     ## Test with different values
     geo_x, geo_y = 10, -43
-    expc_x, expc_y = 272, 345
+    expc_x, expc_y = 272, 356
     pix_x, pix_y = m.geo2pix(geo_x, geo_y)
     assert pix_x == pytest.approx(expc_x, rel=0.001)
     assert pix_y == pytest.approx(expc_y,  rel=0.001)
 
     ## Test with float values
     geo_x, geo_y = 37.89, -72.43
-    expc_x, expc_y = 334, 410
+    expc_x, expc_y = 334, 488
     pix_x, pix_y = m.geo2pix(geo_x, geo_y)
     assert pix_x == pytest.approx(expc_x, rel=0.001)
     assert pix_y == pytest.approx(expc_y,  rel=0.001)
@@ -839,16 +880,14 @@ def test_pix2geo():
 
     ## Test with different values
     pix_x, pix_y = 25, -55
-    expc_x, expc_y = -101.746, -137.922
-    geo_x, geo_y = m.pix2geo(pix_x, pix_y)
-    assert geo_x == pytest.approx(expc_x, rel=0.001)
-    assert geo_y == pytest.approx(expc_y,  rel=0.001)
-
-    ## Test with float values
-    pix_x, pix_y = 334, 410
-    expc_x, expc_y = 37.89, 72.43
+    expc_x, expc_y = -101.746, -79.539
     geo_x, geo_y = m.pix2geo(pix_x, pix_y)
     assert geo_x == pytest.approx(expc_x, rel=0.01)
     assert geo_y == pytest.approx(expc_y,  rel=0.01)
 
-    #! TODO: Add more tests
+    ## Test with float values
+    pix_x, pix_y = 334, 410
+    expc_x, expc_y = 37.89, 58.155
+    geo_x, geo_y = m.pix2geo(pix_x, pix_y)
+    assert geo_x == pytest.approx(expc_x, rel=0.01)
+    assert geo_y == pytest.approx(expc_y,  rel=0.01)
