@@ -320,21 +320,32 @@ class Map:
         else:
             self._layer_list.insert(index, new_map_layer)
 
-    def remove_layer(self, index):
+    def remove_layer(self, layer):
         """ 
         Removes a specific map layer from the map
         
-        Removes map layer at given index, and runs layers' deactivate method.
+        Removes the given map layer, or layer at given index, and then runs layers' deactivate method.
 
         Arguments:
+            layer: The MapLayer to remove.
+            or
             index: The index of the layer to remove.
         
         Returns:
             none
         """
-        ## Pop off layer at index, and call deactivate method
-        layer = self._layer_list.pop(index)
-        layer._deactivate()
+
+        ## If input layer is an integer, assume input is index
+        if isinstance(layer, int):
+            ## Pop off layer at index, and call deactivate method
+            layer = self._layer_list.pop(layer)
+            layer._deactivate()
+        else:
+            ## Remove layer, and call deactivate method
+            self._layer_list.remove(layer)
+            layer._deactivate()
+        
+        ## c
 
     def get_layer(self, index):
         """ 
