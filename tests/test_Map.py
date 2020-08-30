@@ -6,11 +6,11 @@ Function: Provide unit tests for all Map class methods.
 Author: Ben Knisley [benknisley@gmail.com]
 Date: 30 March, 2020
 """
+import PyMapKit
 import pytest
+import pyproj
 import numpy as np
 from unittest.mock import MagicMock
-import pyproj
-import PyMapKit
 
 ## Set up empty class for mocks
 class bare_class:
@@ -103,8 +103,6 @@ def test_init_args():
     assert m.height == 500, "height did not set correctly"
     assert m.longitude == pytest.approx(-82.1, abs=0.01), "longitude did not set correctly"
     assert m.latitude == pytest.approx(40.0, abs=0.01),  "latitude did not set correctly"
-    
-    
 
 def test_add_layer():
     """ Test basic function of add_layer method """
