@@ -25,7 +25,7 @@ setup(
     url = "https://github.com/BenKnisley/PyMapKit",
     
     install_requires=['pyproj', 'numpy', 'requests', 'pillow'],
-    packages=["PyMapKit",],
+    packages=["PyMapKit", "PyMapKit.backend"],
 
     keywords = "GIS Geography GeoSpatial MapTiles PyMapKit",
     classifiers=[
