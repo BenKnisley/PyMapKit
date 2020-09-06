@@ -20,9 +20,9 @@ class bare_class:
 class mock_layer:
     def __init__(self):
         ## Create a mock draw function
-        self.draw = MagicMock()
         self._activate = MagicMock()
         self._deactivate = MagicMock()
+        self.draw = MagicMock()
 
 
 def _color_converter(input_color):
