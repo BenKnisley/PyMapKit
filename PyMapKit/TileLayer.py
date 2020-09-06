@@ -150,8 +150,8 @@ class TileLayer:
         init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self.parent.get_location(), self.parent.get_scale())
 
         ## Find top left tile
-        start_tile_x = init_tile_x - int(tile_x_size / 4) - 4
-        start_tile_y = init_tile_y - int(tile_y_size / 4) - 4
+        start_tile_x = init_tile_x - int(tile_x_size / 6) - 4
+        start_tile_y = init_tile_y - int(tile_y_size / 6) - 4
 
         ## Find bottom right tile
         end_tile_x = int(start_tile_x + tile_x_size)
