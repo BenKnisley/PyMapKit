@@ -161,7 +161,6 @@ class VectorFeature:
         ## Set processed newscale
         self.parent.parent.set_scale(new_scale)
 
-
 class PointFeature(VectorFeature):
     """ """
     def __init__(self, parent):
