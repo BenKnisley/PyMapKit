@@ -11,7 +11,7 @@ from PIL import Image
  
 class RasterLayer:
     """ """
-    def __init__(self, path, clear_nodata=False):
+    def __init__(self, path, clear_nodata=False, nodata_value=(0,0,0,255), projection=None):
         """ """
         ## Open path with GDAL, if it fails raise exception
         self._gdal_raster = gdal.Open(path)
@@ -26,6 +26,8 @@ class RasterLayer:
 
         #$ clear_nodata flag says whether to make nodata pixels transparent 
         self.clear_nodata = clear_nodata
+        self.srcSRS = projection
+        self.nodata_value = nodata_value
 
         self.parent = None
         self.alpha = 1
@@ -44,7 +46,12 @@ class RasterLayer:
 
         ## Warp (transform) the original raster to parent maps srs into a tempfile  
         temp_tif = tempfile.NamedTemporaryFile(suffix='.tif', delete=False)
-        gdal.Warp(temp_tif.name, self._gdal_raster, dstSRS=self.parent.get_projection())
+
+        if self.srcSRS:
+            gdal.Warp(temp_tif.name, self._gdal_raster, srcSRS=self.srcSRS, dstSRS=self.parent.get_projection())
+        else:
+            gdal.Warp(temp_tif.name, self._gdal_raster, dstSRS=self.parent.get_projection())
+
 
         ## Open the tempfile with GDAL and extract proj coords and scale
         temp_tiff = gdal.Open(temp_tif.name)
@@ -63,7 +70,7 @@ class RasterLayer:
             ## Loop through all pixels: loading them into new_image_data
             new_image_data = []
             for pixel in image.getdata():
-                if pixel == (0,0,0,255):
+                if pixel == self.nodata_value:
                     pixel = (0, 0, 0, 0)
                 new_image_data.append(pixel)
             
