@@ -30,7 +30,7 @@ class CairoBackend:
         if target:
             self.surface.write_to_png(target)
 
-    def color_converter(self, input_color):
+    def color_converter(self, input_color, opacity=1):
         """ Converts different color formats into single format.
 
         Inputs:
@@ -54,13 +54,14 @@ class CairoBackend:
 
             ## If float tuple, input same as output
             if isinstance(input_color[0], float):
-                return input_color
+                rtrn_color = *input_color, opacity
+                return rtrn_color
 
             if isinstance(input_color[0], int):
                 R = input_color[3] / 255.0
                 G = input_color[5] / 255.0
                 B = input_color[7] / 255.0
-                return (R,G,B)
+                return (R,G,B, opacity)
 
         ## Two types of color strings: Html color names and hex
         if isinstance(input_color, str):
@@ -76,26 +77,26 @@ class CairoBackend:
                 R = int(input_color[1:3], 16) / 255.0
                 G = int(input_color[3:5], 16) / 255.0
                 B = int(input_color[5:7], 16) / 255.0
-                return (R,G,B)
+                return (R,G,B, opacity)
 
     def draw_background(self, cr, color):
         ## Draw background
         cr.set_source_rgba(*self.color_converter(color))
         cr.paint()
 
-    def draw_point(self, cr, geomstruct, x_values, y_values, color, radius, alpha):
+    def draw_point(self, cr, geomstruct, x_values, y_values, color, radius, alpha): #! Get rid of alpha
         """ """
         pointer = 0
         for p_count in geomstruct:
             for index in range(pointer, pointer+p_count):
-                cr.set_source_rgba(*color, alpha)
+                cr.set_source_rgba(*color)
                 cr.arc(x_values[index], y_values[index], radius, 0, 6.2830)
                 cr.fill()
             pointer += p_count
 
-    def draw_line(self, cr, geomstruct, x_values, y_values, l_weight, l_color, alpha):
+    def draw_line(self, cr, geomstruct, x_values, y_values, l_weight, l_color, alpha):#! Get rid of alpha
         """ """
-        cr.set_source_rgba(*l_color, alpha)
+        cr.set_source_rgba(*l_color)
         cr.set_line_width(l_weight)
         pointer = 0
         for p_count in geomstruct:
@@ -115,9 +116,9 @@ class CairoBackend:
                 cr.line_to(x_values[index], y_values[index])
             pointer = pointer + p_count
 
-        cr.set_source_rgba(*bg_color, alpha)
+        cr.set_source_rgba(*bg_color)
         cr.fill_preserve()
-        cr.set_source_rgba(*l_color, alpha)
+        cr.set_source_rgba(*l_color)
         cr.set_line_width(l_weight)
         cr.stroke()
 
@@ -150,7 +151,7 @@ class CairoBackend:
         
         cr.select_font_face(text_line.font, slant, boldness)
         cr.set_font_size(text_line.size)
-        cr.set_source_rgba(*self.color_converter(text_line.color), 1)
+        cr.set_source_rgba(*self.color_converter(text_line.color))
 
         cr.move_to(x_pos, y_pos)
         cr.show_text(text_line.text)
