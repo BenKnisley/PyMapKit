@@ -167,6 +167,7 @@ class PointFeature(VectorFeature):
         """ """
         VectorFeature.__init__(self, parent)
         self._color = 'green' ## Default color is green
+        self._opacity = 1
         self._cached_color = None
         self._radius = 2
 
@@ -178,21 +179,23 @@ class PointFeature(VectorFeature):
                     return True
         return False
 
-    def set_color(self, input_color):
+        self._bg_opacity = 1
+    def set_color(self, input_color, opacity=1):
         """ """
         self._color = input_color
+        self._opacity = opacity
         self._cached_color = None
 
     def set_size(self, input):
         self._radius = input / 2
 
-    def draw(self, layer, renderer, cr, color_over_ride=None):
+    def draw(self, layer, renderer, cr, color_override=None):
         ## If color not cached yet, cache it
         if self._cached_color == None:
-            self._cached_color = renderer.color_converter(self._color)
+            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
         
-        if color_over_ride:
-            color = renderer.color_converter(color_over_ride)
+        if color_override:
+            color = renderer.color_converter(color_override)
         else:
             color = self._cached_color
 
@@ -251,23 +254,25 @@ class LineFeature(VectorFeature):
 
         return False
 
-    def set_color(self, input_color):
+    def set_color(self, input_color, opacity=1):
         """ """
         self._color = input_color
+        self._line_opacity = opacity
+
         self._cached_color = None
 
     def set_size(self, input_width):
         """ """
         self._width = input_width
 
-    def draw(self, layer, renderer, cr, color_over_ride=None):
+    def draw(self, layer, renderer, cr, color_override=None):
         """ """
         ## If color not cached yet, cache it
         if self._cached_color == None:
-            self._cached_color = renderer.color_converter(self._color)
+            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._line_opacity))
         
-        if color_over_ride:
-            color = renderer.color_converter(color_over_ride)
+        if color_override:
+            color = renderer.color_converter(color_override)
         else:
             color = self._cached_color
 
@@ -280,9 +285,14 @@ class PolygonFeature(VectorFeature):
     def __init__(self, parent):
         """ """
         VectorFeature.__init__(self, parent)
-        self._bgcolor = "blue"
+        ## Create vars for background color
+        self._bgcolor = "blue" #! Pick a better default
+        self._bg_opacity = 1
         self._cached_bgcolor = None
+        
+        ## Create vars for line color
         self._line_color = "black"
+        self._line_opacity = 1
         self._cached_line_color = None
        
         self._line_width = 1
@@ -307,30 +317,33 @@ class PolygonFeature(VectorFeature):
                 return True
         return False
 
-    def set_color(self, input_color):
+    def set_color(self, input_color, opacity=1):
         """ """
         self._bgcolor = input_color
+        self._bg_opacity = opacity
+
         self._cached_bgcolor = None
 
-    def set_line_color(self, input_color):
+    def set_line_color(self, input_color, opacity=1):
         """ """
         self._line_color = input_color
+        self._line_opacity = opacity
         self._cached_line_color = None
 
     def set_line_width(self, input_width):
         """ """
         self._line_width = input_width
 
-    def draw(self, layer, renderer, cr, color_over_ride=None):
+    def draw(self, layer, renderer, cr, color_override=None):
         """ """
         if self._cached_line_color == None:
-            self._cached_line_color = renderer.color_converter(self._line_color)
+            self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
 
         if self._cached_bgcolor == None:
-            self._cached_bgcolor = renderer.color_converter(self._bgcolor)
+            self._cached_bgcolor = renderer.color_converter(self._bgcolor, opacity=(layer._alpha * self._bg_opacity))
 
-        if color_over_ride:
-            bg_color = renderer.color_converter(color_over_ride)
+        if color_override:
+            bg_color = renderer.color_converter(color_override)
         else:
             bg_color = self._cached_bgcolor
 
