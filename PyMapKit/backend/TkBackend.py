@@ -34,7 +34,7 @@ class TkBackend:
         else:
             self.surface.mainloop()
 
-    def color_converter(self, input_color):
+    def color_converter(self, input_color, opacity=1):
         """ Converts different color formats into single format.
 
         Inputs:
