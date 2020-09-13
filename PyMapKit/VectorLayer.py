@@ -4,7 +4,6 @@ Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
 """
 import os
-import sys
 import math
 import warnings
 import numpy as np
@@ -12,36 +11,96 @@ import ogr
 
 
 class VectorFeature:
+    """
+    A base class representing a Vector feature
+
+    Holds data structures and methods for attribute data & geometric data common 
+    to all types of vector features. Each derived class must provide structures 
+    and methods for drawing, and type specific features.
+    """
+
     def __init__(self, parent):
+        """
+        Instantiates a new VectorFeature object
+
+        Instantiates a new VectorFeature object inside of a derived class.
+
+        Arguments:
+            parent: The VectorLayer in which the VectorFeature object is added
+
+        Returns:
+            None
+        """
+        ## Set reference to parent VectorLayer object
         self.parent = parent
+
+        ## Create a dictionary to hold attributes
         self.attribute_dict = {}
 
+        ## Create a list to hold geometric structure of Vector feature
+        self.geom_struct = []
+
+        ## Store the start address in the common point sequence and the number of points
         self.init_address = len(self.parent.x_list)
         self.point_count = 0
-        self.geom_struct = []
-    
-    def set_attributes(self, attributes):
-        for field_name, attribute in zip(self.parent.fields, attributes):
-            self.attribute_dict[field_name] = attribute
-    
+
     def __getitem__(self, key):
+        """
+        Returns the value of the given key
+        """
         if isinstance(key, str):
             #key = self.parent.fields.index(key)
             return self.attribute_dict[key]
     
+    def set_attributes(self, attributes):
+        """
+        Set the objects attributes to the given attributes
+
+        Arguments:
+            attributes: Ordered list of attribute values
+    
+        Returns:
+            None
+        """
+        ## Loop through parent layers fields and given attributes
+        for field_name, attribute in zip(self.parent.fields, attributes):
+            ## Set attribute value
+            self.attribute_dict[field_name] = attribute
+    
     def fields(self):
+        """
+        Returns the names of the attribute fields
+
+        Arguments:
+        None
+
+        Returns:
+            fields: List of names of attribute fields
+        """
+        ## Return all keys in attribute dict
         return self.attribute_dict.keys()
 
-    def from_gdal_feature(self, feature):
+    def from_gdal_feature(self, gdal_feature):
+        """
+        Imports attributes & geometry from a GDAL feature
+
+        Arguments:
+            gdal_feature: The gdal_feature to import data from
+
+        Returns:
+            None
+        """
+        ## Extract attributes from gdal feature
         for field in self.parent.fields:
             self.attribute_dict[field] = feature.GetField(field)
 
+        ## Get gdal geom object from gdal feature
         geom = feature.GetGeometryRef()
-            
+        
+        ## Extract geometry from gdal feature
         if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
             ## Plain point
             if geom.GetGeometryCount() == 0:
-
                 x_list, y_list = [], []
                 for point in geom.GetPoints():
                     x_list.append(point[0])
@@ -96,37 +155,131 @@ class VectorFeature:
             print()
 
     def add_subgeometry(self, new_x_points, new_y_points):
+        """
+        Adds a new subgeometry to the feature
+
+        Arguments:
+            new_x_points: x points values of the new subgeometry
+            new_y_points: y points values of the new subgeometry
+
+        Returns:
+            None
+        """
+        ## Add number of points in new subgeometry to features total point_count
         self.point_count += len(new_x_points)
+
         #self.geom_struct.append( (len(self.parent.x_list), len(new_x_points)) )
+        
+        ## Add point count to features geom_struct
         self.geom_struct.append(len(new_x_points))
+
+        ## Add new points to common point sequences 
         self.parent.x_list += new_x_points
         self.parent.y_list += new_y_points
 
-    def subgeometry_count(self):
-        return len(self.geom_struct)
-    
     def get_subgeometry(self, index):
+        """
+        Returns points belonging to subgeometry at given index
+
+        Arguments:
+            index: The index of the desired subgeometry
+
+        Returns:
+            x points: List of x values (projection coord), belonging to subgeometry.
+            y points: List of y values (projection coord), belonging to subgeometry.
+        """
+
+        ## Find start address of subgeom in common point list
         init_point = self.init_address + sum(self.geom_struct[:index])
+        
+        ## Find last point belonging to subgeom in common point list
         geom_size = self.geom_struct[index]
         term_point = init_point + geom_size
+
+        ## Get points from splices of common point sequences
         x_points = self.parent.x_list[init_point:term_point]
         y_points = self.parent.y_list[init_point:term_point]
-        return x_points, y_points
 
+        ## Return point lists
+        return x_points, y_points
+    
     def get_subgeometries(self):
+        """
+        Returns all subgeometries belonging to feature
+
+        Arguments:
+            index: The index of the desired subgeometry
+
+        Returns:
+            Returns a list of tuples of x and y values for each subgeometry
+        """
+        geom_list = []
+
+        ## Add all subgeoms into geom_list
         for i in range(self.subgeometry_count()):
-            yield self.get_subgeometry(i)
+            geom_list.append(self.get_subgeometry(i))
+        
+        return geom_list
+
+    def subgeometry_count(self):
+        """
+        Returns the number of subgeometries within the feature
+        
+        Arguments:
+            None
+
+        Returns:
+            Subgeometry count: Number of subgeometries belonging to feature
+        """
+        return len(self.geom_struct)
 
     def get_points(self):
+        """
+        Returns all points belonging to feature
+
+        Returns all points belonging to feature in two lists: x points & y points
+
+        Arguments:
+            None
+    
+        Returns:
+            x points: List of x values (projection coord), belonging to feature.
+            y points: List of y values (projection coord), belonging to feature.
+        """
+        ## Fetch points belong to feature from common point sequences
         x_points = self.parent.x_list[self.init_address:self.init_address+self.point_count]
         y_points = self.parent.y_list[self.init_address:self.init_address+self.point_count]
+        
+        ## Return point lists
         return x_points, y_points
 
     def get_extent(self):
+        """
+        Returns the extents (projection coordinates) of the feature
+
+        Arguments:
+            None
+
+        Returns:
+            min_x: The minimum x value of the feature
+            min_y: The minimum y value of the feature
+            max_x: The maximum x value of the feature
+            max_y: The maximum y value of the feature
+        """
         x_points, y_points = self.get_points()
         return min(x_points), min(y_points), max(x_points), max(y_points)
 
     def focus(self):
+        """
+        Sets the location and scale of the grandparent map object to showcase 
+        the feature
+
+        Requires:
+            - Parent VectorLayer (parent) must be added to a Map object
+        
+        Arguments:
+            - None 
+        """
         min_x, min_y, max_x, max_y = self.get_extent()
 
         self.parent.parent._projx = (max_x + min_x)/2
@@ -162,7 +315,8 @@ class VectorFeature:
         self.parent.parent.set_scale(new_scale)
 
 class PointFeature(VectorFeature):
-    """ """
+    """
+    """
 
     def __init__(self, parent):
         """
