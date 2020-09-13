@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
@@ -8,7 +7,6 @@ import math
 import warnings
 import numpy as np
 import ogr
-
 
 class VectorFeature:
     """
