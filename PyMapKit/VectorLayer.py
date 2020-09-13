@@ -1,4 +1,7 @@
 """
+Project: PyMapKit
+Title: VectorLayer
+Function: Holds Classes for Rendering Vector Data
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
 """
