@@ -93,10 +93,10 @@ class VectorFeature:
         """
         ## Extract attributes from gdal feature
         for field in self.parent.fields:
-            self.attribute_dict[field] = feature.GetField(field)
+            self.attribute_dict[field] = gdal_feature.GetField(field)
 
         ## Get gdal geom object from gdal feature
-        geom = feature.GetGeometryRef()
+        geom = gdal_feature.GetGeometryRef()
         
         ## Extract geometry from gdal feature
         if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
@@ -317,13 +317,22 @@ class VectorFeature:
 
 class PointFeature(VectorFeature):
     """
+    A class representing a point feature
+
+    Holds data structures and methods for styling and drawing point features.
     """
 
     def __init__(self, parent):
         """
-        Instantiate a new Point Vector feature
+        Instantiates a new PointFeature object
+
+        Arguments:
+            parent: The VectorLayer in which the PointFeature object is added
+
+        Returns:
+            None
         """
-        ## Instantiate VectorFeature
+        ## Instantiate point as VectorFeature object
         VectorFeature.__init__(self, parent)
 
         ## Set base style attributes (color, opacity, and radius)
@@ -336,35 +345,92 @@ class PointFeature(VectorFeature):
 
     def set_color(self, input_color, opacity=1):
         """
-        Sets the base color of the point
+        Sets the background color of the point
+
+        Arguments:
+            input_color: A value the can be interpreted as a color to set as 
+            the background color.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opacity the background
+                of the point should be. Defaults to 1, fully opaque.
+
+        Returns:
+            None
         """
         self._color = input_color
         self._opacity = opacity
         self._cached_color = None
 
-    def set_weight(self, input):
+    def set_weight(self, size):
         """
         Sets the size of the point
+
+        Arguments:
+            size: The size in pixels of how wide the point should be.
+
+        Returns:
+            None
         """
-        self._radius = input / 2.0
+        self._radius = size / 2.0
 
     def set_outline_color(self, input_color, opacity=1):
-        """ """
+        """
+        !! NOT IMPLEMENTED YET !!
+        Sets the color of the outline of the point
+
+        Arguments:
+            input_color: A value the can be interpreted as a color, 
+            to set as the outline color.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opacity the 
+                outline of the point should be. Defaults to 1, fully
+                opaque.
+
+        Returns:
+            None
+        """
         pass
 
-    def set_outline_weight(self, input):
+    def set_outline_weight(self, weight):
         """
+        !! NOT IMPLEMENTED YET !!
+        Sets width of the outline of the point
+
+        Arguments:
+            weight: The width (in pixels) of the outline of the point.
+
+        Returns:
+            None
         """
         pass
     
     def set_icon(self, input):
         """
+        !! NOT IMPLEMENTED YET !!
+        Sets the icon of the point
+
+        Arguments:
+            input: TBD
+
+        Returns:
+            None
         """
         pass
 
     def point_within(self, test_x, test_y):
         """
         Reports whether a given points is approximately collocated with point
+        feature
+
+        Arguments:
+            test_x: The x value (projection coordinate) of the test point. 
+            test_y: The y value (projection coordinate) of the test point. 
+
+        Returns:
+            point_within: Boolean whether test point is collocated at/near one of 
+                the points subgeometries.
         """
         for x_points, y_points in self.get_subgeometries():
             for point_x, point_y in zip(x_points, y_points):
@@ -373,10 +439,23 @@ class PointFeature(VectorFeature):
                     return True
         return False
 
-    def draw(self, layer, renderer, cr, color_override=None):
+    def draw(self, renderer, cr, color_override=None):
         """
         Draws the point onto given canvas with given renderer
+
+        Arguments:
+            renderer: A renderer object.
+            cr: A canvas object from the renderer
+            
+            optional:
+                color_override: <== Try to remove this too
+            
+
+        Returns:
+            None
         """
+        layer = self.parent
+
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
@@ -385,6 +464,7 @@ class PointFeature(VectorFeature):
             color = renderer.color_converter(color_override)
         else:
             color = self._cached_color
+
 
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
@@ -464,8 +544,10 @@ class LineFeature(VectorFeature):
 
         return False
 
-    def draw(self, layer, renderer, cr, color_override=None):
+    def draw(self, renderer, cr, color_override=None):
         """ """
+        layer = self.parent
+
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._line_opacity))
@@ -474,6 +556,7 @@ class LineFeature(VectorFeature):
             color = renderer.color_converter(color_override)
         else:
             color = self._cached_color
+
 
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
@@ -538,7 +621,7 @@ class PolygonFeature(VectorFeature):
                 return True
         return False
 
-    def draw(self, layer, renderer, cr, color_override=None):
+    def draw(self, renderer, cr, color_override=None):
         """
         Draws the polygon
 
@@ -546,6 +629,8 @@ class PolygonFeature(VectorFeature):
 
         ... 
         """
+        layer = self.parent
+
         if self._cached_line_color == None:
             self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
 
@@ -556,6 +641,7 @@ class PolygonFeature(VectorFeature):
             bg_color = renderer.color_converter(color_override)
         else:
             bg_color = self._cached_bgcolor
+
 
         ## Calculate pixel values
         #""" ## Full layer vectorization proj2pix optimization
@@ -721,7 +807,7 @@ class VectorLayer:
         #'''
         ## Only Draw features in view
         for feature in self.box_select(min_x, min_y, max_x, max_y):
-            feature.draw(self, renderer, cr)
+            feature.draw(renderer, cr)
         '''
         for feature in self.features:
             feature.draw(self, renderer, cr)
