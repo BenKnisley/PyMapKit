@@ -163,15 +163,54 @@ class VectorFeature:
 
 class PointFeature(VectorFeature):
     """ """
+
     def __init__(self, parent):
-        """ """
+        """
+        Instantiate a new Point Vector feature
+        """
+        ## Instantiate VectorFeature
         VectorFeature.__init__(self, parent)
+
+        ## Set base style attributes (color, opacity, and radius)
         self._color = 'green' ## Default color is green
         self._opacity = 1
-        self._cached_color = None
         self._radius = 2
 
+        ## Init variable to cache color
+        self._cached_color = None
+
+    def set_color(self, input_color, opacity=1):
+        """
+        Sets the base color of the point
+        """
+        self._color = input_color
+        self._opacity = opacity
+        self._cached_color = None
+
+    def set_weight(self, input):
+        """
+        Sets the size of the point
+        """
+        self._radius = input / 2.0
+
+    def set_outline_color(self, input_color, opacity=1):
+        """ """
+        pass
+
+    def set_outline_weight(self, input):
+        """
+        """
+        pass
+    
+    def set_icon(self, input):
+        """
+        """
+        pass
+
     def point_within(self, test_x, test_y):
+        """
+        Reports whether a given points is approximately collocated with point
+        """
         for x_points, y_points in self.get_subgeometries():
             for point_x, point_y in zip(x_points, y_points):
                 if(math.isclose(test_x, point_x, abs_tol=self.parent.parent._proj_scale*5) and
@@ -179,17 +218,10 @@ class PointFeature(VectorFeature):
                     return True
         return False
 
-        self._bg_opacity = 1
-    def set_color(self, input_color, opacity=1):
-        """ """
-        self._color = input_color
-        self._opacity = opacity
-        self._cached_color = None
-
-    def set_size(self, input):
-        self._radius = input / 2
-
     def draw(self, layer, renderer, cr, color_override=None):
+        """
+        Draws the point onto given canvas with given renderer
+        """
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
@@ -202,7 +234,7 @@ class PointFeature(VectorFeature):
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
 
-        ## Draw point
+        ## Draw point with renderer
         renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, layer._alpha)
 
 class LineFeature(VectorFeature):
@@ -214,6 +246,29 @@ class LineFeature(VectorFeature):
         self._cached_color = None
 
         self._width = 1
+
+    def set_color(self, input_color, opacity=1):
+        """ """
+        self._color = input_color
+        self._line_opacity = opacity
+
+        self._cached_color = None
+
+    def set_weight(self, input_width):
+        """ """
+        self._width = input_width
+
+    def set_outline_color(self, input_color):
+        """ """
+        pass
+
+    def set_outline_weight(self, weight):
+        """ """
+        pass
+    
+    def set_style(self, input):
+        """ """
+        pass
 
     def point_within(self, test_x, test_y):
         ## Loop through each subgeom
@@ -254,17 +309,6 @@ class LineFeature(VectorFeature):
 
         return False
 
-    def set_color(self, input_color, opacity=1):
-        """ """
-        self._color = input_color
-        self._line_opacity = opacity
-
-        self._cached_color = None
-
-    def set_size(self, input_width):
-        """ """
-        self._width = input_width
-
     def draw(self, layer, renderer, cr, color_override=None):
         """ """
         ## If color not cached yet, cache it
@@ -284,7 +328,9 @@ class PolygonFeature(VectorFeature):
     """ """
     def __init__(self, parent):
         """ """
+        ## Init base VectorFeature Class
         VectorFeature.__init__(self, parent)
+
         ## Create vars for background color
         self._bgcolor = "blue" #! Pick a better default
         self._bg_opacity = 1
@@ -294,8 +340,28 @@ class PolygonFeature(VectorFeature):
         self._line_color = "black"
         self._line_opacity = 1
         self._cached_line_color = None
-       
+
+        ## Property to hold line width
         self._line_width = 1
+
+    def set_color(self, input_color, opacity=1):
+        """ """
+        ## Set color and opacity
+        self._bgcolor = input_color
+        self._bg_opacity = opacity
+
+        ## Reset cached_bgcolor
+        self._cached_bgcolor = None
+
+    def set_outline_color(self, input_color, opacity=1):
+        """ """
+        self._line_color = input_color
+        self._line_opacity = opacity
+        self._cached_line_color = None
+
+    def set_outline_weight(self, input_width):
+        """ """
+        self._line_width = input_width
 
     def point_within(self, test_x, test_y):
         ## Loop through each subgeom
@@ -317,25 +383,14 @@ class PolygonFeature(VectorFeature):
                 return True
         return False
 
-    def set_color(self, input_color, opacity=1):
-        """ """
-        self._bgcolor = input_color
-        self._bg_opacity = opacity
-
-        self._cached_bgcolor = None
-
-    def set_line_color(self, input_color, opacity=1):
-        """ """
-        self._line_color = input_color
-        self._line_opacity = opacity
-        self._cached_line_color = None
-
-    def set_line_width(self, input_width):
-        """ """
-        self._line_width = input_width
-
     def draw(self, layer, renderer, cr, color_override=None):
-        """ """
+        """
+        Draws the polygon
+
+        Draws the polygon onto the canvas with the given renderer.
+
+        ... 
+        """
         if self._cached_line_color == None:
             self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
 
