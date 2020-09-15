@@ -490,10 +490,10 @@ class LineFeature(VectorFeature):
 
     def __init__(self, parent):
         """
-        Instantiates a new PointFeature object
+        Instantiates a new LineFeature object
 
         Arguments:
-            parent: The VectorLayer in which the PointFeature object is added
+            parent: The VectorLayer in which the LineFeature object is added.
 
         Returns:
             None
@@ -524,15 +524,14 @@ class LineFeature(VectorFeature):
             the color of the line.
 
             optional:
-                opacity: a float, 0 to 1, indicating how opaque the background
-                of the point should be. Defaults to 1, fully opaque.
+                opacity: a float, 0 to 1, indicating how opaque the color
+                of the line should be. Defaults to 1, fully opaque.
 
         Returns:
             None
         """
         self._color = input_color
         self._opacity = opacity
-
         self._cached_color = None
 
     def set_weight(self, input_width):
@@ -677,9 +676,22 @@ class LineFeature(VectorFeature):
         renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, color, self._cached_outline_color, self._outline_width)
 
 class PolygonFeature(VectorFeature):
-    """ """
+    """
+    A class representing a polygon feature
+
+    Holds data structures and methods for styling and drawing polygon features.
+    """
+
     def __init__(self, parent):
-        """ """
+        """
+        Instantiates a new PolygonFeature object
+
+        Arguments:
+            parent: The VectorLayer in which the PolygonFeature object is added.
+
+        Returns:
+            None
+        """
         ## Init base VectorFeature Class
         VectorFeature.__init__(self, parent)
 
@@ -697,7 +709,20 @@ class PolygonFeature(VectorFeature):
         self._line_width = 1
 
     def set_color(self, input_color, opacity=1):
-        """ """
+        """
+        Sets the background color of the polygon
+
+        Arguments:
+            input_color: A value the can be interpreted as a color to set as 
+            the color of the line.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opaque the background
+                of the polygon should be. Defaults to 1, fully opaque.
+
+        Returns:
+            None
+        """
         ## Set color and opacity
         self._bgcolor = input_color
         self._bg_opacity = opacity
@@ -706,16 +731,51 @@ class PolygonFeature(VectorFeature):
         self._cached_bgcolor = None
 
     def set_outline_color(self, input_color, opacity=1):
-        """ """
+        """
+        Sets the color of the outline of the polygon
+
+        Arguments:
+            input_color: A value the can be interpreted as a color, 
+            to set as the outline color.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opaque the 
+                outline should be. Defaults to 1, fully opaque.
+
+        Returns:
+            None
+        """
         self._line_color = input_color
         self._line_opacity = opacity
         self._cached_line_color = None
 
     def set_outline_weight(self, input_width):
-        """ """
+        """
+        Sets width of the outline
+
+        Arguments:
+            weight: The width (in pixels) of the outline.
+
+        Returns:
+            None
+        """
         self._line_width = input_width
 
     def point_within(self, test_x, test_y):
+        """
+        Reports whether a given point is inside of the polygon
+
+        Returns True, if given test point is within geometry of features
+            subgeometry
+
+        Arguments:
+            test_x: The x value (projection coordinate) of the test point. 
+            test_y: The y value (projection coordinate) of the test point. 
+
+        Returns:
+            point_within: Boolean whether test point is within the 
+                polygon feature
+        """
         ## Loop through each subgeom
         for x_points, y_points in self.get_subgeometries():
             inside = False
@@ -737,11 +797,18 @@ class PolygonFeature(VectorFeature):
 
     def draw(self, renderer, cr, color_override=None):
         """
-        Draws the polygon
+        Draws the polygon feature onto given canvas with given renderer
 
-        Draws the polygon onto the canvas with the given renderer.
+        Arguments:
+            renderer: A renderer object.
+            cr: A canvas object from the renderer
+            
+            optional:
+                color_override: <== Try to remove this
+            
 
-        ... 
+        Returns:
+            None
         """
         layer = self.parent
 
