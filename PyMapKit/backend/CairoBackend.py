@@ -84,12 +84,19 @@ class CairoBackend:
         cr.set_source_rgba(*self.color_converter(color))
         cr.paint()
 
-    def draw_point(self, cr, geomstruct, x_values, y_values, color, radius, alpha): #! Get rid of alpha
+    def draw_point(self, cr, geomstruct, x_values, y_values, bg_color, radius, outline_color, outline_width):
         """ """
         pointer = 0
         for p_count in geomstruct:
             for index in range(pointer, pointer+p_count):
-                cr.set_source_rgba(*color)
+                
+                ##
+                cr.set_source_rgba(*outline_color)
+                cr.arc(x_values[index], y_values[index], radius+outline_width, 0, 6.2830)
+                cr.fill()
+
+                ##
+                cr.set_source_rgba(*bg_color)
                 cr.arc(x_values[index], y_values[index], radius, 0, 6.2830)
                 cr.fill()
             pointer += p_count

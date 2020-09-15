@@ -338,10 +338,15 @@ class PointFeature(VectorFeature):
         ## Set base style attributes (color, opacity, and radius)
         self._color = 'green' ## Default color is green
         self._opacity = 1
-        self._radius = 2
+        self._radius = 3
+
+        self._line_color = 'black'
+        self._line_opacity = 1
+        self._line_width = 1
 
         ## Init variable to cache color
         self._cached_color = None
+        self._cached_line_color = None
 
     def set_color(self, input_color, opacity=1):
         """
@@ -376,7 +381,6 @@ class PointFeature(VectorFeature):
 
     def set_outline_color(self, input_color, opacity=1):
         """
-        !! NOT IMPLEMENTED YET !!
         Sets the color of the outline of the point
 
         Arguments:
@@ -391,11 +395,11 @@ class PointFeature(VectorFeature):
         Returns:
             None
         """
-        pass
+        self._line_color = input_color
+        self._line_opacity = opacity
 
     def set_outline_weight(self, weight):
         """
-        !! NOT IMPLEMENTED YET !!
         Sets width of the outline of the point
 
         Arguments:
@@ -404,9 +408,10 @@ class PointFeature(VectorFeature):
         Returns:
             None
         """
-        pass
+        self._line_width = weight
+
     
-    def set_icon(self, input):
+    def set_icon(self, icon_path):
         """
         !! NOT IMPLEMENTED YET !!
         Sets the icon of the point
@@ -454,23 +459,29 @@ class PointFeature(VectorFeature):
         Returns:
             None
         """
+        ## Get parent layer
         layer = self.parent
 
         ## If color not cached yet, cache it
         if self._cached_color == None:
             self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
+
+        ## If outline color not cached yet, cache it
+        if self._cached_line_color == None:
+            self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
         
+        ## 
         if color_override:
             color = renderer.color_converter(color_override)
         else:
             color = self._cached_color
 
-
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
 
         ## Draw point with renderer
-        renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, layer._alpha)
+        renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, self._cached_line_color, self._line_width)
+
 
 class LineFeature(VectorFeature):
     """ """

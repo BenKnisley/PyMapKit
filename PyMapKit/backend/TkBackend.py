@@ -63,7 +63,7 @@ class TkBackend:
         canvas.configure(bg=color)
         canvas.create_rectangle(0,0,5000,5000, fill=color)
 
-    def draw_point(self, canvas, geomstruct, x_values, y_values, color, radius, alpha):
+    def draw_point(self, canvas, geomstruct, x_values, y_values, color, radius, outline_color, outline_width):
         """ """
         pointer = 0
         for p_count in geomstruct:
@@ -72,7 +72,7 @@ class TkBackend:
                 y1 = y_values[index] - radius
                 x2 = x_values[index] + radius
                 y2 = y_values[index] + radius
-                canvas.create_oval(x1, y1, x2, y2, width=0, fill=color)
+                canvas.create_oval(x1, y1, x2, y2, outline=outline_color, width=outline_width, fill=color)
             pointer += p_count
 
     def draw_line(self, canvas, geomstruct, x_values, y_values, l_weight, l_color, alpha):
