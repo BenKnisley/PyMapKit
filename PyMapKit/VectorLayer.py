@@ -357,7 +357,7 @@ class PointFeature(VectorFeature):
             the background color.
 
             optional:
-                opacity: a float, 0 to 1, indicating how opacity the background
+                opacity: a float, 0 to 1, indicating how opaque the background
                 of the point should be. Defaults to 1, fully opaque.
 
         Returns:
@@ -388,7 +388,7 @@ class PointFeature(VectorFeature):
             to set as the outline color.
 
             optional:
-                opacity: a float, 0 to 1, indicating how opacity the 
+                opacity: a float, 0 to 1, indicating how opaque the 
                 outline of the point should be. Defaults to 1, fully
                 opaque.
 
@@ -410,7 +410,6 @@ class PointFeature(VectorFeature):
         """
         self._line_width = weight
 
-    
     def set_icon(self, icon_path):
         """
         !! NOT IMPLEMENTED YET !!
@@ -482,41 +481,127 @@ class PointFeature(VectorFeature):
         ## Draw point with renderer
         renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, self._cached_line_color, self._line_width)
 
-
 class LineFeature(VectorFeature):
-    """ """
-    def __init__(self, parent):
-        """ """
-        VectorFeature.__init__(self, parent)
-        self._color = 'red' ## Default color is green
-        self._cached_color = None
+    """
+    A class representing a line feature
 
-        self._width = 1
+    Holds data structures and methods for styling and drawing line features.
+    """
+
+    def __init__(self, parent):
+        """
+        Instantiates a new PointFeature object
+
+        Arguments:
+            parent: The VectorLayer in which the PointFeature object is added
+
+        Returns:
+            None
+        """
+        ## Instantiate point as VectorFeature object
+        VectorFeature.__init__(self, parent)
+
+        ## Set base attributes
+        self._color = 'red' ## Default color is green
+        self._opacity = 1
+        self._width = 2
+
+        ## Set outline attributes
+        self._outline_color = 'black'
+        self._outline_opacity = 1
+        self._outline_width = 0 ## No outline is default
+
+        ## Init variable to cache color
+        self._cached_color = None
+        self._cached_outline_color = None
 
     def set_color(self, input_color, opacity=1):
-        """ """
+        """
+        Sets the color of the line
+
+        Arguments:
+            input_color: A value the can be interpreted as a color to set as 
+            the color of the line.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opaque the background
+                of the point should be. Defaults to 1, fully opaque.
+
+        Returns:
+            None
+        """
         self._color = input_color
-        self._line_opacity = opacity
+        self._opacity = opacity
 
         self._cached_color = None
 
     def set_weight(self, input_width):
-        """ """
+        """
+        Sets the width of the line
+
+        Arguments:
+            size: The size in pixels of how wide the line should be.
+
+        Returns:
+            None
+        """
         self._width = input_width
 
-    def set_outline_color(self, input_color):
-        """ """
-        pass
+    def set_outline_color(self, input_color, opacity=1):
+        """
+        Sets the color of the outline of the line
+
+        Arguments:
+            input_color: A value the can be interpreted as a color, 
+            to set as the outline color.
+
+            optional:
+                opacity: a float, 0 to 1, indicating how opaque the 
+                outline should be. Defaults to 1, fully opaque.
+
+        Returns:
+            None
+        """
+        self._outline_color = input_color
+        self._outline_opacity = opacity
 
     def set_outline_weight(self, weight):
-        """ """
-        pass
+        """
+        Sets width of the outline
+
+        Arguments:
+            weight: The width (in pixels) of the outline.
+
+        Returns:
+            None
+        """
+        self._outline_width = weight
     
     def set_style(self, input):
-        """ """
+        """
+        !!! NOT IMPLEMENTED !!!
+        Sets the how the line is broken up
+
+        Arguments:
+            input: UNKNOWN
+
+        Returns:
+            None
+        """
         pass
 
     def point_within(self, test_x, test_y):
+        """
+        Reports whether a given point is on or near the line feature
+
+        Arguments:
+            test_x: The x value (projection coordinate) of the test point. 
+            test_y: The y value (projection coordinate) of the test point. 
+
+        Returns:
+            point_within: Boolean whether test point is colinear with the 
+                line feature
+        """
         ## Loop through each subgeom
         for x_points, y_points in self.get_subgeometries(): 
             ## Set first set of compair points to first point of subgeom
@@ -556,12 +641,28 @@ class LineFeature(VectorFeature):
         return False
 
     def draw(self, renderer, cr, color_override=None):
-        """ """
+        """
+        Draws the line feature onto given canvas with given renderer
+
+        Arguments:
+            renderer: A renderer object.
+            cr: A canvas object from the renderer
+            
+            optional:
+                color_override: <== Try to remove this
+            
+        Returns:
+            None
+        """
         layer = self.parent
 
         ## If color not cached yet, cache it
         if self._cached_color == None:
-            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._line_opacity))
+            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
+
+        ## If outline color not cached yet, cache it
+        if self._cached_outline_color == None:
+            self._cached_outline_color = renderer.color_converter(self._outline_color, opacity=(layer._alpha * self._outline_opacity))
         
         if color_override:
             color = renderer.color_converter(color_override)
@@ -571,7 +672,9 @@ class LineFeature(VectorFeature):
 
         ## Calculate pixel values
         pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
-        renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, color, layer._alpha)
+
+        ##
+        renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, color, self._cached_outline_color, self._outline_width)
 
 class PolygonFeature(VectorFeature):
     """ """

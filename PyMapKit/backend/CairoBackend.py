@@ -101,17 +101,26 @@ class CairoBackend:
                 cr.fill()
             pointer += p_count
 
-    def draw_line(self, cr, geomstruct, x_values, y_values, l_weight, l_color, alpha):#! Get rid of alpha
+    def draw_line(self, cr, geomstruct, x_values, y_values, l_weight, l_color, ol_color, ol_width):
         """ """
-        cr.set_source_rgba(*l_color)
-        cr.set_line_width(l_weight)
+        cr.set_source_rgba(*ol_color)
+        cr.set_line_width(l_weight+ol_width)
         pointer = 0
         for p_count in geomstruct:
             cr.move_to( x_values[pointer], y_values[pointer] )
             for index in range(pointer, pointer+p_count):
                 cr.line_to( x_values[index], y_values[index] )
+            
+            ## Color in outline
+            cr.stroke_preserve()
+            
+            ## Color in line
+            cr.set_line_width(l_weight)
+            cr.set_source_rgba(*l_color)
             cr.stroke()
-            pointer += p_count
+
+
+        pointer += p_count
 
     def draw_polygon(self, cr, geomstruct, x_values, y_values, bg_color, l_weight, l_color, alpha):
         """ """

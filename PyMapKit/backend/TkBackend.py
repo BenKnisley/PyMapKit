@@ -75,7 +75,7 @@ class TkBackend:
                 canvas.create_oval(x1, y1, x2, y2, outline=outline_color, width=outline_width, fill=color)
             pointer += p_count
 
-    def draw_line(self, canvas, geomstruct, x_values, y_values, l_weight, l_color, alpha):
+    def draw_line(self, canvas, geomstruct, x_values, y_values, l_weight, l_color, ol_color, ol_width):
         """ """
         pointer = 0
         for p_count in geomstruct:
@@ -85,6 +85,7 @@ class TkBackend:
             for xy in zip(x_coords, y_coords):
                 args.append(xy[0])
                 args.append(xy[1])
+            canvas.create_line(*args, fill=ol_color, width=l_weight+ol_width)
             canvas.create_line(*args, fill=l_color, width=l_weight)
             pointer = pointer + p_count
 
