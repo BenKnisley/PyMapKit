@@ -645,6 +645,7 @@ class LineFeature(VectorFeature):
 
         Arguments:
             renderer: A renderer object.
+
             cr: A canvas object from the renderer
             
             optional:
@@ -839,23 +840,33 @@ class PolygonFeature(VectorFeature):
 
 class VectorLayer:
     """
+    A PyMapKit layer that holds and renders geographic vector data
+
+    Holds data structures and methods for rendering geographic vector data.
     """
 
     def __init__(self, path=None):
         """
-        A PyMapKit layer that holds and renders geographic vector data
+        Instantiates a new VectorLayer object
 
-        Holds data structures and methods for rendering geographic vector data
-        ...
+        Arguments:
+            None
+            optional:
+                path: The path of the vector data file to import data from.
+                    Defaults to None. Must be a shp or geojson file. 
+
+
+        Returns:
+            None
         """
-
-        ## Init a  
+    
+        ## Init parent attribute
         self.parent = None
         
-        ## Set layer name
+        ## Set layer name 
         self.name = "VectorLayer"
         
-        ## Set opacity of layer
+        ## Set default opacity of layer
         self._alpha = 1
 
         ## Create list to hold features (VectorFeature)
@@ -864,7 +875,7 @@ class VectorLayer:
         ## Create a list to hold attribute fields
         self.fields = []
 
-        ## Create lists to hold all points
+        ## Create common point lists to hold all points of all features
         self.x_list = []
         self.y_list = []
 
@@ -887,36 +898,32 @@ class VectorLayer:
             
             self.from_gdal_layer(ogrlayer)
 
-    def _activate(self, new_parent):
-        self.parent = new_parent
-
-        x, y = self.parent.geo2proj(self.x_list, self.y_list)
-        self.x_list, self.y_list = list(x), list(y)
-
-    def add_field(self, field_name):
-        self.fields.append(field_name)
-    
-    def new_feature(self):
-        new_feature = PointFeature(self)
-        self.features.append(new_feature)
-        return new_feature
-
-    def set_opacity(self, new_opacity):
-        self._alpha = new_opacity
-
+    #% Magic Methods
     def __len__(self):
+        """
+        Magic method returning number of features in layer
+        """
         ## Return number of items in features list
         return len(self.features)
 
-    def __getitem__(self, key):
-        return self.features[key]
+    def __getitem__(self, index):
+        """
+        Magic method returning feature at given index
+        """
+        return self.features[index]
 
     def __iter__(self):
+        """
+        Magic method for initializing iteration over feature list
+        """
         ## Create index for iteration and return self
         self._iter_indx = 0
         return self
 
     def __next__(self):
+        """
+        Magic method for iteration over feature list
+        """
         ## If there are no more feature then stop iteration
         if self._iter_indx == len(self.features):
             raise StopIteration
@@ -926,9 +933,60 @@ class VectorLayer:
         self._iter_indx += 1
         return feature
 
+    #% Vector Layer Methods
+    def add_field(self, field_name):
+        """
+        Adds a new field to the layers field list
+
+        Arguments:
+            field_name: The name of the new field
+
+        Returns:
+            None
+        """
+        self.fields.append(field_name)
+    
+    def new_feature(self, new_feature_type):
+        """
+        Creates a new empty feature of the given type, adds it to the layer, 
+        and returns it to the user
+
+        Arguments:
+            new_feature_type: A string indicating what type of feature to create;
+                can be either: 'point', 'line', or 'polygon'.
+
+        Returns:
+            new_feature: The freshly created feature, where data can be added.
+        """
+        ## Create new feature of the given type
+        feature_classes = {"point":PointFeature, "line":LineFeature, "polygon":PolygonFeature}
+        new_feature = feature_classes[new_feature_type](self)
+        
+        ## Add new feature to feature list
+        self.features.append(new_feature)
+        
+        ## Return new feature to user
+        return new_feature
+
     def box_select(self, min_x, min_y, max_x, max_y):
-        """ Returns features within a given box """
+        """
+        Returns all the features within a given box
+
+        Arguments:
+            min_x: The min x (projection coordinates) of the selection.
+            min_y: The min y (projection coordinates) of the selection.
+            max_x: The max x (projection coordinates) of the selection.
+            max_y: The max y (projection coordinates) of the selection.
+
+        Returns:
+            selected_features: A list of feature are within the 
+                selection box.
+        """
+        ## Create return list
         selected_features = []
+
+        ## Loop through all features in layer, adding them to return list 
+        ## if within selection box
         for feature in self.features:
             g_min_x, g_min_y, g_max_x, g_max_y = feature.get_extent()
 
@@ -943,7 +1001,20 @@ class VectorLayer:
         return selected_features
 
     def point_select(self, proj_x, proj_y):
-        """ Selects feature at exact point """
+        """
+        Returns all features that are at a given selection point
+
+        Arguments:
+            proj_x: The x value (projection coordinates) of the 
+                selection point.
+
+            proj_y: The y value (projection coordinates) of the 
+                selection point.
+
+        Returns:
+            selected_features: A list of feature are intersects 
+                the selection point.
+        """
         ## Box select small two pixel sized box into shortlist
         min_x = proj_x - self.parent._proj_scale * 2
         min_y = proj_y - self.parent._proj_scale * 2
@@ -958,58 +1029,15 @@ class VectorLayer:
                 selected_features.append(feature)
         return selected_features
 
-    def get_extent(self):
-        return min(self.x_list), min(self.y_list), max(self.x_list), max(self.y_list)
-    
-    def focus(self):
-        
-        min_x, min_y, max_x, max_y = self.get_extent()
-
-        self.parent._projx = (max_x + min_x)/2
-        self.parent._projy = (max_y + min_y)/2
-
-        s_x = (max_x - min_x) / self.parent.width
-        s_y = (max_y - min_y) / self.parent.height
-        new_scale =  max(s_x, s_y)
-
-        ## Get projection crs dict, ignore all warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            crs_dict = self.parent._projection.crs.to_dict()
-
-        ## If units not defined in crs_dict the units are degrees
-        if 'units' not in crs_dict:
-            ## Convert scale to m/pix from deg
-            new_scale = new_scale * 110570
-
-        elif crs_dict['units'] == 'us-ft':
-                new_scale = new_scale / 3.28084
-        
-        else:
-            pass ## Is meters :) scale is already in m/pix
-    
-        new_scale = new_scale * 1.25
-
-        ## Set processed newscale
-        self.parent.set_scale(new_scale)
-
-    def draw(self, renderer, cr):
-        """ """
-        min_x, min_y = self.parent.pix2proj(0,0)
-        max_x, max_y = self.parent.pix2proj(self.parent.width, self.parent.height)
-
-
-        #'''
-        ## Only Draw features in view
-        for feature in self.box_select(min_x, min_y, max_x, max_y):
-            feature.draw(renderer, cr)
-        '''
-        for feature in self.features:
-            feature.draw(self, renderer, cr)
-        #'''
-
     def from_gdal_layer(self, gdal_layer):
         """
+        Imports all features and attributes from a GDAL layer
+
+        Arguments:
+            gdal_layer: The GDAL layer to import from
+
+        Returns:
+            None
         """
         ## Extract field names from gdal_layer and add them to new_layer
         attrib_data = gdal_layer.GetLayerDefn()
@@ -1018,7 +1046,6 @@ class VectorLayer:
             field_data = attrib_data.GetFieldDefn(i)
             self.add_field(field_data.GetName())
     
-
         for feature in gdal_layer:
             feature_geom = feature.GetGeometryRef()
             feature_class = {"POINT": PointFeature, 
@@ -1033,6 +1060,133 @@ class VectorLayer:
             self.features.append(new_feature)
             new_feature.from_gdal_feature(feature)
 
+    #% Layer Methods
+    def _activate(self, new_parent):
+        """
+        Method called when layer is added to a PyMapKit.Map object.
+        Sets the parent attribute, and projects data to projection
+        coordinates.
 
+        Arguments:
+            new_parent: The PyMapKit.Map object that the VectorLayer
+                was added to.
 
+        Returns:
+            None
+        """
+        ## Set parent attribute
+        self.parent = new_parent
+
+        ## Projects x_list, self.y_list to parent Maps projection
+        x, y = self.parent.geo2proj(self.x_list, self.y_list)
+        self.x_list, self.y_list = list(x), list(y)
+
+    def _deactivate(self):
+        """
+        Method called when layer is removed from a PyMapKit.map object
+        Resets the parent attribute, and converts the projected points
+        back to geographic coordinates.
+
+        Arguments:
+            None
+
+        Returns:
+            None
+        """
+        x, y = self.parent.proj2geo(self.x_list, self.y_list)
+        self.x_list, self.y_list = list(x), list(y)
+        self.parent = None
+
+    def get_extent(self):
+        """
+        Returns the extent (projection coordinates) of the layer
+
+        Arguments:
+            None
+
+        Returns:
+            extent: Tuple of max and min values of the layer
+                min_x: The smallest x value in the layer
+                min_y: The smallest y value in the layer
+                max_x: The largest y value in the layer
+                max_y: The largest y value in the layer
+        """
+        return min(self.x_list), min(self.y_list), max(self.x_list), max(self.y_list)
+    
+    def focus(self):
+        """
+        Sets the location and scale of the parent map object to showcase 
+            the layer
+        
+        Arguments:
+            None
+
+        Returns:
+            None
+        """
+        ## Get the current extent of the layer
+        min_x, min_y, max_x, max_y = self.get_extent()
+
+        ## Set the location of the parent map to the middle of the extent 
+        self.parent._projx = (max_x + min_x)/2
+        self.parent._projy = (max_y + min_y)/2
+
+        ## Find optimal scale for both x and y values 
+        s_x = (max_x - min_x) / self.parent.width
+        s_y = (max_y - min_y) / self.parent.height
+        
+        ## Find larger of x and y scales
+        new_scale =  max(s_x, s_y)
+
+        ## Get projection crs dict ignoring all warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            crs_dict = self.parent._projection.crs.to_dict()
+
+        ## Convert scale based on current parent map objects projection
+        if 'units' not in crs_dict: ## If units not defined in crs_dict the units are degrees
+            ## Convert scale to m/pix from deg
+            new_scale = new_scale * 110570
+        elif crs_dict['units'] == 'us-ft':
+                new_scale = new_scale / 3.28084
+        else:
+            pass ## Is meters :) scale is already in m/pix
+        
+        ## Adjust scale to look better
+        new_scale = new_scale * 1.25
+
+        ## Set parent Map Object scale
+        self.parent.set_scale(new_scale)
+
+    def set_opacity(self, new_opacity):
+        """
+        Sets the opacity of the layer
+        """
+        self._alpha = new_opacity
+
+    def draw(self, renderer, cr):
+        """
+        Draws all features in view onto given canvas using given renderer
+
+        Arguments:
+            renderer: A renderer object.
+            
+            cr: A canvas object the renderer can draw on
+
+        Returns:
+            None
+        """
+        ## Find project coordinates of current viewport
+        min_x, min_y = self.parent.pix2proj(0,0)
+        max_x, max_y = self.parent.pix2proj(self.parent.width, self.parent.height)
+
+        #'''
+        ## Draw features within current viewport
+        for feature in self.box_select(min_x, min_y, max_x, max_y):
+            feature.draw(renderer, cr)
+        '''
+        ## Draw all features
+        for feature in self.features:
+            feature.draw(self, renderer, cr)
+        #'''
 
