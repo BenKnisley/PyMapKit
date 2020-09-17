@@ -838,16 +838,30 @@ class PolygonFeature(VectorFeature):
         renderer.draw_polygon(cr, self.geom_struct, pix_x, pix_y, bg_color, self._line_width, self._cached_line_color, layer._alpha)
 
 class VectorLayer:
+    """
+    """
+
     def __init__(self, path=None):
+        """
+        A PyMapKit layer that holds and renders geographic vector data
+
+        Holds data structures and methods for rendering geographic vector data
+        ...
+        """
+
+        ## Init a  
         self.parent = None
+        
+        ## Set layer name
+        self.name = "VectorLayer"
+        
+        ## Set opacity of layer
         self._alpha = 1
 
-        self.name = "VectorLayer"
-
-        ## Create list to hold features
+        ## Create list to hold features (VectorFeature)
         self.features = []
         
-        ## Create List to hold fields
+        ## Create a list to hold attribute fields
         self.fields = []
 
         ## Create lists to hold all points
