@@ -946,6 +946,17 @@ class VectorLayer:
         """
         self.fields.append(field_name)
     
+    #@
+    def get_field_values(self, field_name):
+        attribute_list = []
+        for f in self:
+            attribute_list.append(f[field_name])
+        return attribute_list
+    
+    def set_color(self, color):
+        for f in self:
+            f.set_color(color)
+
     def new_feature(self, new_feature_type):
         """
         Creates a new empty feature of the given type, adds it to the layer, 
