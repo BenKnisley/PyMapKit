@@ -5,6 +5,8 @@ Function: Provide 'backend' namespace and get_backend function.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 17 July, 2020
 """
+from .BaseBackend import BaseBackend
+
 
 def get_backend(backend):
     """
