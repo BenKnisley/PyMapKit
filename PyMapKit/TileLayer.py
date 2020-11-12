@@ -53,7 +53,7 @@ class _tile:
 
     def draw(self, renderer, cr):
         if self.image == None:
-            self.image = renderer.get_image_obj(self.path)
+            self.image = renderer.cache_image(self.path)
 
         ## Get pixel coord of tile
         pix_x, pix_y = self.parent_map.proj2pix(self.proj_x, self.proj_y)

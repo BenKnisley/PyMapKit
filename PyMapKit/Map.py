@@ -525,10 +525,10 @@ class Map:
         """
         output_file = None
         
-        if self.renderer.can_render_to(target):
+        if self.renderer.is_canvas(target):
             canvas = target
         else:
-           canvas = self.renderer.create_canvas(self.width, self.height)
+           canvas = self.renderer.new_canvas(self.width, self.height)
            output_file = target
         
         ## If not None

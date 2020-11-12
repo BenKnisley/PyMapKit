@@ -106,7 +106,7 @@ class RasterLayer:
     def draw(self, renderer, cr):
         """ """
         if self._image_surface == None:
-            self._image_surface = renderer.get_image_obj(self._img_path)
+            self._image_surface = renderer.cache_image(self._img_path)
 
         pix_x, pix_y = self.parent.proj2pix(self._proj_x, self._proj_y)
 
