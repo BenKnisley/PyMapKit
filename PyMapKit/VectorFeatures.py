@@ -122,8 +122,6 @@ class Geometry:
                 if inside:
                     return True
             return False
-
-
 class Feature:
     """ """
     def __init__(self, attributes_names, geometry):

@@ -5,283 +5,88 @@ Function: Holds Classes for Rendering Vector Data
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 20 July, 2020
 """
-import os
-import math
 import warnings
-import numpy as np
-import ogr
+from operator import methodcaller
+import pyproj
 
-class VectorFeature:
-    """
-    A base class representing a Vector feature
+from .VectorFeatures import FeatureHost, FeatureList, FeatureDict, Geometry
+from .VectorFeatures import Feature as _Feature
 
-    Holds data structures and methods for attribute data & geometric data common 
-    to all types of vector features. Each derived class must provide structures 
-    and methods for drawing, and type specific features.
-    """
+class FeatureStyle:
+    def __init__(self):
+        self.cached_renderer = None
+        
+        self.display = None
 
-    def __init__(self, parent):
-        """
-        Instantiates a new VectorFeature object
+        self.color = 'green'
+        self._color_cache = None
+        self.opacity = 1
 
-        Instantiates a new VectorFeature object inside of a derived class.
+        self.outline_color = 'black'
+        self._outline_color_cache = None
 
-        Arguments:
-            parent: The VectorLayer in which the VectorFeature object is added
+        self.weight = 1
+        self.outline_weight = 1
+    
+    def set_defaults(self, geometry_type):
+        if geometry_type == 'point':
+            self.display = 'point'
+            self.color = 'red'
+            self.weight = 3
+            self.outline_color = 'black'
+            self.outline_weight = 1
+        
+        elif geometry_type == 'line':
+            self.display = 'solid'
+            self.color = 'blue'
+            self.weight = 0.5
+            self.outline_color = 'black'
+            self.outline_weight = 0
+        
+        else: ## geometry_type == Polygon
+            self.display = 'solid'
+            self.color = 'green'
+            self.weight = 1
+            self.outline_color = 'black'
+            self.outline_weight = 1
+        
+    
+    def cache_renderer(self, renderer):
+        self._color_cache = renderer.cache_color(self.color, opacity=self.opacity)
+        self._outline_color_cache = renderer.cache_color(self.outline_color, opacity=self.opacity)
+        self.cached_renderer = renderer
+    
+    def set_color(self, new_color):
+        self.color = new_color
+        self._color_cache = None
+        self.cached_renderer = None
+    
+    def set_outline_color(self, new_color):
+        self.outline_color = new_color
+        self._outline_color_cache = None
+        self.cached_renderer = None
 
-        Returns:
-            None
-        """
-        ## Set reference to parent VectorLayer object
+class Feature(_Feature):
+    def __init__(self, parent, attributes_names, geometry):
+        _Feature.__init__(self, attributes_names, geometry)
         self.parent = parent
-
-        ## Create a dictionary to hold attributes
-        self.attribute_dict = {}
-
-        ## Create a list to hold geometric structure of Vector feature
-        self.geom_struct = []
-
-        ## Store the start address in the common point sequence and the number of points
-        self.init_address = len(self.parent.x_list)
-        self.point_count = 0
-
-    def __getitem__(self, key):
-        """
-        Returns the value of the given key
-        """
-        if isinstance(key, str):
-            #key = self.parent.fields.index(key)
-            return self.attribute_dict[key]
+        self.style = FeatureStyle()
+        self.style.set_defaults(parent.geometry_type)
     
-    def set_attributes(self, attributes):
-        """
-        Set the objects attributes to the given attributes
+    def set_color(self, color):
+        self.style.set_color(color)
 
-        Arguments:
-            attributes: Ordered list of attribute values
+    def set_outline_color(self, new_color):
+        self.style.set_outline_color(new_color)
     
-        Returns:
-            None
-        """
-        ## Loop through parent layers fields and given attributes
-        for field_name, attribute in zip(self.parent.fields, attributes):
-            ## Set attribute value
-            self.attribute_dict[field_name] = attribute
-    
-    def fields(self):
-        """
-        Returns the names of the attribute fields
+    def set_weight(self, new_weight):
+        self.style.weight = new_weight
 
-        Arguments:
-        None
-
-        Returns:
-            fields: List of names of attribute fields
-        """
-        ## Return all keys in attribute dict
-        return self.attribute_dict.keys()
-
-    def from_gdal_feature(self, gdal_feature):
-        """
-        Imports attributes & geometry from a GDAL feature
-
-        Arguments:
-            gdal_feature: The gdal_feature to import data from
-
-        Returns:
-            None
-        """
-        ## Extract attributes from gdal feature
-        for field in self.parent.fields:
-            self.attribute_dict[field] = gdal_feature.GetField(field)
-
-        ## Get gdal geom object from gdal feature
-        geom = gdal_feature.GetGeometryRef()
-        
-        ## Extract geometry from gdal feature
-        if geom.GetGeometryName() in ("POINT", "MULTIPOINT"):
-            ## Plain point
-            if geom.GetGeometryCount() == 0:
-                x_list, y_list = [], []
-                for point in geom.GetPoints():
-                    x_list.append(point[0])
-                    y_list.append(point[1])
-                self.add_subgeometry(x_list, y_list)
-            
-            ## Mutipoint
-            else:
-                for indx in range(geom.GetGeometryCount()):
-                    subpoly_geom = geom.GetGeometryRef(indx)
-
-                    x_list, y_list = [], []
-                    for point in subpoly_geom.GetPoints():
-                        x_list.append(point[0])
-                        y_list.append(point[1])
-                    self.add_subgeometry(x_list, y_list)
-
-        elif geom.GetGeometryName() in ("LINESTRING", "MULTILINESTRING"):
-            geocount = geom.GetGeometryCount()
-            if geocount == 0:
-                x_list, y_list = [], []
-                for point in geom.GetPoints():
-                    x_list.append(point[0])
-                    y_list.append(point[1])
-                self.add_subgeometry(x_list, y_list)
-            else:
-                for indx in range(geom.GetGeometryCount()):
-                    subgeom = geom.GetGeometryRef(indx)
-                    
-                    x_list, y_list = [], []
-                    for point in subgeom.GetPoints():
-                        x_list.append(point[0])
-                        y_list.append(point[1])
-                    self.add_subgeometry(x_list, y_list)
-
-        elif geom.GetGeometryName() in ("POLYGON", "LINEARRING", "MULTIPOLYGON"):
-            for indx in range(geom.GetGeometryCount()):
-                subpoly_geom = geom.GetGeometryRef(indx)
-
-                if subpoly_geom.GetGeometryName() == "POLYGON":
-                    subpoly_geom = subpoly_geom.GetGeometryRef(0)
-
-                x_list, y_list = [], []
-                for point in subpoly_geom.GetPoints():
-                    x_list.append(point[0])
-                    y_list.append(point[1])
-                self.add_subgeometry(x_list, y_list)
-
-        else:
-            print("There is an unexpected geometry type.")
-            print(geom.GetGeometryName())
-            print()
-
-    def add_subgeometry(self, new_x_points, new_y_points):
-        """
-        Adds a new subgeometry to the feature
-
-        Arguments:
-            new_x_points: x points values of the new subgeometry
-            new_y_points: y points values of the new subgeometry
-
-        Returns:
-            None
-        """
-        ## Add number of points in new subgeometry to features total point_count
-        self.point_count += len(new_x_points)
-
-        #self.geom_struct.append( (len(self.parent.x_list), len(new_x_points)) )
-        
-        ## Add point count to features geom_struct
-        self.geom_struct.append(len(new_x_points))
-
-        ## Add new points to common point sequences 
-        self.parent.x_list += new_x_points
-        self.parent.y_list += new_y_points
-
-    def get_subgeometry(self, index):
-        """
-        Returns points belonging to subgeometry at given index
-
-        Arguments:
-            index: The index of the desired subgeometry
-
-        Returns:
-            x points: List of x values (projection coord), belonging to subgeometry.
-            y points: List of y values (projection coord), belonging to subgeometry.
-        """
-
-        ## Find start address of subgeom in common point list
-        init_point = self.init_address + sum(self.geom_struct[:index])
-        
-        ## Find last point belonging to subgeom in common point list
-        geom_size = self.geom_struct[index]
-        term_point = init_point + geom_size
-
-        ## Get points from splices of common point sequences
-        x_points = self.parent.x_list[init_point:term_point]
-        y_points = self.parent.y_list[init_point:term_point]
-
-        ## Return point lists
-        return x_points, y_points
-    
-    def get_subgeometries(self):
-        """
-        Returns all subgeometries belonging to feature
-
-        Arguments:
-            index: The index of the desired subgeometry
-
-        Returns:
-            Returns a list of tuples of x and y values for each subgeometry
-        """
-        geom_list = []
-
-        ## Add all subgeoms into geom_list
-        for i in range(self.subgeometry_count()):
-            geom_list.append(self.get_subgeometry(i))
-        
-        return geom_list
-
-    def subgeometry_count(self):
-        """
-        Returns the number of subgeometries within the feature
-        
-        Arguments:
-            None
-
-        Returns:
-            Subgeometry count: Number of subgeometries belonging to feature
-        """
-        return len(self.geom_struct)
-
-    def get_points(self):
-        """
-        Returns all points belonging to feature
-
-        Returns all points belonging to feature in two lists: x points & y points
-
-        Arguments:
-            None
-    
-        Returns:
-            x points: List of x values (projection coord), belonging to feature.
-            y points: List of y values (projection coord), belonging to feature.
-        """
-        ## Fetch points belong to feature from common point sequences
-        x_points = self.parent.x_list[self.init_address:self.init_address+self.point_count]
-        y_points = self.parent.y_list[self.init_address:self.init_address+self.point_count]
-        
-        ## Return point lists
-        return x_points, y_points
-
-    def get_extent(self):
-        """
-        Returns the extents (projection coordinates) of the feature
-
-        Arguments:
-            None
-
-        Returns:
-            min_x: The minimum x value of the feature
-            min_y: The minimum y value of the feature
-            max_x: The maximum x value of the feature
-            max_y: The maximum y value of the feature
-        """
-        x_points, y_points = self.get_points()
-        return min(x_points), min(y_points), max(x_points), max(y_points)
+    def set_outline_weight(self, new_weight):
+        self.style.outline_weight = new_weight
 
     def focus(self):
-        """
-        Sets the location and scale of the grandparent map object to showcase 
-        the feature
-
-        Requires:
-            - Parent VectorLayer (parent) must be added to a Map object
-        
-        Arguments:
-            - None 
-        """
-        min_x, min_y, max_x, max_y = self.get_extent()
+        min_x, min_y, max_x, max_y = self.geometry.get_extent()
 
         self.parent.parent._projx = (max_x + min_x)/2
         self.parent.parent._projy = (max_y + min_y)/2
@@ -315,889 +120,243 @@ class VectorFeature:
         ## Set processed newscale
         self.parent.parent.set_scale(new_scale)
 
-class PointFeature(VectorFeature):
-    """
-    A class representing a point feature
-
-    Holds data structures and methods for styling and drawing point features.
-    """
-
-    def __init__(self, parent):
-        """
-        Instantiates a new PointFeature object
-
-        Arguments:
-            parent: The VectorLayer in which the PointFeature object is added
-
-        Returns:
-            None
-        """
-        ## Instantiate point as VectorFeature object
-        VectorFeature.__init__(self, parent)
-
-        ## Set base style attributes (color, opacity, and radius)
-        self._color = 'green' ## Default color is green
-        self._opacity = 1
-        self._radius = 3
-
-        self._line_color = 'black'
-        self._line_opacity = 1
-        self._line_width = 1
-
-        ## Init variable to cache color
-        self._cached_color = None
-        self._cached_line_color = None
-
-    def set_color(self, input_color, opacity=1):
-        """
-        Sets the background color of the point
-
-        Arguments:
-            input_color: A value the can be interpreted as a color to set as 
-            the background color.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the background
-                of the point should be. Defaults to 1, fully opaque.
-
-        Returns:
-            None
-        """
-        self._color = input_color
-        self._opacity = opacity
-        self._cached_color = None
-
-    def set_weight(self, size):
-        """
-        Sets the size of the point
-
-        Arguments:
-            size: The size in pixels of how wide the point should be.
-
-        Returns:
-            None
-        """
-        self._radius = size / 2.0
-
-    def set_outline_color(self, input_color, opacity=1):
-        """
-        Sets the color of the outline of the point
-
-        Arguments:
-            input_color: A value the can be interpreted as a color, 
-            to set as the outline color.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the 
-                outline of the point should be. Defaults to 1, fully
-                opaque.
-
-        Returns:
-            None
-        """
-        self._line_color = input_color
-        self._line_opacity = opacity
-
-    def set_outline_weight(self, weight):
-        """
-        Sets width of the outline of the point
-
-        Arguments:
-            weight: The width (in pixels) of the outline of the point.
-
-        Returns:
-            None
-        """
-        self._line_width = weight
-
-    def set_icon(self, icon_path):
-        """
-        !! NOT IMPLEMENTED YET !!
-        Sets the icon of the point
-
-        Arguments:
-            input: TBD
-
-        Returns:
-            None
-        """
-        pass
-
-    def point_within(self, test_x, test_y):
-        """
-        Reports whether a given points is approximately collocated with point
-        feature
-
-        Arguments:
-            test_x: The x value (projection coordinate) of the test point. 
-            test_y: The y value (projection coordinate) of the test point. 
-
-        Returns:
-            point_within: Boolean whether test point is collocated at/near one of 
-                the points subgeometries.
-        """
-        for x_points, y_points in self.get_subgeometries():
-            for point_x, point_y in zip(x_points, y_points):
-                if(math.isclose(test_x, point_x, abs_tol=self.parent.parent._proj_scale*5) and
-                    math.isclose(test_y, point_y, abs_tol=self.parent.parent._proj_scale*5)):
-                    return True
-        return False
-
-    def draw(self, renderer, cr, color_override=None):
-        """
-        Draws the point onto given canvas with given renderer
-
-        Arguments:
-            renderer: A renderer object.
-            cr: A canvas object from the renderer
-            
-            optional:
-                color_override: <== Try to remove this too
-            
-
-        Returns:
-            None
-        """
-        ## Get parent layer
-        layer = self.parent
-
-        ## If color not cached yet, cache it
-        if self._cached_color == None:
-            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
-
-        ## If outline color not cached yet, cache it
-        if self._cached_line_color == None:
-            self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
-        
-        ## 
-        if color_override:
-            color = renderer.color_converter(color_override)
-        else:
-            color = self._cached_color
-
-        ## Calculate pixel values
-        pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
-
-        ## Draw point with renderer
-        renderer.draw_point(cr, self.geom_struct, pix_x, pix_y, color, self._radius, self._cached_line_color, self._line_width)
-
-class LineFeature(VectorFeature):
-    """
-    A class representing a line feature
-
-    Holds data structures and methods for styling and drawing line features.
-    """
-
-    def __init__(self, parent):
-        """
-        Instantiates a new LineFeature object
-
-        Arguments:
-            parent: The VectorLayer in which the LineFeature object is added.
-
-        Returns:
-            None
-        """
-        ## Instantiate point as VectorFeature object
-        VectorFeature.__init__(self, parent)
-
-        ## Set base attributes
-        self._color = 'red' ## Default color is green
-        self._opacity = 1
-        self._width = 2
-
-        ## Set outline attributes
-        self._outline_color = 'black'
-        self._outline_opacity = 1
-        self._outline_width = 0 ## No outline is default
-
-        ## Init variable to cache color
-        self._cached_color = None
-        self._cached_outline_color = None
-
-    def set_color(self, input_color, opacity=1):
-        """
-        Sets the color of the line
-
-        Arguments:
-            input_color: A value the can be interpreted as a color to set as 
-            the color of the line.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the color
-                of the line should be. Defaults to 1, fully opaque.
-
-        Returns:
-            None
-        """
-        self._color = input_color
-        self._opacity = opacity
-        self._cached_color = None
-
-    def set_weight(self, input_width):
-        """
-        Sets the width of the line
-
-        Arguments:
-            size: The size in pixels of how wide the line should be.
-
-        Returns:
-            None
-        """
-        self._width = input_width
-
-    def set_outline_color(self, input_color, opacity=1):
-        """
-        Sets the color of the outline of the line
-
-        Arguments:
-            input_color: A value the can be interpreted as a color, 
-            to set as the outline color.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the 
-                outline should be. Defaults to 1, fully opaque.
-
-        Returns:
-            None
-        """
-        self._outline_color = input_color
-        self._outline_opacity = opacity
-
-    def set_outline_weight(self, weight):
-        """
-        Sets width of the outline
-
-        Arguments:
-            weight: The width (in pixels) of the outline.
-
-        Returns:
-            None
-        """
-        self._outline_width = weight
-    
-    def set_style(self, input):
-        """
-        !!! NOT IMPLEMENTED !!!
-        Sets the how the line is broken up
-
-        Arguments:
-            input: UNKNOWN
-
-        Returns:
-            None
-        """
-        pass
-
-    def point_within(self, test_x, test_y):
-        """
-        Reports whether a given point is on or near the line feature
-
-        Arguments:
-            test_x: The x value (projection coordinate) of the test point. 
-            test_y: The y value (projection coordinate) of the test point. 
-
-        Returns:
-            point_within: Boolean whether test point is colinear with the 
-                line feature
-        """
-        ## Loop through each subgeom
-        for x_points, y_points in self.get_subgeometries(): 
-            ## Set first set of compair points to first point of subgeom
-            x1, y1 = x_points[0], y_points[0]
-            ## Compair each set of points to the last
-            for x2, y2 in zip(x_points, y_points): 
-                ## Only compair if points are different
-                if (x1,y1) != (x2,y2):
-                    ## Find distance between compare points (ab)
-                    base = (( (x2-x1)**2 + (y2-y1)**2 )**0.5)
-
-                    ## Find distances from test point to both compair points 
-                    ac = (( (x1-test_x)**2 + (y1-test_y)**2 )**0.5)
-                    bc = (( (x2-test_x)**2 + (y2-test_y)**2 )**0.5)
-
-                    ## Only proceed if both ac & bc are smaller than base 
-                    if (ac < base) and (bc < base):
-                        ## Find area of triangle
-                        area = ( x1*(y2-test_y) + x2*(test_y-y1) + test_x*(y1-y2) )/2
-
-                        ## Find distance of test point from base line (height of triangle)
-                        dist = (2*area) / base
-                        ## Convert to pixel distance
-                        pix_dist = dist / self.parent.parent._proj_scale
-
-                        ## If distance is less than 10 pixels, then point is near enough
-                        if pix_dist < 10:
-                            return True
-                ## Increment last point
-                x1,y1 = x2,y2 
-        return False
-
-                    #if (area / squr_area) < 0.0001:
-                    #   return True
-
-
-        return False
-
-    def draw(self, renderer, cr, color_override=None):
-        """
-        Draws the line feature onto given canvas with given renderer
-
-        Arguments:
-            renderer: A renderer object.
-
-            cr: A canvas object from the renderer
-            
-            optional:
-                color_override: <== Try to remove this
-            
-        Returns:
-            None
-        """
-        layer = self.parent
-
-        ## If color not cached yet, cache it
-        if self._cached_color == None:
-            self._cached_color = renderer.color_converter(self._color, opacity=(layer._alpha * self._opacity))
-
-        ## If outline color not cached yet, cache it
-        if self._cached_outline_color == None:
-            self._cached_outline_color = renderer.color_converter(self._outline_color, opacity=(layer._alpha * self._outline_opacity))
-        
-        if color_override:
-            color = renderer.color_converter(color_override)
-        else:
-            color = self._cached_color
-
-
-        ## Calculate pixel values
-        pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
-
-        ##
-        renderer.draw_line(cr, self.geom_struct, pix_x, pix_y, self._width, color, self._cached_outline_color, self._outline_width)
-
-class PolygonFeature(VectorFeature):
-    """
-    A class representing a polygon feature
-
-    Holds data structures and methods for styling and drawing polygon features.
-    """
-
-    def __init__(self, parent):
-        """
-        Instantiates a new PolygonFeature object
-
-        Arguments:
-            parent: The VectorLayer in which the PolygonFeature object is added.
-
-        Returns:
-            None
-        """
-        ## Init base VectorFeature Class
-        VectorFeature.__init__(self, parent)
-
-        ## Create vars for background color
-        self._bgcolor = "blue" #! Pick a better default
-        self._bg_opacity = 1
-        self._cached_bgcolor = None
-        
-        ## Create vars for line color
-        self._line_color = "black"
-        self._line_opacity = 1
-        self._cached_line_color = None
-
-        ## Property to hold line width
-        self._line_width = 1
-
-    def set_color(self, input_color, opacity=1):
-        """
-        Sets the background color of the polygon
-
-        Arguments:
-            input_color: A value the can be interpreted as a color to set as 
-            the color of the line.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the background
-                of the polygon should be. Defaults to 1, fully opaque.
-
-        Returns:
-            None
-        """
-        ## Set color and opacity
-        self._bgcolor = input_color
-        self._bg_opacity = opacity
-
-        ## Reset cached_bgcolor
-        self._cached_bgcolor = None
-
-    def set_outline_color(self, input_color, opacity=1):
-        """
-        Sets the color of the outline of the polygon
-
-        Arguments:
-            input_color: A value the can be interpreted as a color, 
-            to set as the outline color.
-
-            optional:
-                opacity: a float, 0 to 1, indicating how opaque the 
-                outline should be. Defaults to 1, fully opaque.
-
-        Returns:
-            None
-        """
-        self._line_color = input_color
-        self._line_opacity = opacity
-        self._cached_line_color = None
-
-    def set_outline_weight(self, input_width):
-        """
-        Sets width of the outline
-
-        Arguments:
-            weight: The width (in pixels) of the outline.
-
-        Returns:
-            None
-        """
-        self._line_width = input_width
-
-    def point_within(self, test_x, test_y):
-        """
-        Reports whether a given point is inside of the polygon
-
-        Returns True, if given test point is within geometry of features
-            subgeometry
-
-        Arguments:
-            test_x: The x value (projection coordinate) of the test point. 
-            test_y: The y value (projection coordinate) of the test point. 
-
-        Returns:
-            point_within: Boolean whether test point is within the 
-                polygon feature
-        """
-        ## Loop through each subgeom
-        for x_points, y_points in self.get_subgeometries():
-            inside = False
-            n = len(x_points)
-            p1x,p1y = x_points[0], y_points[0]
-            for i in range(n+1):
-                p2x, p2y = x_points[i % n], y_points[i % n]
-                if test_y > min(p1y,p2y):
-                    if test_y <= max(p1y,p2y):
-                        if test_x <= max(p1x,p2x):
-                            if p1y != p2y:
-                                xints = (test_y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                            if p1x == p2x or test_x <= xints:
-                                inside = not inside
-                p1x,p1y = p2x,p2y
-            if inside:
-                return True
-        return False
-
-    def draw(self, renderer, cr, color_override=None):
-        """
-        Draws the polygon feature onto given canvas with given renderer
-
-        Arguments:
-            renderer: A renderer object.
-            cr: A canvas object from the renderer
-            
-            optional:
-                color_override: <== Try to remove this
-            
-
-        Returns:
-            None
-        """
-        layer = self.parent
-
-        if self._cached_line_color == None:
-            self._cached_line_color = renderer.color_converter(self._line_color, opacity=(layer._alpha * self._line_opacity))
-
-        if self._cached_bgcolor == None:
-            self._cached_bgcolor = renderer.color_converter(self._bgcolor, opacity=(layer._alpha * self._bg_opacity))
-
-        if color_override:
-            bg_color = renderer.color_converter(color_override)
-        else:
-            bg_color = self._cached_bgcolor
-
-
-        ## Calculate pixel values
-        #""" ## Full layer vectorization proj2pix optimization
-        #pix_x, pix_y = self._pix_x, self. _pix_y
-        """ ## Single Vector iteration proj2pix
-        pix_x, pix_y = layer.parent.proj2pix(self._proj_x, self._proj_y)
-        #"""
-
-        ## Calculate pixel values
-        pix_x, pix_y = layer.parent.proj2pix(*self.get_points())
-        
-        ## Call on renderer to render polygon
-        renderer.draw_polygon(cr, self.geom_struct, pix_x, pix_y, bg_color, self._line_width, self._cached_line_color, layer._alpha)
-
-class VectorLayer:
-    """
-    A PyMapKit layer that holds and renders geographic vector data
-
-    Holds data structures and methods for rendering geographic vector data.
-    """
-
-    def __init__(self, path=None):
-        """
-        Instantiates a new VectorLayer object
-
-        Arguments:
-            None
-            optional:
-                path: The path of the vector data file to import data from.
-                    Defaults to None. Must be a shp or geojson file. 
-
-
-        Returns:
-            None
-        """
-    
-        ## Init parent attribute
+class VectorLayer(FeatureHost):
+    def __init__(self, geometry_type, field_names):
+        FeatureHost.__init__(self, geometry_type, field_names, projection="EPSG:4326")
         self.parent = None
-        
-        ## Set layer name 
-        self.name = "VectorLayer"
-        
-        ## Set default opacity of layer
-        self._alpha = 1
 
-        ## Create list to hold features (VectorFeature)
-        self.features = []
-        
-        ## Create a list to hold attribute fields
-        self.fields = []
+    def new(self):
+        new_geom = Geometry(self, self.geometry_type)
+        self.geometries.append(new_geom)
 
-        ## Create common point lists to hold all points of all features
-        self.x_list = []
-        self.y_list = []
-
-        if path:
-            ## Load Gdal from file extension
-            driver_dict = {'.shp': 'ESRI Shapefile', '.geojson': 'GeoJSON'}
-            try:
-                driver = driver_dict[path[path.rindex('.'):]]
-            except KeyError as ext:
-                print("Bad file type:", ext)
-                exit()
-
-            ## Get GDAL layer from path
-            driver = ogr.GetDriverByName(driver)
-            data_file = driver.Open(path, 0)
-            if data_file == None: print("Bad File."); exit()
-            ogrlayer = data_file.GetLayer()
-
-            self.name = os.path.splitext(os.path.basename(path))[0] ## (name, ext) #! Maybe move this and use ext
-            
-            self.from_gdal_layer(ogrlayer)
-
-    #% Magic Methods
-    def __len__(self):
-        """
-        Magic method returning number of features in layer
-        """
-        ## Return number of items in features list
-        return len(self.features)
-
-    def __getitem__(self, index):
-        """
-        Magic method returning feature at given index
-        """
-        return self.features[index]
-
-    def __iter__(self):
-        """
-        Magic method for initializing iteration over feature list
-        """
-        ## Create index for iteration and return self
-        self._iter_indx = 0
-        return self
-
-    def __next__(self):
-        """
-        Magic method for iteration over feature list
-        """
-        ## If there are no more feature then stop iteration
-        if self._iter_indx == len(self.features):
-            raise StopIteration
-
-        ## Return next feature from features list
-        feature = self.features[self._iter_indx]
-        self._iter_indx += 1
-        return feature
-
-    #% Vector Layer Methods
-    def add_field(self, field_name):
-        """
-        Adds a new field to the layers field list
-
-        Arguments:
-            field_name: The name of the new field
-
-        Returns:
-            None
-        """
-        self.fields.append(field_name)
-    
-    #@
-    def get_field_values(self, field_name):
-        attribute_list = []
-        for f in self:
-            attribute_list.append(f[field_name])
-        return attribute_list
-    
-    def set_color(self, color):
-        for f in self:
-            f.set_color(color)
-
-    def new_feature(self, new_feature_type):
-        """
-        Creates a new empty feature of the given type, adds it to the layer, 
-        and returns it to the user
-
-        Arguments:
-            new_feature_type: A string indicating what type of feature to create;
-                can be either: 'point', 'line', or 'polygon'.
-
-        Returns:
-            new_feature: The freshly created feature, where data can be added.
-        """
-        ## Create new feature of the given type
-        feature_classes = {"point":PointFeature, "line":LineFeature, "polygon":PolygonFeature}
-        new_feature = feature_classes[new_feature_type](self)
-        
-        ## Add new feature to feature list
+        new_feature = Feature(self, self.field_names, new_geom)
         self.features.append(new_feature)
-        
-        ## Return new feature to user
+
         return new_feature
 
-    def box_select(self, min_x, min_y, max_x, max_y):
-        """
-        Returns all the features within a given box
+    def add(self, old_feature):
+        new_feature = super().add(old_feature)
+        new_style = FeatureStyle()
+        new_feature.style = new_style
+        new_feature.parent = self
+        return new_feature
 
-        Arguments:
-            min_x: The min x (projection coordinates) of the selection.
-            min_y: The min y (projection coordinates) of the selection.
-            max_x: The max x (projection coordinates) of the selection.
-            max_y: The max y (projection coordinates) of the selection.
 
-        Returns:
-            selected_features: A list of feature are within the 
-                selection box.
-        """
-        ## Create return list
-        selected_features = []
+    def _activate(self, parent):
+        self.parent = parent
 
-        ## Loop through all features in layer, adding them to return list 
-        ## if within selection box
-        for feature in self.features:
-            g_min_x, g_min_y, g_max_x, g_max_y = feature.get_extent()
+        ## Make sure projection matches
+        if self.projection != self.parent._projection:
+            x_vals, y_vals = pyproj.transform(self.projection, self.parent._projection, self.y_values, self.x_values)
+            self.x_values, self.y_values = x_vals, y_vals
 
-            if (
-                ## Geometry completely or partially within selector 
-                ((g_max_x >= min_x and g_min_x <= max_x) and (g_max_y >= min_y and g_min_y <= max_y)) 
-                or
-                ## Selector completely within geometry
-                (g_min_x <= min_x and g_max_x >= max_x and (g_min_y <= min_y and g_max_y >= max_y))):
-                    selected_features.append(feature)
+            self.projection = self.parent._projection
+    
+    def draw(self, renderer, cr):
+        if self.geometry_type == 'polygon':
+            for feature in self:
+                
+                if not feature.style.cached_renderer: 
+                    feature.style.cache_renderer(renderer)
+                
+                pix_x, pix_y = self.parent.proj2pix(*feature.geometry.get_points())
+                renderer.draw_polygon(cr, feature.geometry.structure, pix_x, pix_y, feature.style)
+        
+        elif self.geometry_type == 'line':
+            for feature in self:
+                
+                if not feature.style.cached_renderer: 
+                    feature.style.cache_renderer(renderer)
+                
+                pix_x, pix_y = self.parent.proj2pix(*feature.geometry.get_points())
+                renderer.draw_line(cr, feature.geometry.structure, pix_x, pix_y, feature.style)
+        
+        elif self.geometry_type == 'point':
+            for feature in self:
 
-        return selected_features
+                if not feature.style.cached_renderer: 
+                    feature.style.cache_renderer(renderer)
+                
+                pix_x, pix_y = self.parent.proj2pix(*feature.geometry.get_points())
+                renderer.draw_point(cr, feature.geometry.structure, pix_x, pix_y, feature.style)
+        
+        else:
+            pass
+
+    def focus(self):
+        min_x, min_y, max_x, max_y = self.get_extent()
+
+        self.parent._projx = (max_x + min_x)/2
+        self.parent._projy = (max_y + min_y)/2
+
+        if (max_x - min_x) == 0 or (max_y - min_y) == 0:
+            return
+
+        s_x = (max_x - min_x) / self.parent.width
+        s_y = (max_y - min_y) / self.parent.height
+
+        new_scale =  max(s_x, s_y)
+
+        ## Get projection crs dict, ignore all warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            crs_dict = self.parent._projection.crs.to_dict()
+
+        ## If units not defined in crs_dict the units are degrees
+        if 'units' not in crs_dict:
+            ## Convert scale to m/pix from deg
+            new_scale = new_scale * 110570
+
+        elif crs_dict['units'] == 'us-ft':
+                new_scale = new_scale / 3.28084
+        
+        else:
+            pass ## Is meters :) scale is already in m/pix
+    
+        new_scale = new_scale * 1.25
+
+        ## Set processed newscale
+        self.parent.set_scale(new_scale)
+
+
+    def get_extent(self):
+        return min(self.x_values), min(self.y_values), max(self.x_values), max(self.y_values)
+
+    def run_on_all(self, method_name, *args):
+        has_return = False
+        rtrn_list = []
+        for rtrn in map(methodcaller(method_name, *args), self.features):
+            has_return = has_return or bool(rtrn)
+            rtrn_list.append(rtrn)
 
     def point_select(self, proj_x, proj_y):
-        """
-        Returns all features that are at a given selection point
-
-        Arguments:
-            proj_x: The x value (projection coordinates) of the 
-                selection point.
-
-            proj_y: The y value (projection coordinates) of the 
-                selection point.
-
-        Returns:
-            selected_features: A list of feature are intersects 
-                the selection point.
-        """
         ## Box select small two pixel sized box into shortlist
         min_x = proj_x - self.parent._proj_scale * 2
-        min_y = proj_y - self.parent._proj_scale * 2
         max_x = proj_x + self.parent._proj_scale * 2
+        min_y = proj_y - self.parent._proj_scale * 2
         max_y = proj_y + self.parent._proj_scale * 2
+
         short_list = self.box_select(min_x, min_y, max_x, max_y)
 
         ## If point is is within feature, added to final list
         selected_features = []
         for feature in short_list:
-            if feature.point_within(proj_x, proj_y):
+            if feature.geometry.point_within(proj_x, proj_y):
                 selected_features.append(feature)
-        return selected_features
-
-    def from_gdal_layer(self, gdal_layer):
-        """
-        Imports all features and attributes from a GDAL layer
-
-        Arguments:
-            gdal_layer: The GDAL layer to import from
-
-        Returns:
-            None
-        """
-        ## Extract field names from gdal_layer and add them to new_layer
-        attrib_data = gdal_layer.GetLayerDefn()
-        field_count = attrib_data.GetFieldCount()
-        for i in range(field_count):
-            field_data = attrib_data.GetFieldDefn(i)
-            self.add_field(field_data.GetName())
-    
-        for feature in gdal_layer:
-            feature_geom = feature.GetGeometryRef()
-            feature_class = {"POINT": PointFeature, 
-                            "MULTIPOINT": PointFeature,
-                            "LINESTRING": LineFeature, 
-                            "MULTILINESTRING": LineFeature, 
-                            "POLYGON": PolygonFeature,
-                            "LINEARRING": PolygonFeature,
-                            "MULTIPOLYGON": PolygonFeature}[feature_geom.GetGeometryName()]
-            
-            new_feature = feature_class(self)
-            self.features.append(new_feature)
-            new_feature.from_gdal_feature(feature)
-
-    #% Layer Methods
-    def _activate(self, new_parent):
-        """
-        Method called when layer is added to a PyMapKit.Map object.
-        Sets the parent attribute, and projects data to projection
-        coordinates.
-
-        Arguments:
-            new_parent: The PyMapKit.Map object that the VectorLayer
-                was added to.
-
-        Returns:
-            None
-        """
-        ## Set parent attribute
-        self.parent = new_parent
-
-        ## Projects x_list, self.y_list to parent Maps projection
-        x, y = self.parent.geo2proj(self.x_list, self.y_list)
-        self.x_list, self.y_list = list(x), list(y)
-
-    def _deactivate(self):
-        """
-        Method called when layer is removed from a PyMapKit.map object
-        Resets the parent attribute, and converts the projected points
-        back to geographic coordinates.
-
-        Arguments:
-            None
-
-        Returns:
-            None
-        """
-        x, y = self.parent.proj2geo(self.x_list, self.y_list)
-        self.x_list, self.y_list = list(x), list(y)
-        self.parent = None
-
-    def get_extent(self):
-        """
-        Returns the extent (projection coordinates) of the layer
-
-        Arguments:
-            None
-
-        Returns:
-            extent: Tuple of max and min values of the layer
-                min_x: The smallest x value in the layer
-                min_y: The smallest y value in the layer
-                max_x: The largest y value in the layer
-                max_y: The largest y value in the layer
-        """
-        return min(self.x_list), min(self.y_list), max(self.x_list), max(self.y_list)
-    
-    def focus(self):
-        """
-        Sets the location and scale of the parent map object to showcase 
-            the layer
         
-        Arguments:
-            None
-
-        Returns:
-            None
-        """
-        ## Get the current extent of the layer
-        min_x, min_y, max_x, max_y = self.get_extent()
-
-        ## Set the location of the parent map to the middle of the extent 
-        self.parent._projx = (max_x + min_x)/2
-        self.parent._projy = (max_y + min_y)/2
-
-        ## Find optimal scale for both x and y values 
-        s_x = (max_x - min_x) / self.parent.width
-        s_y = (max_y - min_y) / self.parent.height
+        return FeatureList(self, selected_features)
+    
+    @classmethod
+    def from_gdal_layer(cls, gdal_layer):
+        ## Get scheme from layer, load into field_names
+        field_names = []
+        layer_def = gdal_layer.GetLayerDefn()
+        for i in range(layer_def.GetFieldCount()):
+            field_def = layer_def.GetFieldDefn(i)
+            field_names.append(field_def.GetName())
         
-        ## Find larger of x and y scales
-        new_scale =  max(s_x, s_y)
+        ## Find geometry type of layer
+        test_feature = gdal_layer.GetNextFeature()
+        geometry = test_feature.GetGeometryRef()
+        geom_type = geometry.GetGeometryName()
+        gdal_layer.ResetReading()
 
-        ## Get projection crs dict ignoring all warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            crs_dict = self.parent._projection.crs.to_dict()
+        #! DO SOMETHING ABOUT PROJECTION
+        
+        ## Create VectorSet to hold features
+        geometry_type = {"POLYGON":"polygon", "LINEARRING":"polygon", "MULTIPOLYGON":"polygon", "LINESTRING":"line", "MULTILINESTRING":"line", "POINT":"point", "MULTIPOINT":"point"}[geom_type]
+        new_layer = VectorLayer(geometry_type, field_names)
 
-        ## Convert scale based on current parent map objects projection
-        if 'units' not in crs_dict: ## If units not defined in crs_dict the units are degrees
-            ## Convert scale to m/pix from deg
-            new_scale = new_scale * 110570
-        elif crs_dict['units'] == 'us-ft':
-                new_scale = new_scale / 3.28084
+        ## If polygon
+        if geom_type in ("POLYGON", "LINEARRING", "MULTIPOLYGON"):
+            for feature in gdal_layer:
+                ## Create a new Feature, & extract new_geom from new_feature
+                new_feature = new_layer.new()
+                new_geom = new_feature.geometry
+
+                ## Load fields from GDAL feature into new feature
+                for field_name in field_names:
+                    new_feature[field_name] = feature[field_name]
+                
+                ## Load all subgeometry into  new_layer geom
+                geom = feature.GetGeometryRef()
+                for indx in range(geom.GetGeometryCount()):
+                    subpoly_geom = geom.GetGeometryRef(indx)
+
+                    ## Account for weird GDAL subgeom thing
+                    if subpoly_geom.GetGeometryName() == "POLYGON":
+                        subpoly_geom = subpoly_geom.GetGeometryRef(0)
+
+                    ## Load points from subgeom into lists
+                    x_coord_list, y_coord_list = [], [] 
+                    for point in subpoly_geom.GetPoints():
+                        x_coord_list.append(point[0])
+                        y_coord_list.append(point[1])
+                    
+                    ## Create new subgeom
+                    new_geom.add_subgeometry(x_coord_list, y_coord_list)
+
+        elif geom_type in ("LINESTRING", "MULTILINESTRING"):
+            for feature in gdal_layer:
+                ## Create a new Feature, & extract new_geom from new_feature
+                new_feature = new_layer.new()
+                new_geom = new_feature.geometry
+
+                ## Load fields from GDAL feature into new feature
+                for field_name in field_names:
+                    new_feature[field_name] = feature[field_name]
+                
+                ## Load all subgeometry into new features geom
+                geom = feature.GetGeometryRef()
+                geocount = geom.GetGeometryCount()
+                if geocount == 0:
+                    x_list, y_list = [], []
+                    for point in geom.GetPoints():
+                        x_list.append(point[0])
+                        y_list.append(point[1])
+                    new_geom.add_subgeometry(x_list, y_list)
+                else:
+                    for indx in range(geom.GetGeometryCount()):
+                        subgeom = geom.GetGeometryRef(indx)
+                        
+                        x_list, y_list = [], []
+                        for point in subgeom.GetPoints():
+                            x_list.append(point[0])
+                            y_list.append(point[1])
+                        new_geom.add_subgeometry(x_list, y_list)
+
+
+
+        elif geom_type in ("POINT", "MULTIPOINT"):
+            for feature in gdal_layer:
+                ## Create a new Feature, & extract new_geom from new_feature
+                new_feature = new_layer.new()
+                new_geom = new_feature.geometry
+
+                ## Load fields from GDAL feature into new feature
+                for field_name in field_names:
+                    new_feature[field_name] = feature[field_name]
+                
+                ## Load all subgeometry into new features geom
+                geom = feature.GetGeometryRef()
+                if geom.GetGeometryCount() == 0:
+                    x_list, y_list = [], []
+                    for point in geom.GetPoints():
+                        x_list.append(point[0])
+                        y_list.append(point[1])
+                    new_geom.add_subgeometry(x_list, y_list)
+                
+                ## Mutipoint
+                else:
+                    for indx in range(geom.GetGeometryCount()):
+                        subpoly_geom = geom.GetGeometryRef(indx)
+
+                        x_list, y_list = [], []
+                        for point in subpoly_geom.GetPoints():
+                            x_list.append(point[0])
+                            y_list.append(point[1])
+                        new_geom.add_subgeometry(x_list, y_list)
         else:
-            pass ## Is meters :) scale is already in m/pix
-        
-        ## Adjust scale to look better
-        new_scale = new_scale * 1.25
+            pass
 
-        ## Set parent Map Object scale
-        self.parent.set_scale(new_scale)
-
-    def set_opacity(self, new_opacity):
-        """
-        Sets the opacity of the layer
-        """
-        self._alpha = new_opacity
-
-    def draw(self, renderer, cr):
-        """
-        Draws all features in view onto given canvas using given renderer
-
-        Arguments:
-            renderer: A renderer object.
-            
-            cr: A canvas object the renderer can draw on
-
-        Returns:
-            None
-        """
-        ## Find project coordinates of current viewport
-        min_x, min_y = self.parent.pix2proj(0,0)
-        max_x, max_y = self.parent.pix2proj(self.parent.width, self.parent.height)
-
-        #'''
-        ## Draw features within current viewport
-        for feature in self.box_select(min_x, min_y, max_x, max_y):
-            feature.draw(renderer, cr)
-        '''
-        ## Draw all features
-        for feature in self.features:
-            feature.draw(self, renderer, cr)
-        #'''
-
+        return new_layer
