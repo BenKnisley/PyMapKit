@@ -8,6 +8,7 @@ Date: 7, November 2020
 import warnings
 from operator import methodcaller
 import pyproj
+import ogr
 
 class Geometry:
     """
@@ -597,7 +598,21 @@ class VectorLayer:
 
     @classmethod
     def from_path(cls, path):
-        pass
+        ## Load Gdal from file extension
+        driver_dict = {'.shp': 'ESRI Shapefile', '.geojson': 'GeoJSON'}
+        try:
+            driver = driver_dict[path[path.rindex('.'):]]
+        except KeyError as ext:
+            print("Bad file type:", ext)
+            return
+
+        ## Get GDAL layer from path
+        driver = ogr.GetDriverByName(driver)
+        data_file = driver.Open(path, 0)
+        if data_file == None: print("Bad File."); return
+        ogrlayer = data_file.GetLayer()
+        
+        return VectorLayer.from_gdal_layer(ogrlayer)
 
     @classmethod
     def from_gdal_layer(cls, gdal_layer):
