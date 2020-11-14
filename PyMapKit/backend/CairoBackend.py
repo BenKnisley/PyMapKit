@@ -59,9 +59,9 @@ class CairoBackend(BaseBackend):
     def draw_point(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         
         ## Draw point
         pointer = 0
@@ -81,9 +81,9 @@ class CairoBackend(BaseBackend):
     def draw_line(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
+            style.cache_renderer(self)
 
         canvas.set_source_rgba(*style._outline_color_cache)
         canvas.set_line_width(style.weight+style.outline_weight)
@@ -107,9 +107,9 @@ class CairoBackend(BaseBackend):
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
+            style.cache_renderer(self)
 
         ## Draw polygon
         pointer = 0
@@ -126,6 +126,7 @@ class CairoBackend(BaseBackend):
         canvas.set_source_rgba(*style._outline_color_cache)
         canvas.set_line_width(style.outline_weight)
         canvas.stroke()
+
 
     def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw'):
         #def draw_image(self, cr, img_surface, pix_x, pix_y, scale_x, scale_y):

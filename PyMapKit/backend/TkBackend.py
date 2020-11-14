@@ -55,9 +55,9 @@ class TkBackend(BaseBackend):
     def draw_point(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         
         pointer = 0
         for p_count in structure:
@@ -72,10 +72,10 @@ class TkBackend(BaseBackend):
     def draw_line(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
-
+            style.cache_renderer(self)
+        
         pointer = 0
         for p_count in structure:
             args = []
@@ -91,10 +91,10 @@ class TkBackend(BaseBackend):
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
         ## Cache colors
         if not style.cached_renderer:
-            style.cache_colors(self)
+            style.cache_renderer(self)
         elif style.cached_renderer != self:
-            style.cache_colors(self)
-
+            style.cache_renderer(self)
+        
         pointer = 0
         for p_count in structure:
             args = []
