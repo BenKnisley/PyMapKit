@@ -394,7 +394,6 @@ class FeatureDict:
                 retn_list.append(feature)
         return FeatureList(self.parent, retn_list)
 
-
 class VectorLayer:
     """ """
     def __init__(self, geometry_type, field_names, projection="EPSG:4326"):
