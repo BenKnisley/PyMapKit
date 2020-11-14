@@ -400,6 +400,8 @@ class VectorLayer:
     def __init__(self, geometry_type, field_names, projection="EPSG:4326"):
         self.parent = None
 
+        self.name = 'Vector Layer'
+
         self.field_names = field_names
         self.features = []
 
