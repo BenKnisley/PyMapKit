@@ -120,7 +120,7 @@ class TkBackend(BaseBackend):
         ## Draw image on
         canvas.create_image(x, y, image=img, anchor=align)
     
-    def draw_text(self, canvas, text_line, text_style=None):
+    def draw_text(self, canvas, text_line, x_pos, y_pos, text_style=None):
         effect_string = ''
         if text_line.italic:
             effect_string += 'italic '
@@ -128,11 +128,17 @@ class TkBackend(BaseBackend):
         if text_line.bold:
             effect_string += 'bold '
         
+        if text_style:
+            align = 'center'
+        else:
+            align = 'nw'
+
+
         #if text_line.underline:
         #    effect_string += 'underline'
         effect_string = effect_string.strip()
 
         ## Draw Text
-        canvas.create_text(x_pos, y_pos, font=(text_line.font, text_line.size, effect_string), text=text_line.text, fill=text_line.color, anchor='nw')
+        canvas.create_text(x_pos, y_pos, font=(text_line.font, text_line.size, effect_string), text=text_line.text, fill=text_line.color, anchor=align)
 
 

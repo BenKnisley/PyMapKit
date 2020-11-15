@@ -144,7 +144,7 @@ class CairoBackend(BaseBackend):
         canvas.paint()
         canvas.restore()
     
-    def draw_text(self, canvas, text_line, text_style=None):
+    def draw_text(self, canvas, text_line, x_pos, y_pos, text_style=None):
         """ """
         if text_line.italic:
             slant = cairo.FONT_SLANT_ITALIC
@@ -156,11 +156,15 @@ class CairoBackend(BaseBackend):
             boldness = cairo.FONT_WEIGHT_BOLD
         else:
             boldness = cairo.FONT_WEIGHT_NORMAL
-
         
         canvas.select_font_face(text_line.font, slant, boldness)
         canvas.set_font_size(text_line.size)
         canvas.set_source_rgba(*self.cache_color(text_line.color))
+
+        if text_style:
+            (x, y, width, height, dx, dy) = canvas.text_extents(text_line.text)
+            x_pos -= width/2
+            y_pos += height/2
 
         canvas.move_to(x_pos, y_pos)
         canvas.show_text(text_line.text)

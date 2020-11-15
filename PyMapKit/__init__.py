@@ -23,6 +23,7 @@ from .VectorLayer import VectorLayer
 from .RasterLayer import RasterLayer
 from .TileLayer import TileLayer
 from .TextLayer import TextLayer
+from .LabelLayer import LabelLayer
 
 
 
