@@ -151,12 +151,12 @@ class TileLayer:
         
         #!! Simplify this
         ## Get number of tiles to cover width and height of canvas
-        scaling_factor = zoom2scale(zoom_lvl) / self.parent.get_scale()
-        scaling_factor += (0.005 * (1/scaling_factor))
-        scaling_factor = 256 * scaling_factor
+        sf = zoom2scale(zoom_lvl) / self.parent.get_scale()
+        sf += (0.005 * (1/sf))
+        sf = 256 * sf
 
-        tile_x_size = int(self.parent.width / sx) + 2
-        tile_y_size = int(self.parent.height / sx) + 2
+        tile_x_size = int(self.parent.width / sf) + 2
+        tile_y_size = int(self.parent.height / sf) + 2
 
         ## Get tile at map location
 
