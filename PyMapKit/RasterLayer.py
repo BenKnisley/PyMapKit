@@ -93,6 +93,7 @@ class RasterLayer:
         self._scale_x = None
         self._scale_y = None
 
+    #! Rename to set opacity
     def set_transparency(self, new_transparency):
         """
         """

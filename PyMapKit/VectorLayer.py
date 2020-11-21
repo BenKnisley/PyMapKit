@@ -9,6 +9,8 @@ import warnings
 from operator import methodcaller
 import pyproj
 import ogr
+import os
+import math
 
 class Geometry:
     """
@@ -152,11 +154,12 @@ class Feature:
         self.attributes[field_name] = value
 
     ## Style pass through
-    def set_color(self, color):
-        self.style.set_color(color)
+    def set_color(self, color, opacity=1):
+        self.style.set_color(color, opacity)
 
-    def set_outline_color(self, new_color):
+    def set_outline_color(self, new_color, opacity=1):
         self.style.set_outline_color(new_color)
+        self.style.outline_opacity = 1
     
     def set_weight(self, new_weight):
         self.style.weight = new_weight
@@ -168,8 +171,7 @@ class Feature:
     def focus(self):
         min_x, min_y, max_x, max_y = self.geometry.get_extent()
 
-        self.parent.parent._projx = (max_x + min_x)/2
-        self.parent.parent._projy = (max_y + min_y)/2
+        self.parent.parent.set_proj_coordinate((max_x + min_x)/2, (max_y + min_y)/2)
 
         if (max_x - min_x) == 0 or (max_y - min_y) == 0:
             return
@@ -211,6 +213,7 @@ class FeatureStyle:
         self.opacity = 1
 
         self.outline_color = 'black'
+        self.outline_opacity = 1
         self._outline_color_cache = None
 
         self.weight = 1
@@ -240,16 +243,18 @@ class FeatureStyle:
         
     def cache_renderer(self, renderer):
         self._color_cache = renderer.cache_color(self.color, opacity=self.opacity)
-        self._outline_color_cache = renderer.cache_color(self.outline_color, opacity=self.opacity)
+        self._outline_color_cache = renderer.cache_color(self.outline_color, opacity=self.outline_opacity)
         self.cached_renderer = renderer
     
-    def set_color(self, new_color):
+    def set_color(self, new_color, opacity=1):
         self.color = new_color
+        self.opacity = opacity
         self._color_cache = None
         self.cached_renderer = None
     
-    def set_outline_color(self, new_color):
+    def set_outline_color(self, new_color, opacity=1):
         self.outline_color = new_color
+        self.outline_opacity = opacity
         self._outline_color_cache = None
         self.cached_renderer = None
 
@@ -614,7 +619,11 @@ class VectorLayer:
         if data_file == None: print("Bad File."); return
         ogrlayer = data_file.GetLayer()
         
-        return VectorLayer.from_gdal_layer(ogrlayer)
+        rtrn_layer = VectorLayer.from_gdal_layer(ogrlayer)
+
+        rtrn_layer.name = os.path.basename(path)
+
+        return rtrn_layer
 
     @classmethod
     def from_gdal_layer(cls, gdal_layer):

@@ -65,7 +65,7 @@ class _tile:
 
 class TileLayer:
     """ """
-    def __init__(self, url, blocking=True):
+    def __init__(self, url, blocking=True, cache_dir=None):
         """ 
         url format: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
         """
@@ -79,12 +79,16 @@ class TileLayer:
         self.url = url
         self.tile_store = {}
         self.requested_tiles = []
-        self.executor = ThreadPoolExecutor(max_workers=8)
+        self.executor = ThreadPoolExecutor(max_workers=20)
         ## Flag if layer should block while downloading tiles
         self.blocking = blocking
 
         ## Create temp directory to store tiles
-        self.temp_dir = tempfile.mkdtemp()
+        if cache_dir:
+            self.cache_dir = cache_dir
+        else:
+            self.cache_dir = tempfile.mkdtemp()
+        
 
     def fetch_tile(self, zoom_lvl, tile_x, tile_y, blocking=True):
 
@@ -95,7 +99,7 @@ class TileLayer:
             tile_data = (zoom_lvl, tile_x, tile_y)
             self.start_download(tile_data)
             return self.tile_store[(zoom_lvl, tile_x, tile_y)]
-        
+
         elif (zoom_lvl, tile_x, tile_y) in self.requested_tiles:
             return None
         
@@ -118,7 +122,7 @@ class TileLayer:
         url = url.replace('{x}', str(tile_x))
         url = url.replace('{y}', str(tile_y))
  
-        path = f"{self.temp_dir}/{zoom_lvl}.{tile_x}.{tile_y}.png" 
+        path = f"{self.cache_dir}/{zoom_lvl}.{tile_x}.{tile_y}.png" 
 
         if os.path.isfile(path):
             return path
@@ -142,16 +146,23 @@ class TileLayer:
     
     def draw(self, renderer, cr):
         """ """
+        ##
+        init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self.parent.get_location(), self.parent.get_scale())
+        
+        #!! Simplify this
         ## Get number of tiles to cover width and height of canvas
-        tile_x_size = int(self.parent.width / 256) + 6
-        tile_y_size = int(self.parent.height / 256) + 6
+        scaling_factor = zoom2scale(zoom_lvl) / self.parent.get_scale()
+        scaling_factor += (0.005 * (1/scaling_factor))
+        scaling_factor = 256 * scaling_factor
+
+        tile_x_size = int(self.parent.width / sx) + 2
+        tile_y_size = int(self.parent.height / sx) + 2
 
         ## Get tile at map location
-        init_tile_x, init_tile_y, zoom_lvl = geo2tile(*self.parent.get_location(), self.parent.get_scale())
 
         ## Find top left tile
-        start_tile_x = init_tile_x - int(tile_x_size / 6) - 4
-        start_tile_y = init_tile_y - int(tile_y_size / 6) - 4
+        start_tile_x = init_tile_x - int(tile_x_size/2)# - 4
+        start_tile_y = init_tile_y - int(tile_y_size/2)# - 4
 
         ## Find bottom right tile
         end_tile_x = int(start_tile_x + tile_x_size)
