@@ -19,7 +19,9 @@ __status__ = "Planning"
 from .Map import Map
 
 ## Import data layer classes
+from . import VectorLayer as vector #! Import all like this??
 from .VectorLayer import VectorLayer
+
 from .RasterLayer import RasterLayer
 from .TileLayer import TileLayer
 from .TextLayer import TextLayer
