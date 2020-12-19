@@ -18,22 +18,19 @@ __status__ = "Planning"
 ## Import Map class
 from .Map import Map
 
-## Import data layer classes
-from . import VectorLayer as vector #! Import all like this??
-from .VectorLayer import VectorLayer
-
+## 
+from . import VectorLayer as vector
 from . import RasterLayer as raster
-from .RasterLayer import RasterLayer
-
 from . import TileLayer as tile
-from .TileLayer import TileLayer
-
 from . import TextLayer as text
-from .TextLayer import TextLayer
-
 from . import LabelLayer as label
+
+
+## Import data layer classes
+from .VectorLayer import VectorLayer
+from .RasterLayer import RasterLayer
+from .TileLayer import TileLayer
+from .TextLayer import TextLayer
 from .LabelLayer import LabelLayer
-
-
 
 
