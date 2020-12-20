@@ -5,7 +5,7 @@ Function: Provide 'backend' namespace and get_backend function.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 17 July, 2020
 """
-from .BaseBackend import BaseBackend
+from .base_backend import BaseBackend
 
 
 def get_backend(backend):
@@ -15,11 +15,11 @@ def get_backend(backend):
     It a backend does not exist, backend passes through; assuming user is using a custom backend.  
     """
     if backend in ('cairo', 'pycairo'):
-        from .CairoBackend import CairoBackend
+        from .cairo_backend import CairoBackend
         return CairoBackend()
 
     elif backend in ('tk', 'tkcanvas', 'tkinter'):
-        from .TkBackend import TkBackend
+        from .tk_backend import TkBackend
         return TkBackend()
 
     else:

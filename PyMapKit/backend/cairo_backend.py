@@ -5,7 +5,7 @@ Function: Define CairoBackend class and contain all cairo drawing functionality.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 1 January, 2020
 """
-from .BaseBackend import BaseBackend
+from .base_backend import BaseBackend
 import numpy as np
 import cairo
 

@@ -5,7 +5,7 @@ Function: Define TkBackend class and contain all Tk drawing functionality.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 15 July, 2020
 """
-from .BaseBackend import BaseBackend
+from .base_backend import BaseBackend
 import tkinter as tk
 from PIL import Image, ImageTk
 

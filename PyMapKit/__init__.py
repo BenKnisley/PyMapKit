@@ -14,23 +14,21 @@ __license__ = "MIT"
 __version__ = "0.1.4"
 __status__ = "Planning"
 
+## import all modules under PyMapKit
+from . import vector_layer as vector_layer
+from . import raster_layer as raster_layer
+from . import tile_layer as tile_layer
+from . import text_layer as text_layer
+from . import label_layer as label_layer
 
 ## Import Map class
-from .Map import Map
+from .map import Map
 
-## 
-from . import VectorLayer as vector
-from . import RasterLayer as raster
-from . import TileLayer as tile
-from . import TextLayer as text
-from . import LabelLayer as label
-
-
-## Import data layer classes
-from .VectorLayer import VectorLayer
-from .RasterLayer import RasterLayer
-from .TileLayer import TileLayer
-from .TextLayer import TextLayer
-from .LabelLayer import LabelLayer
+## Import layer classes
+from .vector_layer import VectorLayer
+from .raster_layer import RasterLayer
+from .tile_layer import TileLayer
+from .text_layer import TextLayer
+from .label_layer import LabelLayer
 
 
