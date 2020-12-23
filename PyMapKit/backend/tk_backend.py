@@ -23,7 +23,7 @@ class TkBackend(BaseBackend):
     def save(self, canvas, output):
         if output:
             self.surface.update()    
-            canvas.postscript(file=target)
+            canvas.postscript(file=output)
         else:
             self.surface.mainloop()
 
