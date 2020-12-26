@@ -1,12 +1,11 @@
 """
 Project: PyMapKit
 Title: Skia Rendering Backend
-Function: Define CairoBackend class and contain all Skia drawing functionality.
+Function: Define SkiaBackend class and contain all Skia drawing functionality.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 18 December, 2020
 """
 from .base_backend import BaseBackend
-import numpy as np
 import skia
 
 class SkiaBackend(BaseBackend):
@@ -26,7 +25,6 @@ class SkiaBackend(BaseBackend):
     def cache_image(self, image_path):
         return skia.Image.open(image_path)
 
-    ''' Test this '''
     def cache_color(self, input_color, opacity=1):
         ## Two tuple types, 0-1 or 0-256
         if isinstance(input_color, tuple):
@@ -60,7 +58,7 @@ class SkiaBackend(BaseBackend):
                 A = int(opacity * 255)
                 return skia.Color(R,G,B,A)
 
-    def draw_background(self, canvas, color): #? Make sure background can be transparent
+    def draw_background(self, canvas, color):
         if not isinstance(color, int):
             color = self.cache_color(color)
 
@@ -180,7 +178,6 @@ class SkiaBackend(BaseBackend):
         ## Draw image
         canvas.drawImageRect(image_cache, rect)
     
-    ''' IMPLEMENT '''
     def draw_text(self, canvas, text_line, x_pos, y_pos, text_style=None):
         """ """
         ## Create a list to hold Typeface constructor args
