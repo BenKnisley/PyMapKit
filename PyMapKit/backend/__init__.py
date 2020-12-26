@@ -21,6 +21,11 @@ def get_backend(backend):
     elif backend in ('tk', 'tkcanvas', 'tkinter'):
         from .tk_backend import TkBackend
         return TkBackend()
+    
+    elif backend in ('skia', 'pyskia'):
+        from .skia_backend import SkiaBackend
+        return SkiaBackend()
+
 
     else:
         ## If backend is not found, assume user is using there own
