@@ -7,11 +7,10 @@ Created: 8 February, 2020
 """
 import gdal
 import tempfile
-from PIL import Image
  
 class RasterLayer:
     """ """
-    def __init__(self, path, clear_nodata=False, nodata_value=(0,0,0,255), projection=None):
+    def __init__(self, path, clear_nodata=False, nodata_value=(0,0,0), projection=None):
         """ """
         ## Open path with GDAL, if it fails raise exception
         self._gdal_raster = gdal.Open(path)
@@ -57,29 +56,19 @@ class RasterLayer:
         temp_tiff = gdal.Open(temp_tif.name)
         self._proj_x, self._scale_x, _, self._proj_y, _, self._scale_y = temp_tiff.GetGeoTransform()
 
-        #image.MAX_IMAGE_PIXELS = 9331200000000
-        
-        ## Load image data with PIL
-        image = Image.open(temp_tif.name)
+        ## Get Each color band
+        R_band = temp_tiff.GetRasterBand(1)
+        G_band = temp_tiff.GetRasterBand(2)
+        B_band = temp_tiff.GetRasterBand(3)
 
-        ## If clear_nodata flag is set, make nodata pixels transparent
-        if self.clear_nodata:
-            ## Convert to RGBA colorspace
-            image = image.convert("RGBA")
-            
-            ## Loop through all pixels: loading them into new_image_data
-            new_image_data = []
-            for pixel in image.getdata():
-                if pixel == self.nodata_value:
-                    pixel = (0, 0, 0, 0)
-                new_image_data.append(pixel)
-            
-            ## Put updated image data into image 
-            image.putdata(new_image_data)
-        
-        ## Save image into a tempfile, converting into PNG
+        ## Set given nodata values
+        R_band.SetNoDataValue(self.nodata_value[0])
+        G_band.SetNoDataValue(self.nodata_value[1])
+        B_band.SetNoDataValue(self.nodata_value[2])
+
         temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-        image.save(temp_png.name, "PNG")
+        dst_driver = gdal.GetDriverByName('PNG')
+        dst_ds = dst_driver.CreateCopy(temp_png.name, temp_tiff)
         
         ## Keep path of image data to cache during draw 
         self._img_path = temp_png.name
