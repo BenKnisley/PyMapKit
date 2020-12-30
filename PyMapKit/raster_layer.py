@@ -21,7 +21,7 @@ class RasterLayer:
         self.path = path
 
         ## Create a name property
-        self.name = "RasterLayer"
+        self.name = "Raster Layer"
 
         #$ clear_nodata flag says whether to make nodata pixels transparent 
         self.clear_nodata = clear_nodata
@@ -68,8 +68,9 @@ class RasterLayer:
 
         temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         dst_driver = gdal.GetDriverByName('PNG')
-        dst_ds = dst_driver.CreateCopy(temp_png.name, temp_tiff)
-        
+        dst_ds = dst_driver.CreateCopy(temp_png.name, temp_tiff, 0, ["ZLEVEL=1"])
+
+
         ## Keep path of image data to cache during draw 
         self._img_path = temp_png.name
 
