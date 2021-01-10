@@ -41,11 +41,14 @@ class Map:
 
     def add(self, new_layer, index=0):
         ''' Add a layer to the map '''
+        new_layer.activate(self)
         self.layers.insert(index, new_layer)
+        
 
 
     def remove(self, del_layer):
         ''' Remove a layer from the map '''
+        del_layer.deactivate()
         self.layers.remove(del_layer)
     
     ##
@@ -88,10 +91,6 @@ class Map:
     ##
     ##
     ##
-    
-    def set_size(self, width, height):
-        ''' '''
-        pass
     
     def set_geographic_crs(self, new_crs):
         '''  '''
