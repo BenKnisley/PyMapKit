@@ -11,6 +11,7 @@ import pyproj
 
 class Map:
     def __init__(self):
+        ''' '''
         ## Create a list to hold layers
         self.layers = [] #! Add type hint
 
@@ -39,13 +40,14 @@ class Map:
     ######################
 
     def add(self, new_layer, index=0):
-        ''' '''
-        pass
+        ''' Add a layer to the map '''
+        self.layers.insert(index, new_layer)
 
 
     def remove(self, del_layer):
-        ''' '''
-        pass
+        ''' Remove a layer from the map '''
+        self.layers.remove(del_layer)
+    
     ##
     ##
     ##
