@@ -11,9 +11,8 @@ import pyproj
 
 class Map:
     def __init__(self):
-
         ## Create a list to hold layers
-        self.layers = [] #! Add type hnt
+        self.layers = [] #! Add type hint
 
         ## Create integers to hold width and height
         self.width: int = 0
@@ -35,3 +34,95 @@ class Map:
         self.x_coordinate = 0
         self.y_coordinate = 0
 
+    ######################
+    ## Layer methods
+    ######################
+
+    def add(self, new_layer, index=0):
+        ''' '''
+        pass
+
+
+    def remove(self, del_layer):
+        ''' '''
+        pass
+    ##
+    ##
+    ##
+    
+    def set_location(self, latitude, longitude):
+        ''' '''
+        pass
+
+    def get_location(self):
+        ''' '''
+        pass
+    
+    def get_projection_coordinates(self):
+        ''' '''
+        pass
+    
+    def set_projection_coordinates(self, x, y):
+        ''' '''
+        pass
+    
+    ##
+    ##
+    ##
+    
+    def set_size(self, width, height):
+        ''' '''
+        pass
+    
+    def set_backend(self, backend):
+        '''  '''
+        pass
+    
+    def render(self, *args):
+        ''' '''
+        pass
+    
+    
+    ##
+    ##
+    ##
+    
+    def set_size(self, width, height):
+        ''' '''
+        pass
+    
+    def set_geographic_crs(self, new_crs):
+        '''  '''
+        pass
+    
+    def set_projection(self, new_projection):
+        ''' '''
+        pass
+    
+    ##
+    ##
+    ##
+    
+    def geo2proj(self, geo_x, geo_y):
+        ''' '''
+        pass
+    
+    def proj2geo(self, proj_x, proj_y):
+        ''' '''
+        pass
+    
+    def proj2pix(self, proj_x, proj_y):
+        ''' '''
+        pass
+    
+    def pix2proj(self, pix_x, pix_y):
+        ''' '''
+        pass
+    
+    def geo2pix(self, geo_x, geo_y):
+        ''' '''
+        pass
+    
+    def pix2geo(self, pix_x, pix_y):
+        ''' '''
+        pass
