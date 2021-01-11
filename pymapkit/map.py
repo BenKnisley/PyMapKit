@@ -28,30 +28,53 @@ class Map:
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs)
         self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs)
 
-        ## Set scale
-        self.scale = 1
-
+        ## Create variables to hold scale
+        self._scale = 1 ## m/pix
+        self._proj_scale = 1 ## unit/pixel
+        
         ## Set projection location
         self.x_coordinate = 0
         self.y_coordinate = 0
+
 
     ######################
     ## Layer methods
     ######################
 
-    def add(self, new_layer, index=None):
-        ''' Add a layer to the map '''
+    def add(self, new_layer, index=-1):
+        """
+        Adds a new layer to the map.
+        By default the new layer is added to the end of the layer list, and thus on top of existing map layers.
+
+        Arguments:
+            - new_layer - a pymapkit.MapLayer object to be added to the Map objects layer list
+
+            Optional:__
+                - index=-1: the index where to insert the new layer. -1 adds layer to the top of the map, 0 to the bottom.
+
+        Returns: None
+        """
         ## Call activate on new_layer
         new_layer.activate(self)
 
         ## Add layer. 
-        if index == None:
+        if index == -1:
             self.layers.append(new_layer)
         else:
             self.layers.insert(index, new_layer)
         
     def remove(self, del_layer):
-        ''' Remove a layer from the map '''
+        """ 
+        Removes a layer from the map.
+
+        Arguments
+            - del_layer - the layer to remove from the layer list. del_layer must exist in map.layers.
+
+            Optional:
+                - None
+
+        Returns: None
+        """
         ## Call deactivate on del_layer
         del_layer.deactivate()
 
@@ -61,11 +84,6 @@ class Map:
     ##
     ##
     ##
- 
-    def set_scale(self, new_scale):
-        ''' '''
-        pass
-
     
     def set_location(self, latitude, longitude):
         ''' '''
@@ -87,6 +105,13 @@ class Map:
     ## 
     ##
     
+    def set_scale(self, new_scale):
+        ''' '''
+        ## NOTE: PyProj gives us a way to convert
+        #projected_crs.axis_info[0].unit_conversion_factor
+        pass
+
+
     def set_size(self, width, height):
         ''' '''
         pass

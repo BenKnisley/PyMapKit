@@ -13,7 +13,7 @@ None
 Returns: A new pymapkit.Map object
 
 
-### classmethod ```add(new_layer, index=None)```
+### classmethod ```add(new_layer, index=-1)```
 Adds a new layer to the map.
 By default the new layer is added to the end of the layer list, and thus on top of existing map layers.
 
@@ -21,7 +21,7 @@ __Parameters:__
 - new_layer - a pymapkit.MapLayer object to be added to the Map objects layer list
 
 __Optional Parameters:__
-- index(default=None): the index where to insert the new layer. None adds layer to the top of the map, 0 to the bottom.
+- index(default=-1): the index where to insert the new layer. -1 adds layer to the top of the map, 0 to the bottom.
 
 __Returns:__ None
 
