@@ -39,21 +39,33 @@ class Map:
     ## Layer methods
     ######################
 
-    def add(self, new_layer, index=0):
+    def add(self, new_layer, index=None):
         ''' Add a layer to the map '''
+        ## Call activate on new_layer
         new_layer.activate(self)
-        self.layers.insert(index, new_layer)
+
+        ## Add layer. 
+        if index == None:
+            self.layers.append(new_layer)
+        else:
+            self.layers.insert(index, new_layer)
         
-
-
     def remove(self, del_layer):
         ''' Remove a layer from the map '''
+        ## Call deactivate on del_layer
         del_layer.deactivate()
+
+        ## 
         self.layers.remove(del_layer)
     
     ##
     ##
     ##
+ 
+    def set_scale(self, new_scale):
+        ''' '''
+        pass
+
     
     def set_location(self, latitude, longitude):
         ''' '''
@@ -72,7 +84,7 @@ class Map:
         pass
     
     ##
-    ##
+    ## 
     ##
     
     def set_size(self, width, height):
