@@ -9,6 +9,16 @@ Created: 5 January, 2021
 import pyproj
 import numpy as np
 
+
+def get_renderer(renderer_name):
+    """
+    """
+    if renderer_name in ('skia', 'pyskia'):
+        from .skia_backend import SkiaBackend
+        return SkiaBackend()
+
+
+
 class Map:
     def __init__(self):
         ''' '''
@@ -19,8 +29,8 @@ class Map:
         self.renderer = None
 
         ## Create integers to hold width and height
-        self.width: int = 0
-        self.height: int = 0
+        self.width: int = 500
+        self.height: int = 500
 
         ## Create a crs for input geographic points, & output projected points
         ## Default to WGS84 & Mercator
@@ -200,11 +210,11 @@ class Map:
     ## Backend, background, and rendering methods
     ##
 
-    def set_backend(self, backend):
+    def set_renderer(self, renderer_name):
         '''
         '''
-        self.renderer = backend
-        pass
+        self.renderer = get_renderer(renderer_name)
+    
     
     def render(self, output=None, *args):
         ''' '''
