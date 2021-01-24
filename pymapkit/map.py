@@ -14,19 +14,23 @@ def get_renderer(renderer_name):
     """
     """
     if renderer_name in ('skia', 'pyskia'):
-        from .skia_backend import SkiaBackend
-        return SkiaBackend()
+        from .skia_renderer import SkiaRenderer
+        return SkiaRenderer()
 
 
 
 class Map:
-    def __init__(self):
+    def __init__(self, renderer='pyskia'):
         ''' '''
         ## Create a list to hold layers
         self.layers = [] #! Add type hint
 
         ## Hold a renderer
         self.renderer = None
+        if isinstance(renderer, str):
+            self.renderer = get_renderer(renderer)
+        else: 
+            self.renderer = renderer
 
         ## Create integers to hold width and height
         self.width: int = 500
@@ -210,12 +214,14 @@ class Map:
     ## Backend, background, and rendering methods
     ##
 
-    def set_renderer(self, renderer_name):
+    def set_renderer(self, renderer):
         '''
         '''
-        self.renderer = get_renderer(renderer_name)
-    
-    
+        if isinstance(renderer, str):
+            self.renderer = get_renderer(renderer)
+        else: 
+            self.renderer = renderer
+
     def render(self, output=None, *args):
         ''' '''
 
@@ -305,8 +311,12 @@ class Map:
 
     def geo2pix(self, geo_x, geo_y):
         ''' '''
-        pass
+        proj_x, proj_y = self.geo2proj(geo_x, geo_y)
+        pix_x, pix_y = self.proj2pix(proj_x, proj_y)
+        return pix_x, pix_y
     
     def pix2geo(self, pix_x, pix_y):
         ''' '''
-        pass
+        proj_x, proj_y = self.geo2proj(pix_x, pix_y)
+        geo_x, geo_y = self.proj2pix(proj_x, proj_y)
+        return geo_x, geo_y

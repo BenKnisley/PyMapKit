@@ -4,5 +4,5 @@ Date:
 """
 from .base_renderer import BaseRenderer
 
-class SkiaBackend(BaseRenderer):
+class SkiaRenderer(BaseRenderer):
     pass
