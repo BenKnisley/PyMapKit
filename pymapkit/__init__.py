@@ -16,4 +16,4 @@ __status__ = "Pre-Alpha"
 
 ## Import Map class
 from .map import Map
-
+from .base_renderer import BaseRenderer
