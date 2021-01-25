@@ -11,12 +11,10 @@ import numpy as np
 
 
 def get_renderer(renderer_name):
-    """
-    """
+    """Returns a renderer instance based on input string"""
     if renderer_name in ('skia', 'pyskia'):
         from .skia_renderer import SkiaRenderer
-        return SkiaRenderer()
-
+        return object()
 
 
 class Map:
@@ -32,7 +30,7 @@ class Map:
         else: 
             self.renderer = renderer
 
-        ## Create integers to hold width and height
+        ## Create integers to hold width and height. Default 500x500
         self.width: int = 500
         self.height: int = 500
 
@@ -42,8 +40,8 @@ class Map:
         self.projected_crs: pyproj.crs.CRS = pyproj.crs.CRS("EPSG:3785")
 
         ## Create transformer objects
-        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs)
-        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs)
+        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
 
         ## Create a variable to hold scale
         self._proj_scale = 1.0 ## unit/pixel
@@ -59,17 +57,22 @@ class Map:
     def add(self, new_layer, index=-1):
         """
         Adds a new layer to the map.
-        By default the new layer is added to the end of the layer list, and thus on top of existing map layers.
 
-        Arguments:
-            - new_layer - a pymapkit.MapLayer object to be added to the Map objects layer list
+        Adds a given map layer to the map.layers list. It defaults to adding 
+        the layer to the top of the map (end of list), but layer can be added
+        to any location using the optional index argument.
 
-            Optional:__
-                - index=-1: the index where to insert the new layer. -1 adds layer to the top of the map, 0 to the bottom.
+        Args:
+            new_layer (BaseLayer): The layer the add to map
 
-        Returns: None
+        Optional Args:
+            index (int): The index where to insert the new map layer.
+
+        Returns:
+            None
         """
-        ## Call activate on new_layer
+        
+        ## Call _activate on new_layer, a requirement for BaseLayer derivatives
         new_layer._activate(self)
 
         ## Add layer. 
@@ -78,31 +81,98 @@ class Map:
         else:
             self.layers.insert(index, new_layer)
         
+
     def remove(self, del_layer):
-        """ 
-        Removes a layer from the map.
+        """
+        Removes a given layer from the map.
 
-        Arguments
-            - del_layer - the layer to remove from the layer list. del_layer must exist in map.layers.
+        Removes a given layer from the maps layer list. Layer must exist in 
+        map.layer for it to be removed, otherwise it throws an error.
 
-            Optional:
-                - None
-
-        Returns: None
+        Args:
+            del_layer (BaseLayer): The layer to remove from the Map. Must exist
+            currently in map.layer.
+        
+        Returns:
+            None
         """
         ## Call deactivate on del_layer
         del_layer._deactivate()
         self.layers.remove(del_layer)
     
+
+    ##
+    ## Reference System Methods
+    ##
+    
+    def set_geographic_crs(self, new_crs):
+        """
+        Sets the base geographic reference system. 
+
+        Sets the base geographic reference system, for accurate lat/lon to 
+        projection conversion. Defaults to WGS84(EPSG:4326) 
+        See: https://xkcd.com/2170/
+
+        Args:
+            new_crs (str | pyproj.crs.CRS): The CRS to use as the base 
+            geographic reference system.
+        
+        Returns:
+            None
+        """
+
+        if isinstance(new_crs, str):
+            self.geographic_crs = pyproj.crs.CRS(new_crs)
+
+        elif isinstance(new_crs, pyproj.crs.CRS):
+            self.geographic_crs = pyproj.crs.CRS(new_crs)
+        
+        else:
+            pass #@ NOTE: throw errors
+     
+        ## Recreate transformer objects
+        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+
+
+    def set_projection(self, new_crs): #@ Rename to set_crs
+        """
+        Sets the projected coordinate system of the map.
+
+        Sets the projected coordinate system of the map. Or how the map 
+        displays the spherical coordinates on a 2D plane.
+
+        Args:
+            new_crs (str | pyproj.crs.CRS): The CRS to use as the projected 
+            reference system.
+        
+        Returns:
+            None
+        """
+        if isinstance(new_crs, str):
+            self.projected_crs = pyproj.crs.CRS(new_crs)
+
+        elif isinstance(new_crs, pyproj.crs.CRS):
+            self.projected_crs = pyproj.crs.CRS(new_crs)
+        
+        else:
+            print('error')
+        
+        ## Recreate transformer objects
+        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+
     ##
     ## Location Methods
     ##
     
     def set_location(self, latitude, longitude):
-        ''' '''
+        """
+        """
         geo_y, geo_x = latitude, longitude
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         self.set_projection_coordinates(proj_x, proj_y)
+
 
     def get_location(self):
         ''' '''
@@ -110,41 +180,17 @@ class Map:
         latitude, longitude = geo_y, geo_x ## I do this for now
         return latitude, longitude
 
+
     def set_projection_coordinates(self, new_x, new_y):
         ''' '''
         self.proj_x = new_x
         self.proj_y = new_y
-    
+
+
     def get_projection_coordinates(self):
         ''' '''
         return self.proj_x, self.proj_y
 
-    ##
-    ## Reference System Methods
-    ##
-    
-    def set_geographic_crs(self, new_crs):
-        '''  '''
-        if isinstance(new_crs, str):
-            self.geographic_crs = pyproj.crs.CRS(new_crs)
-
-        elif isinstance(new_crs, pyproj.crs.CRS):
-            self.geographic_crs = pyproj.crs.CRS(new_crs)
-        
-        else:
-            pass #@ NOTE: throw errors
-     
-    def set_projection(self, new_crs): #@ Rename to set_crs
-        ''' '''
-        if isinstance(new_crs, str):
-            self.projected_crs = pyproj.crs.CRS(new_crs)
-
-        elif isinstance(new_crs, pyproj.crs.CRS):
-            self.projected_crs = pyproj.crs.CRS(new_crs)
-        
-        else:
-            pass #@ NOTE: throw errors
-     
 
     ##
     ## Scale Methods
@@ -168,6 +214,7 @@ class Map:
 
         ## Set scale in proj units per pix
         self._proj_scale = float(new_scale)
+
 
     def get_scale(self):
         """
@@ -205,6 +252,7 @@ class Map:
         """
         self.width = width
         self.height = height
+
     
     def get_size(self):
         """ """
@@ -253,16 +301,22 @@ class Map:
     ##
     
     def geo2proj(self, geo_x, geo_y):
-        ''' '''
+        """
+        Converts geographic coordinates to projection coordinates.
+        """
         return self.transform_geo2proj.transform(geo_x, geo_y)
     
     def proj2geo(self, proj_x, proj_y):
-        ''' '''
+        """
+        Converts projection coordinates to geographic coordinates.
+        """
         return self.transform_geo2proj.transform(proj_x, proj_y)
 
 
     def proj2pix(self, proj_x, proj_y):
-        ''' '''
+        """
+        Converts projection coordinates to pixel coordinates. 
+        """
         ## Flag true if input is list
         list_flag = False
 
@@ -285,7 +339,9 @@ class Map:
         return pix_x, pix_y
 
     def pix2proj(self, pix_x, pix_y):
-        ''' '''
+        """
+        Converts canvas coordinates to projection coordinates.
+        """
         ## Flag true if input is list
         list_flag = False
 
@@ -310,13 +366,17 @@ class Map:
 
 
     def geo2pix(self, geo_x, geo_y):
-        ''' '''
+        """
+        Converts geographic coordinates to canvas coordinates.
+        """
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         pix_x, pix_y = self.proj2pix(proj_x, proj_y)
         return pix_x, pix_y
     
     def pix2geo(self, pix_x, pix_y):
-        ''' '''
+        """
+        Converts canvas coordinates to geographic coordinates.
+        """
         proj_x, proj_y = self.geo2proj(pix_x, pix_y)
         geo_x, geo_y = self.proj2pix(proj_x, proj_y)
         return geo_x, geo_y
