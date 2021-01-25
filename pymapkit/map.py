@@ -168,6 +168,17 @@ class Map:
     
     def set_location(self, latitude, longitude):
         """
+        Sets the geographic location of the map.
+
+        Sets the geographic location of the center of the map, Location is 
+        specified using lat/lon, and stored as projection x/y.
+
+        Args:
+            latitude (float): The latitude coordinate of the map.
+            longitude (float): The longitude coordinate of the map.
+
+        Returns:
+            None
         """
         geo_y, geo_x = latitude, longitude
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
