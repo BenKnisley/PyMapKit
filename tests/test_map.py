@@ -5,13 +5,14 @@ Date: 10 January, 2020
 import pytest
 from unittest.mock import MagicMock
 import pymapkit as pmk
+import pyproj
 
 
 class mock_layer:
     def __init__(self):
         ## Create a mock draw function
-        self.activate = MagicMock()
-        self.deactivate = MagicMock()
+        self._activate = MagicMock()
+        self._deactivate = MagicMock()
         self.draw = MagicMock()
 
 
@@ -38,7 +39,7 @@ def test_map_add():
     assert m.layers[1] == new_layer1, "Map.add method did not add layer to end of list"
     assert m.layers[2] == new_layer2, "Map.add method did not add layer to end of list"
     assert m.layers[3] == new_layer3, "Map.add method did not add layer to end of list"
-    new_layer1.activate.assert_called_once_with(m)
+    new_layer1._activate.assert_called_once_with(m)
 
 
 def test_map_remove():
@@ -56,4 +57,74 @@ def test_map_remove():
 
     assert len(m.layers) == 2, "Map.add method did not remove layer from map object"
     assert new_layer3 not in m.layers, "Map.add method did not remove correct layer from map object"
-    new_layer3.deactivate.assert_called_once()
+    new_layer3._deactivate.assert_called_once()
+
+
+def test_set_projection():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    ## Hold these to test if changed
+    old_transform_geo2proj = m.transform_geo2proj
+    old_transform_proj2geo = m.transform_proj2geo
+
+    ## Test set with text
+    m.set_projection('EPSG:32023')
+
+    ## Check that projected_crs is correct, geo_crs is the same, and that the transforms updated
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:32023")
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4326")
+    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
+    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
+
+
+def test_set_geographic_crs():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    ##
+    ## Test set with text
+    ##
+
+    ## Hold these to test if changed
+    old_transform_geo2proj = m.transform_geo2proj
+    old_transform_proj2geo = m.transform_proj2geo
+
+    ## Call set_geographic_crs
+    m.set_geographic_crs('EPSG:4267')
+
+    ## Check that geographic_crs is correct, proj_crs is the same, and that the transforms updated
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4267")
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:3785")
+    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
+    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
+
+
+def test_set_location():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    geographic_crs = pyproj.crs.CRS("EPSG:4326")
+    projected_crs = pyproj.crs.CRS("EPSG:3785")
+    m.set_geographic_crs(geographic_crs)
+    m.set_projection(projected_crs)
+
+    tranform = pyproj.Transformer.from_crs(geographic_crs, projected_crs)
+
+    ## Basic case
+    try_x, try_y = tranform.transform(40, -83)
+    m.set_location(40, -83)
+    assert m.proj_x == try_x
+    assert m.proj_y == try_y
+
+    ## Edge case - values to big
+    try_x, try_y = tranform.transform(200, 200)
+    m.set_location(200, 200)
+    assert m.proj_x == try_x
+    assert m.proj_y == try_y
+
+
+
+
+def test_geo2proj():
+    pass
