@@ -22,13 +22,16 @@ m.set_scale(500)
 tile_layer = PyMapKit.TileLayer("https://tileserver.com/tile/{z}/{y}/{x}")
 
 ## Create data layers
-vect_layer = PyMapKit.VectorLayer("./path/to/file.shp")
-rast_layer = PyMapKit.VectorLayer("./path/to/file.tiff")
+vect_layer = PyMapKit.VectorLayer.from_path("./path/to/file.shp")
+rast_layer = PyMapKit.RasterLayer("./path/to/file.tiff")
 
 ## Add layers to Map Object
 m.add_layer(tile_layer)
 m.add_layer(vect_layer)
 m.add_layer(rast_layer)
+
+## Focus on vector_layer
+vect_layer.focus()
 
 ## Render to file
 m.render("map.png")
