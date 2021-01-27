@@ -205,13 +205,40 @@ class Map:
 
 
     def set_projection_coordinates(self, new_x, new_y):
-        ''' '''
+        """
+        Sets the projected location of the map.
+
+        Sets the projected location of the center of the map, location is 
+        specified and stored as projection x/y.
+
+        Args:
+            x (float): The x value of the projections coordinate of the map
+            location.
+            y (float): The y value of the projections coordinate of the map
+            location.
+
+        Returns:
+            None
+        """
         self.proj_x = new_x
         self.proj_y = new_y
 
-
     def get_projection_coordinates(self):
-        ''' '''
+        """
+        Returns the projected location of the map.
+
+        Returns the projected location of the center of the map, location is 
+        returned as x, y.
+
+        Args:
+            None
+
+        Returns:
+            x (float): The x value of the projections coordinate of the map
+            location.
+            y (float): The y value of the projections coordinate of the map
+            location.
+        """
         return self.proj_x, self.proj_y
 
 

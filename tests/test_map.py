@@ -123,6 +123,7 @@ def test_set_location():
     assert m.proj_x == try_x
     assert m.proj_y == try_y
 
+
 def test_get_location():
     """ Test Map.get_projection method """
     m = pmk.Map()
@@ -146,6 +147,41 @@ def test_get_location():
     lat, lon = m.get_location()
     assert lat == pytest.approx(-35.0)
     assert lon == pytest.approx(83.1)
+
+
+def test_set_projection_coordinates():
+    """ Test Map.set_projection_coordinates method """
+    m = pmk.Map()
+    m.set_projection("EPSG:3785")
+    
+    ## Set first test values
+    test_x, test_y = 7453953, 5593228
+    
+    ## Call set_projection_coordinates method
+    m.set_projection_coordinates(test_x, test_y)
+
+    ## Test that the projection values changed
+    assert m.proj_x == test_x
+    assert m.proj_y == test_y
+
+
+def test_get_projection_coordinates():
+    """ Test Map.get_projection_coordinates method """
+    m = pmk.Map()
+    m.set_projection("EPSG:3785")
+    
+    ## Set first test values
+    test_x, test_y = 7453953, 5593228
+    
+    ## Call set_projection_coordinates method
+    m.set_projection_coordinates(test_x, test_y)
+
+    ## Get Results from get_projection_coordinates 
+    result_x, result_y = m.get_projection_coordinates()
+
+    assert result_x == test_x
+    assert result_y == test_y
+
 
 
 
