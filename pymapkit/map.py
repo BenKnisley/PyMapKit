@@ -170,7 +170,7 @@ class Map:
         """
         Sets the geographic location of the map.
 
-        Sets the geographic location of the center of the map, Location is 
+        Sets the geographic location of the center of the map, location is 
         specified using lat/lon, and stored as projection x/y.
 
         Args:
@@ -186,7 +186,19 @@ class Map:
 
 
     def get_location(self):
-        ''' '''
+        """
+        Returns the geographic location of the map.
+
+        Returns the geographic location of the center of the map, location is
+        returned in lat/lon.
+
+        Args:
+            None
+
+        Returns:
+            latitude (float): The latitude coordinate of the map.
+            longitude (float): The longitude coordinate of the map.
+        """
         geo_x, geo_y = self.proj2geo(self.proj_x, self.proj_y)
         latitude, longitude = geo_y, geo_x ## I do this for now
         return latitude, longitude
@@ -264,7 +276,7 @@ class Map:
         self.width = width
         self.height = height
 
-    
+
     def get_size(self):
         """ """
         return self.width, self.height
@@ -321,7 +333,7 @@ class Map:
         """
         Converts projection coordinates to geographic coordinates.
         """
-        return self.transform_geo2proj.transform(proj_x, proj_y)
+        return self.transform_proj2geo.transform(proj_x, proj_y)
 
 
     def proj2pix(self, proj_x, proj_y):

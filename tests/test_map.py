@@ -123,6 +123,30 @@ def test_set_location():
     assert m.proj_x == try_x
     assert m.proj_y == try_y
 
+def test_get_location():
+    """ Test Map.get_projection method """
+    m = pmk.Map()
+
+    m.set_location(40.0, 83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(40.0)
+    assert lon == pytest.approx(83.0)
+
+    m.set_location(-35, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-35)
+    assert lon == pytest.approx(-83.0)
+
+    m.set_location(35, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(35)
+    assert lon == pytest.approx(-83.0)
+
+    m.set_location(-35.0, 83.1)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-35.0)
+    assert lon == pytest.approx(83.1)
+
 
 
 
