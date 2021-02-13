@@ -183,6 +183,27 @@ def test_get_projection_coordinates():
     assert result_y == test_y
 
 
+def test_set_scale():
+    """ Test Map.set_scale method """
+    m = pmk.Map()
+
+    ## Do basic it changed test
+    old_proj_scale = m._proj_scale
+    m.set_scale(50)
+    assert m._proj_scale != old_proj_scale
+
+    ## Test with US-Ft projection
+    m.set_projection('EPSG:32023')
+    m.set_scale(50)
+    assert m._proj_scale == pytest.approx(164.042)
+
+
+    ## Test with degree projection
+    m.set_projection('EPSG:4326')
+    m.set_scale(50)
+    assert m._proj_scale == pytest.approx(0.000452202)
+
+
 
 
 

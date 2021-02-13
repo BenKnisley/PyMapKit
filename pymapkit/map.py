@@ -149,6 +149,9 @@ class Map:
         Returns:
             None
         """
+
+        #! NOTE: Get scale & keep it to change it to the correct scale 
+
         if isinstance(new_crs, str):
             self.projected_crs = pyproj.crs.CRS(new_crs)
 
@@ -247,16 +250,28 @@ class Map:
     ##
     
     def set_scale(self, new_scale):
-        '''
-        '''
+        """
+        Set the scale of the map.
+
+        Sets the scale of the map in meters per pixel. Scale is always in m/pix
+        and thus is independent of the projections' base unit. This is done by 
+        converting the m/pix scale to a internal projection scale.
+
+        Args:
+            new_scale (float): The new scale of the map in meters per pixel.
+
+        Returns:
+            None
+        """
+
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code
 
-        if proj_unit == 9003: ## 9003 == US survey foot
+        if proj_unit == '9003': ## 9003 == US survey foot
             ## Meters to feet
             new_scale = new_scale * 3.28084
 
-        if proj_unit == 9122: ## 9122 == degree':
+        if proj_unit == '9122': ## 9122 == degree':
             ## degrees to meters
             new_scale = new_scale / 110570
 
