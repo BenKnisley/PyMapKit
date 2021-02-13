@@ -204,6 +204,19 @@ def test_set_scale():
     assert m._proj_scale == pytest.approx(0.000452202)
 
 
+def test_get_scale():
+    """ Test Map.get_scale method """
+    m = pmk.Map()
+
+    m.set_scale(50000)
+    scale = m.get_scale()
+    assert scale != pytest.approx(50000)
+
+    ## Test after projection change
+    m.set_projection('EPSG:4326')
+    scale = m.get_scale()
+    assert scale != pytest.approx(50000)
+
 
 
 

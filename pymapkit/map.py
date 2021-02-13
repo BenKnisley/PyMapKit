@@ -283,6 +283,18 @@ class Map:
 
     def get_scale(self):
         """
+        Returns the map scale in meters per pixel.
+
+        Returns the scale of the map in meters per pixel. Scale is always in 
+        m/pix and thus is independent of the projections' base unit. This is 
+        done by converting internal projection scale to the m/pix scale.
+
+        Args:
+            None
+
+        Returns:
+            scale (float): The scale of the map in meters per pixel.
+
         """
         ## Get current scale in units/pix
         proj_scale = self._proj_scale
@@ -290,11 +302,11 @@ class Map:
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code
 
-        if proj_unit == 9003: ## 9003 == US survey foot
+        if proj_unit == '9003': ## 9003 == US survey foot
             ## Meters to feet
             return proj_scale / 3.28084
 
-        if proj_unit == 9122: ## 9122 == degree':
+        if proj_unit == '9122': ## 9122 == degree':
             ## meters to degrees
             return proj_scale * 110570
 
