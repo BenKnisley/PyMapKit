@@ -15,6 +15,13 @@ class mock_layer:
         self._activate = MagicMock()
         self._deactivate = MagicMock()
         self.draw = MagicMock()
+class mock_renderer:
+    def __init__(self):
+        ## Create a mock draw function
+        self.is_canvas = MagicMock()
+        self.is_canvas.return_value = True
+        self.save = MagicMock()
+
 
 
 def test_map_init():
@@ -275,3 +282,43 @@ def test_get_renderer():
     ## Test pyskia
     retn = pmk.map.get_renderer('pyskia')
     assert isinstance(retn, object)
+
+
+def test_render():
+    """ Test map.render method """
+    m = pmk.Map()
+
+    mock_renderer_obj = mock_renderer()
+    m.set_renderer(mock_renderer_obj)
+
+    ## Create mock layers
+    new_layer1 = mock_layer()
+    new_layer2 = mock_layer()
+    new_layer3 = mock_layer()
+
+    ## Add layers to canvas
+    m.add(new_layer1)
+    m.add(new_layer2)
+    m.add(new_layer3)
+
+    ## Call render with no args
+    m.render()
+
+    ## Assert the each layer had draw method called
+    new_layer1.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer2.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer3.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    ## Assert that save was called 
+    mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, None)
+
+    ## Reset mock renderer
+    mock_renderer_obj = mock_renderer()
+    m.set_renderer(mock_renderer_obj)
+
+    ## Call with file arg
+    m.render("./file.png")
+
+    ## Assert that save was called 
+    mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, "./file.png")
+
+

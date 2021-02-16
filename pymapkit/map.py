@@ -380,12 +380,32 @@ class Map:
 
 
     def render(self, output=None, *args):
-        ''' '''
+        """
+        Renders the map.
+        
+        Renders all map data stored in map layers to a map canvas with a map 
+        renderer.
+
+        Args:
+            None
+        
+        Optional Args:
+            output (str): The location to store the output map. Defaults to 
+            None, meaning the map will be drawn, but not be saved.
+
+            args (tuple): All other arguments will be sent to the 
+            renderer.save method if called.
+
+        Returns:
+            None
+         
+        """
 
         output_file = None
         
         if self.renderer.is_canvas(output):
-            canvas = output
+            output_file = output
+            canvas = self.renderer
         else:
            canvas = self.renderer.new_canvas(self.width, self.height)
            output_file = output
