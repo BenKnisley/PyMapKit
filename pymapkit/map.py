@@ -11,9 +11,20 @@ import numpy as np
 
 
 def get_renderer(renderer_name):
-    """Returns a renderer instance based on input string"""
+    """ 
+    Returns a named renderer instance based on input string
+
+
+    Args:
+        renderer_name (str): The name of the renderer object to return.
+    
+    Returns:
+        renderer (base_renderer): A renderer object of the type given with 
+        renderer_name.
+    """
     if renderer_name in ('skia', 'pyskia'):
         from .skia_renderer import SkiaRenderer
+        #! NOTE: Don't forget to update the tests too
         return object()
 
 class Map:
@@ -279,7 +290,6 @@ class Map:
         ## Set scale in proj units per pix
         self._proj_scale = float(new_scale)
 
-
     def get_scale(self):
         """
         Returns the map scale in meters per pixel.
@@ -327,7 +337,6 @@ class Map:
 
         self.width = width
         self.height = height
-
 
     def get_size(self):
         """

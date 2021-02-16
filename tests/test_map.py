@@ -269,3 +269,9 @@ def test_set_renderer(mocker):
     get_renderer_patch.assert_called_once_with("fake_renderer")
     assert m.renderer == fake_renderer_obj
 
+
+def test_get_renderer():
+    """ Test map.get_renderer function """
+    ## Test pyskia
+    retn = pmk.map.get_renderer('pyskia')
+    assert isinstance(retn, object)
