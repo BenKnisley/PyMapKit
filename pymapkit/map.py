@@ -16,7 +16,6 @@ def get_renderer(renderer_name):
         from .skia_renderer import SkiaRenderer
         return object()
 
-
 class Map:
     def __init__(self, renderer='pyskia'):
         ''' '''
@@ -350,12 +349,26 @@ class Map:
     ##
 
     def set_renderer(self, renderer):
-        '''
-        '''
+        """
+        Tells the map which renderer to use to render the map.
+
+        Sets the renderer to be used to render the map data. Set from a string 
+        or a directly given renderer object.
+
+        Args:
+            renderer (str | base_renderer obj): A string naming the renderer to
+            use, retrieved via the get_renderer function. Or a base_renderer 
+            object to be used directly as the renderer.
+            
+        Returns:
+            None
+        """
+
         if isinstance(renderer, str):
             self.renderer = get_renderer(renderer)
         else: 
             self.renderer = renderer
+
 
     def render(self, output=None, *args):
         ''' '''

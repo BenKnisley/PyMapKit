@@ -4,6 +4,7 @@ Date: 10 January, 2020
 """
 import pytest
 from unittest.mock import MagicMock
+from pytest_mock import mocker
 import pymapkit as pmk
 import pyproj
 
@@ -252,7 +253,19 @@ def test_get_size():
     assert m.get_size()[1] == 410
 
 
+def test_set_renderer(mocker):
+    """ Test Map.get_renderer method """
+    m = pmk.Map()
 
+    ## Test directly setting renderer object
+    fake_renderer_obj = object()
+    m.set_renderer(fake_renderer_obj)
+    assert m.renderer == fake_renderer_obj
 
-def test_geo2proj():
-    pass
+    ## Test that setting renderer from string calls get_renderer correctly
+    fake_renderer_obj = object()
+    get_renderer_patch = mocker.patch("pymapkit.map.get_renderer", return_value=fake_renderer_obj)
+    m.set_renderer("fake_renderer")
+    get_renderer_patch.assert_called_once_with("fake_renderer")
+    assert m.renderer == fake_renderer_obj
+
