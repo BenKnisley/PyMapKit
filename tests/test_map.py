@@ -234,6 +234,23 @@ def test_set_size():
     assert m.width == 800
     assert m.height == 1000
 
+def test_get_size():
+    """ Test Map.set_size method """
+    m = pmk.Map()
+
+    m.set_size(100, 100)
+    assert m.get_size()[0] == 100
+    assert m.get_size()[1] == 100
+
+
+    m.width = 350
+    assert m.get_size()[0] == 350
+    assert m.get_size()[1] == 100
+
+    m.height = 410
+    assert m.get_size()[0] == 350
+    assert m.get_size()[1] == 410
+
 
 
 

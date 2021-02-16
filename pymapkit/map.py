@@ -294,7 +294,6 @@ class Map:
 
         Returns:
             scale (float): The scale of the map in meters per pixel.
-
         """
         ## Get current scale in units/pix
         proj_scale = self._proj_scale
@@ -326,13 +325,24 @@ class Map:
 
         Returns: None
         """
-        
+
         self.width = width
         self.height = height
 
 
     def get_size(self):
-        """ """
+        """
+        Returns the pixel size on the map canvas.
+
+        Returns the width & height of the map area.
+
+        Args:
+            width (int): The width of the map canvas in pixels.
+            height (int): The height of the map canvas in pixels.
+            
+        Returns:
+            None
+        """
         return self.width, self.height
 
     ##
