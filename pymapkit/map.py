@@ -316,17 +316,17 @@ class Map:
 
     def set_size(self, width, height):
         """
-        Sets the size in pixels of the canvas
+        Sets the pixel size of the canvas.
+
+        Sets the pixel width & height of the map area.
 
         Arguments:
-            - width: int - the new width of the map canvas
-            - height: int - the new width of the map canvas
-
-        Optional Arguments:
-            None
+            - width (int): the new width of the map canvas.
+            - height (int): the new width of the map canvas.
 
         Returns: None
         """
+        
         self.width = width
         self.height = height
 

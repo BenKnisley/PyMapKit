@@ -218,6 +218,23 @@ def test_get_scale():
     assert scale != pytest.approx(50000)
 
 
+def test_set_size():
+    """ Test Map.set_size method """
+    m = pmk.Map()
+
+    m.set_size(100, 100)
+    assert m.width == 100
+    assert m.height == 100
+
+    m.set_size(500, 100)
+    assert m.width == 500
+    assert m.height == 100
+
+    m.set_size(800, 1000)
+    assert m.width == 800
+    assert m.height == 1000
+
+
 
 
 def test_geo2proj():
