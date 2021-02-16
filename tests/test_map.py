@@ -235,7 +235,7 @@ def test_set_size():
     assert m.height == 1000
 
 def test_get_size():
-    """ Test Map.set_size method """
+    """ Test Map.get_size method """
     m = pmk.Map()
 
     m.set_size(100, 100)
