@@ -432,12 +432,44 @@ class Map:
     def geo2proj(self, geo_x, geo_y):
         """
         Converts geographic coordinates to projection coordinates.
+
+        Converts geographic coordinates, either singlet or vectorized, to 
+        projection coordinates of the maps CRS. Output is same type as input.
+
+        Args:
+            geo_x (int | float | list): The input longitude or geographic x 
+            value(s) to convert.
+
+            geo_y (int | float | list): The input latitude or geographic y 
+            value(s) to convert.
+    
+
+        Returns:
+            proj_x (int | float | list): The output x value(s).
+
+            proj_y (int | float | list): The output y value(s).
         """
         return self.transform_geo2proj.transform(geo_x, geo_y)
     
     def proj2geo(self, proj_x, proj_y):
         """
         Converts projection coordinates to geographic coordinates.
+
+        Converts projection coordinates using the maps CRS, either singlet or 
+        vectorized, to geographic coordinates. Output is same type as input.
+
+        Args:
+            proj_x (int | float | list): The input projected x value(s) to 
+            convert.
+
+            proj_y (int | float | list): The input projected y value(s) to 
+            convert.
+    
+
+        Returns:
+            geo_x (int | float | list): The output longitude (x) value(s).
+
+            geo_y (int | float | list): The output latitude (y) value(s).
         """
         return self.transform_proj2geo.transform(proj_x, proj_y)
 
