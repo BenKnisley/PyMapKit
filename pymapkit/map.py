@@ -476,7 +476,24 @@ class Map:
 
     def proj2pix(self, proj_x, proj_y):
         """
-        Converts projection coordinates to pixel coordinates. 
+        Converts projection coordinates to canvas pixel coordinates.
+
+        Converts projection coordinates using the maps CRS, either singlet or 
+        vectorized, to canvas pixel coordinates with (0,0) at the center of the 
+        map. Output type is same type as input.
+
+        Args:
+            proj_x (int | float | list): The input projected x value(s) to 
+            convert.
+
+            proj_y (int | float | list): The input projected y value(s) to 
+            convert.
+    
+
+        Returns:
+            canvas_x (int | float | list): The output pixel (x) value(s).
+
+            canvas_y (int | float | list): The output pixel (y) value(s).
         """
         ## Flag true if input is list
         list_flag = False
@@ -494,8 +511,9 @@ class Map:
 
         ## Convert numpy array to list
         if list_flag:
-            pix_x = list(pix_x)
-            pix_y = list(pix_y)
+            pix_x = list(map(int, pix_x))
+            pix_y = list(map(int, pix_y))
+        
         
         return pix_x, pix_y
 
