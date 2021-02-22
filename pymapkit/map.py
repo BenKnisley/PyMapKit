@@ -479,8 +479,8 @@ class Map:
         Converts projection coordinates to canvas pixel coordinates.
 
         Converts projection coordinates using the maps CRS, either singlet or 
-        vectorized, to canvas pixel coordinates with (0,0) at the center of the 
-        map. Output type is same type as input.
+        vectorized, to canvas pixel coordinates with (0,0) at the top left 
+        corner of the map. Output type is same type as input.
 
         Args:
             proj_x (int | float | list): The input projected x value(s) to 
