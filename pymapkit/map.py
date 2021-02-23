@@ -423,8 +423,6 @@ class Map:
         ## Save or display canvas
         self.renderer.save(canvas, output_file)
 
-    
-    
     ##
     ## Conversion methods
     ##
@@ -506,13 +504,13 @@ class Map:
         
         ## Do math logic on all points
         # NOTE: @ self._proj_scale has to be a float!
-        pix_x = ((proj_x - self.proj_x) / self._proj_scale) + int(self.width / 2) #! NOTE: a round(...) might be better 
-        pix_y = -((proj_y - self.proj_y) / self._proj_scale) + int(self.height / 2) #! NOTE: a round(...) might be better 
+        pix_x = ((proj_x - self.proj_x) / self._proj_scale) + int(self.width / 2)
+        pix_y = ((proj_y - self.proj_y) / self._proj_scale) + int(self.height / 2)
 
         ## Convert numpy array to list
         if list_flag:
-            pix_x = list(map(int, pix_x))
-            pix_y = list(map(int, pix_y))
+            pix_x = list(map(round, pix_x))
+            pix_y = list(map(round, pix_y))
         
         
         return pix_x, pix_y
@@ -564,16 +562,50 @@ class Map:
 
     def geo2pix(self, geo_x, geo_y):
         """
-        Converts geographic coordinates to canvas coordinates.
+        Converts geographic coordinates to canvas pixel coordinates.
+
+        Converts geographic coordinates directly to canvas pixel coordinates.
+        Input can be either singlet or vectorized. Output will be same type as 
+        input. Canvas pixel coordinates are set to have (0,0) at the top left 
+        corner of the map.
+
+        Args:
+            geo_x (int | float | list): The input longitude or geographic x 
+            value(s) to convert.
+
+            geo_y (int | float | list): The input latitude or geographic y 
+            value(s) to convert.
+
+        Returns:
+            canvas_x (int | float | list): The output pixel x value(s).
+
+            canvas_y (int | float | list): The output pixel y value(s).
         """
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
-        pix_x, pix_y = self.proj2pix(proj_x, proj_y)
-        return pix_x, pix_y
+        canvas_x, canvas_y = self.proj2pix(proj_x, proj_y)
+        return canvas_x, canvas_y
     
     def pix2geo(self, pix_x, pix_y):
         """
-        Converts canvas coordinates to geographic coordinates.
+        Converts canvas pixel coordinates to geographic coordinates.
+
+        Converts canvas pixel coordinates to geographic coordinates.
+        Input can be either singlet or vectorized.
+        Canvas pixel coordinates have (0,0) at the top left corner of the map. \
+        Output type is same type as input.
+
+        Args:
+            pix_x (int | float | list): The input canvas x value(s) to 
+            convert.
+
+            pix_y (int | float | list): The input canvas y value(s) to 
+            convert.
+
+        Returns:
+            geo_x (int | float | list): The output longitude (x) value(s).
+
+            geo_y (int | float | list): The output latitude (y) value(s).
         """
-        proj_x, proj_y = self.geo2proj(pix_x, pix_y)
-        geo_x, geo_y = self.proj2pix(proj_x, proj_y)
+        proj_x, proj_y = self.pix2proj(pix_x, pix_y)
+        geo_x, geo_y = self.proj2geo(proj_x, proj_y)
         return geo_x, geo_y

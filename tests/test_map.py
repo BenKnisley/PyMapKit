@@ -333,7 +333,6 @@ def test_geo2proj():
     test_coord = (-83, 40)
     expected = (1859916.4298, 728826.5006)
     actual = m.geo2proj(*test_coord)
-
     assert expected[0] == pytest.approx(actual[0])
     assert expected[1] == pytest.approx(actual[1])
 
@@ -370,7 +369,6 @@ def test_proj2geo():
     test_coord = (1859916, 728826)
     expected = (-83, 40)
     actual = m.proj2geo(*test_coord)
-
     assert expected[0] == pytest.approx(actual[0])
     assert expected[1] == pytest.approx(actual[1])
 
@@ -412,7 +410,8 @@ def test_proj2pix():
     test_coord = (m.proj_x, m.proj_y)
     expected = (250, 250) ## Half of canvas size
     actual = m.proj2pix(*test_coord)
-    assert actual == expected
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
 
     ## Test list input
     test_coords = (
@@ -421,10 +420,10 @@ def test_proj2pix():
     )
 
     expected = (
-        [1807, 1381, 234, 451], 
-        [-622, -362, 2318, 1935]
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
     )
-    
+
     actual = m.proj2pix(*test_coords)
 
     ## Assert output is list
@@ -451,18 +450,19 @@ def test_pix2proj():
     test_coord = (250, 250) ## Half of canvas size
     expected = (m.proj_x, m.proj_y) 
     actual = m.pix2proj(*test_coord)
-    assert actual == expected
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
 
     
     ## Test list input
     test_coords = (
-        [1, -200, 400, -40, 50], 
-        [1, -400, 400, 50, -50]
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
     )
 
     expected = (
-        [-2224729, -5521973, 4320546, -2897301], 
-        [-3355819, -9933903, 3189456, -2552013]
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576]
     )
     
     actual = m.pix2proj(*test_coords)
@@ -473,6 +473,85 @@ def test_pix2proj():
 
     ## Test for expected results
     for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
-        assert expected_x == pytest.approx(actual_x) #, abs=5000*2)
-        assert expected_y == pytest.approx(actual_y) #, abs=5000*2)
+        assert expected_x == pytest.approx(actual_x, abs=5000*2)
+        assert expected_y == pytest.approx(actual_y, abs=5000*2)
     
+
+def test_geo2pix():
+    """ Test Map.geo2pix method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (-83, 40)
+    expected = (250, 250) 
+    actual = m.geo2pix(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+    
+    ## Test list input
+    test_coords = (
+        [22.52, -3.13, -83.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9]
+    )
+
+    expected = (
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
+    )
+    
+    actual = m.geo2pix(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x)
+        assert expected_y == pytest.approx(actual_y)
+    
+
+def test_pix2geo():
+    """ Test Map.pix2geo method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (250, 250) 
+    expected = (-83, 40)
+    actual = m.pix2geo(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+    
+    ## Test list input
+    test_coords = (
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
+    )
+
+    expected = (
+        [22.52, -3.13, -83.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9]
+    )
+    
+    actual = m.pix2geo(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x , abs=0.1)
+        assert expected_y == pytest.approx(actual_y , abs=0.1)
