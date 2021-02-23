@@ -491,9 +491,9 @@ class Map:
     
 
         Returns:
-            canvas_x (int | float | list): The output pixel (x) value(s).
+            canvas_x (int | float | list): The output pixel x value(s).
 
-            canvas_y (int | float | list): The output pixel (y) value(s).
+            canvas_y (int | float | list): The output pixel y value(s).
         """
         ## Flag true if input is list
         list_flag = False
@@ -519,7 +519,24 @@ class Map:
 
     def pix2proj(self, pix_x, pix_y):
         """
-        Converts canvas coordinates to projection coordinates.
+        Converts canvas pixel coordinates to projection coordinates.
+
+        Converts canvas pixel coordinates to projection coordinates with the 
+        maps CRS. Input can be either singlet or vectorized. Canvas coordinates 
+        origin (0,0) is at the top left corner of the map. Output type is same 
+        as input type.
+
+        Args:
+            pix_x (int | float | list): The input canvas x value(s) to 
+            convert.
+
+            pix_y (int | float | list): The input canvas y value(s) to 
+            convert.
+    
+        Returns:
+            proj_x (int | float | list): The output projection x value(s).
+
+            proj_y (int | float | list): The output projection y value(s).
         """
         ## Flag true if input is list
         list_flag = False
@@ -534,7 +551,8 @@ class Map:
         #! NOTE: @ self._proj_scale has to be a float!
         #! NOTE: a round(...) might be better 
         proj_x = self.proj_x + ((pix_x - int(self.width / 2)) * self._proj_scale) 
-        proj_y = (self.proj_y + ((pix_y - int(self.height / 2)) * self._proj_scale) )
+        proj_y = (self.proj_y + ((pix_y - int(self.height / 2)) * self._proj_scale))
+
 
         ## Convert numpy array to list
         if list_flag:
