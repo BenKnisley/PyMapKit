@@ -28,6 +28,15 @@ def get_renderer(renderer_name):
         return object()
 
 class Map:
+    """
+    Models a Map.
+
+    A class that models a map. It has three primary functions:
+        - Store and manage map data, such as: location, projections, and scale
+        - Holds and manages map data layers
+        - Serves as the entry point of the rendering pipline, and controls 
+            rendering
+    """
     def __init__(self, renderer='pyskia'):
         ''' '''
         ## Create a list to hold layers

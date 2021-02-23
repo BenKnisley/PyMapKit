@@ -23,7 +23,6 @@ class mock_renderer:
         self.save = MagicMock()
 
 
-
 def test_map_init():
     """ Test Map.__init__ """
     m = pmk.Map()
