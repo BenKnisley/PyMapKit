@@ -280,8 +280,8 @@ def test_set_renderer(mocker):
 def test_get_renderer():
     """ Test map.get_renderer function """
     ## Test pyskia
-    retn = pmk.map.get_renderer('pyskia')
-    assert isinstance(retn, object)
+    return_obj = pmk.map.get_renderer('pyskia')
+    assert isinstance(return_obj, object)
 
 
 def test_render():
