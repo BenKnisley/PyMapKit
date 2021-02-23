@@ -37,8 +37,22 @@ class Map:
         - Serves as the entry point of the rendering pipline, and controls 
             rendering
     """
+
     def __init__(self, renderer='pyskia'):
-        ''' '''
+        """
+        Initializes a new Map object.
+
+        Initializes a Map object with defaults or given parameters.
+
+        Args:
+            None
+
+        Optional Args:
+            renderer='pyskia' (str | base_renderer obj): A string naming the 
+            renderer to use, retrieved via the get_renderer function. Or a 
+            base_renderer object to be used directly as the renderer.
+
+        """
         ## Create a list to hold layers
         self.layers = [] #! Add type hint
 
