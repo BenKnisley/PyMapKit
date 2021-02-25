@@ -10,7 +10,24 @@ class SkiaRenderer(BaseRenderer):
     """
 
     def new_canvas(self, width, height):
-        pass
+        """
+        Creates and returns a new Skia canvas.
+
+        Creates a new Skia canvas ready for the SkiaRenderer instance to draw
+        on. The new canvas is created via a new Skia surface. The new canvas is 
+        returned, and the new surface is stored as `self.surface`. The new 
+        surface has the width and height specified.
+
+        Args:
+            width (int): The width in pixels of the new Skia surface.
+            height (int): The height in pixels of the new Skia surface.
+
+        Returns:
+            canvas (skia.Canvas): A new Skia canvas ready to be draw on.
+        """
+        self.surface = skia.Surface(width, height)
+        canvas = self.surface.getCanvas()
+        return canvas
     
     def is_canvas(self, target):
         pass
