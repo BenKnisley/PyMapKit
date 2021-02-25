@@ -1,12 +1,18 @@
 """
+Project: PyMapKit
+File: skia_renderer.py
+Title: Skia Renderer Class
+Function: Implements the drawing api using the PySkia library.
 Author: Ben Knisley [benknisley@gmail.com]
-Date:
+Created: 5 February, 2021
 """
 from .base_renderer import BaseRenderer
 import skia
 
 class SkiaRenderer(BaseRenderer):
     """
+    Derived from the BaseRenderer abstract class, SkiaRenderer is an 
+    implementation of the drawing API using the PySkia library.
     """
 
     def new_canvas(self, width, height):
