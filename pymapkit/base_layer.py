@@ -53,6 +53,6 @@ class BaseLayer:
         ''' Method to set opacity of whole layer '''
     
     @abc.abstractmethod
-    def draw(self, renderer, canvas):
+    def render(self, renderer, canvas):
         ''' Method '''
         pass
