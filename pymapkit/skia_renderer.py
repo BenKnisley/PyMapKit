@@ -36,7 +36,19 @@ class SkiaRenderer(BaseRenderer):
         return canvas
     
     def is_canvas(self, target):
-        pass
+        """
+        Returns whether a given item is a Skia canvas.
+
+        Returns whether a given item is a Skia canvas and can be drawn on by 
+        the renderer object.
+
+        Args:
+            target (*): The object to test.
+        
+        Returns:
+            is_canvas (bool): Whether the test item is a skia canvas. 
+        """
+        return isinstance(target, skia.Surface)
     
     def save(self, canvas, output):
         pass
