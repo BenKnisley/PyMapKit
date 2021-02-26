@@ -3,8 +3,25 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 25 February, 2020
 """
 import pytest
+from unittest.mock import MagicMock
 import pymapkit as pmk
 import skia
+
+
+
+
+class mock_skia_image:
+    def __init__(self):
+        self.save = MagicMock()
+
+class mock_surface:
+    def __init__(self):
+        self.image_mock = mock_skia_image()
+        self.makeImageSnapshot = MagicMock()
+        self.makeImageSnapshot.return_value = self.image_mock
+
+
+
 
 
 def test_init():
@@ -37,3 +54,34 @@ def test_is_canvas():
     assert r.is_canvas(object()) == False
     assert r.is_canvas("Hello") == False
     assert r.is_canvas(None) == False
+
+
+def test_save():
+    """ Test SkiaRenderer.save """
+    ## Setup
+    r = pmk.SkiaRenderer()
+    canvas = r.new_canvas(800, 600)
+    output = "./test.png"
+
+    ## Replace real surface with mock surface
+    r.surface = mock_surface()
+    
+    ## Tests that a none output, does not call mocked fns
+    r.save(canvas, None)
+    r.surface.makeImageSnapshot.assert_not_called()
+    r.surface.image_mock.save.assert_not_called()
+
+    ## Reset Mocks after first test
+    r.surface.makeImageSnapshot.reset_mock()
+    r.surface.image_mock.save.reset_mock()
+
+    ## Tests that a str output, calls functions correctly
+    r.save(canvas, output)
+    r.surface.makeImageSnapshot.assert_called_once()
+    r.surface.image_mock.save.assert_called_once_with(output, skia.kPNG)
+
+
+
+
+
+

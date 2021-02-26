@@ -51,7 +51,24 @@ class SkiaRenderer(BaseRenderer):
         return isinstance(target, skia.Canvas)
     
     def save(self, canvas, output):
-        pass
+        """
+        Saves the rendered results to an output file.
+
+        Saves the Skia surface to an output file. If output parameter is False 
+        or None, then no file will be created. Currently only supports PNG 
+        output. 
+
+        Args:
+            canvas (skia.Canvas): A Skia Canvas object.
+
+            output (str): Path to output file.
+        
+        Returns:
+            None
+        """
+        if output: ## For now, output is assumed to be in png format
+            image = self.surface.makeImageSnapshot()
+            image.save(output, skia.kPNG)
 
     ##
     ##
