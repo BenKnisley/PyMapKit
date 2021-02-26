@@ -48,7 +48,7 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             is_canvas (bool): Whether the test item is a skia canvas. 
         """
-        return isinstance(target, skia.Surface)
+        return isinstance(target, skia.Canvas)
     
     def save(self, canvas, output):
         pass
