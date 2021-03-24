@@ -7,9 +7,6 @@ from unittest.mock import MagicMock
 import pymapkit as pmk
 import skia
 
-
-
-
 class mock_skia_image:
     def __init__(self):
         self.save = MagicMock()
@@ -19,10 +16,6 @@ class mock_surface:
         self.image_mock = mock_skia_image()
         self.makeImageSnapshot = MagicMock()
         self.makeImageSnapshot.return_value = self.image_mock
-
-
-
-
 
 def test_init():
     """ Test SkiaRenderer.__init__ """
@@ -80,7 +73,55 @@ def test_save():
     r.surface.makeImageSnapshot.assert_called_once()
     r.surface.image_mock.save.assert_called_once_with(output, skia.kPNG)
 
+ 
+def test_cache_color():
+    """ Test SkiaRenderer.cache_color """
+    r = pmk.SkiaRenderer()
 
+    ## Test caching color names
+    result = r.cache_color("red")
+    expected = 4294901760
+    assert result == expected
+
+    result = r.cache_color("teal")
+    expected = 4278222976
+    assert result == expected
+
+    ## Test with opacity 
+    result = r.cache_color("teal", 0.5)
+    expected = 2130739328
+    assert result == expected
+
+    ## Test with Hex string color
+    result = r.cache_color("#8B5EA0")
+    expected = 4287323808
+    assert result == expected
+
+    ## Test with Hex string color and opacity
+    result = r.cache_color("#8B5EA0", 0.4)
+    expected = 1720409760
+    assert result == expected
+
+    ## Test with tuple input color
+    result = r.cache_color((139, 94, 160))
+    expected = 4287323808
+    assert result == expected
+
+    ## Test with tuple input color and opacity
+    result = r.cache_color((139, 94, 160), 0.4)
+    expected = 1720409760
+    assert result == expected
+
+    ## Test with float tuple input color
+    result = r.cache_color((0.55, 0.36, 0.62))
+    expected = 4287388574
+    assert result == expected
+
+
+    ## Test with float tuple input color
+    result = r.cache_color((0.55, 0.36, 0.62), 0.33)
+    expected = 1418484638
+    assert result == expected
 
 
 

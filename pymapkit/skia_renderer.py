@@ -74,8 +74,79 @@ class SkiaRenderer(BaseRenderer):
     ##
     ##
 
-    def cache_color(self, color):
-        pass
+    def cache_color(self, input_color, opacity=1):
+        """
+        Saves the rendered results to an output file.
+
+        Saves the Skia surface to an output file. If output parameter is False 
+        or None, then no file will be created. Currently only supports PNG 
+        output. 
+
+        Args:
+            input_color (string, tuple): A representation of a color. Valid 
+             inputs include:
+                - "Green"
+                - 'black', opacity=0.4
+                - #FFFFFF, opacity=0.9
+                - (0.12, 0.39, 0.54)
+                - (215, 0.39, 0.54), opacity=0.2
+
+        Optional Args:
+            opacity (float between 0 - 1): The opacity value of the color.
+        
+        Returns:
+            cached_color (skia.Color): The skia Color value object for the 
+             given color.
+        """
+
+        ## Valid input color formats
+
+
+        if isinstance(input_color, str):
+            ## Convert input_color string to lowercase
+            input_color = input_color.lower()
+            
+            ## Convert color_name to hex color string
+            if input_color in self.color_names:
+                input_color = self.color_names[input_color]
+
+            ## String should be a hex color at this point, so error out if not
+            if input_color[0] != '#' or len(input_color) != 7:
+                raise ValueError("Given color is invalid")
+            
+            ## Extract color values from hex string
+            R = int(int(input_color[1:3], 16))
+            G = int(int(input_color[3:5], 16))
+            B = int(int(input_color[5:7], 16))
+            A = int(opacity * 255)
+
+            ## Convert to tuple
+            input_color = (R, G, B, A)
+
+        ## input_color mis required to be a tuple at this point
+        if not isinstance(input_color, tuple):
+            raise ValueError("Given color is invalid")
+        
+        ## Check if input tuple is in 1.0 max color format 
+        if isinstance(max(input_color), float) and max(input_color) <= 1.0:
+            R = int(input_color[0] * 255)
+            G = int(input_color[1] * 255)
+            B = int(input_color[2] * 255)
+            A = int(opacity * 255)
+            input_color = (R, G, B, A)
+
+        ## If tuple has three values, add the alpha channel
+        if len(input_color) == 3:
+            R, G, B = input_color
+            A = int(opacity * 255)
+            input_color = (R, G, B, A)
+
+        ## Return a skia.Color object
+        return skia.Color(*input_color)
+
+
+
+
 
     ##
     ##
