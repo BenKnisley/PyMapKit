@@ -76,11 +76,9 @@ class SkiaRenderer(BaseRenderer):
 
     def cache_color(self, input_color, opacity=1):
         """
-        Saves the rendered results to an output file.
+        Converts a given color to a Skia color 
 
-        Saves the Skia surface to an output file. If output parameter is False 
-        or None, then no file will be created. Currently only supports PNG 
-        output. 
+        Converts a given color to an integer representing that color to Skia.
 
         Args:
             input_color (string, tuple): A representation of a color. Valid 
