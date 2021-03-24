@@ -142,17 +142,32 @@ class SkiaRenderer(BaseRenderer):
         ## Return a skia.Color object
         return skia.Color(*input_color)
 
-
-
-
-
     ##
     ##
     ##
     
 
     def draw_background(self, canvas, color):
-        pass
+        """
+        Draws a single color on the whole canvas.
+        
+        Args:
+            canvas (skia.Canvas): The canvas to draw on.
+
+            color (*): A object representing the color to use.
+
+        Returns:
+            None
+        """
+        ## If given color is not in skia format (int), convert it.
+        if not isinstance(color, int):
+            color = self.cache_color(color)
+
+        ## Create a Skia Paint object and draw paint over whole canvas
+        paint = skia.Paint(Color=color)
+        canvas.drawPaint(paint)
+    
+
     
     ##
     ##
