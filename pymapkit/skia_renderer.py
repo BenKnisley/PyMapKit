@@ -174,7 +174,48 @@ class SkiaRenderer(BaseRenderer):
     ##
 
     def draw_point(self, canvas, structure, x_values, y_values, style):
-        pass
+        """
+        Draws a point or mutipoint onto the canvas.
+
+        Args:
+            canvas (skia.Canvas): The canvas to draw on.
+
+            structure (List): A list holding the structure of the geometry. 
+
+            x_values (List): A List holding the pixel x values.
+            
+            y_values (List): A List holding the pixel y values.
+
+            style (vector_layer.FeatureStyle): Object storing style infomation
+
+        """
+        ## Cache colors if color is not cached
+        if not style.cached_renderer:
+            style.cache_renderer(self)
+        elif style.cached_renderer != self:
+            style.cache_renderer(self)
+        
+        ## Create a path
+        path = skia.Path()
+
+        ## Add points to path
+        pointer = 0
+        for p_count in structure:
+            for index in range(pointer, pointer+p_count):
+                path.addCircle(x_values[index], y_values[index], style.weight)
+            pointer += p_count
+        
+        ## Draw background
+        paint = skia.Paint(AntiAlias=True)
+        paint.setColor(style._color_cache)
+        canvas.drawPath(path, paint)
+        
+        ## Draw outline
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setColor(style._outline_color_cache)
+        paint.setStrokeWidth(style.outline_weight)
+        canvas.drawPath(path, paint)
+
 
     def draw_line(self, canvas, structure, x_values, y_values, style):
         pass
@@ -188,6 +229,7 @@ class SkiaRenderer(BaseRenderer):
 
     def cache_image(self, image_path):
         pass
+
 
     def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw'):
         pass
