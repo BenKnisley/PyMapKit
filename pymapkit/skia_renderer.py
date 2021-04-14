@@ -187,7 +187,6 @@ class SkiaRenderer(BaseRenderer):
             y_values (List): A List holding the pixel y values.
 
             style (vector_layer.FeatureStyle): Object storing style infomation
-
         """
         ## Cache colors if color is not cached
         if not style.cached_renderer:
@@ -218,7 +217,55 @@ class SkiaRenderer(BaseRenderer):
 
 
     def draw_line(self, canvas, structure, x_values, y_values, style):
-        pass
+        """
+        Draws a line or mutiline onto the canvas.
+
+        Args:
+            canvas (skia.Canvas): The canvas to draw on.
+
+            structure (List): A list holding the structure of the geometry. 
+
+            x_values (List): A List holding the pixel x values.
+            
+            y_values (List): A List holding the pixel y values.
+
+            style (vector_layer.FeatureStyle): Object storing style infomation
+
+        """
+        ## Cache colors
+        if not style.cached_renderer:
+            style.cache_renderer(self)
+        elif style.cached_renderer != self:
+            style.cache_renderer(self)
+
+        ## Create a path
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+            for index in range(pointer, pointer+p_count):
+                path.lineTo( x_values[index], y_values[index] )
+            pointer += p_count
+        
+        ## Create outline paint
+        paint = skia.Paint(style._outline_color_cache)
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setStrokeWidth(style.weight+style.outline_weight)
+        paint.setAntiAlias(True)
+
+        ## Draw outline path
+        canvas.drawPath(path, paint)
+
+        ## Create line paint
+        paint = skia.Paint(style._color_cache)
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setStrokeWidth(style.weight)
+        paint.setAntiAlias(True)
+
+        ## Draw line path
+        canvas.drawPath(path, paint)
 
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
         pass
