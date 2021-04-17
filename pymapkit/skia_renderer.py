@@ -186,7 +186,10 @@ class SkiaRenderer(BaseRenderer):
             
             y_values (List): A List holding the pixel y values.
 
-            style (vector_layer.FeatureStyle): Object storing style infomation
+            style (vector_layer.FeatureStyle): Object storing style infomation.
+        
+        Returns:
+            None
         """
         ## Cache colors if color is not cached
         if not style.cached_renderer:
@@ -215,7 +218,6 @@ class SkiaRenderer(BaseRenderer):
         paint.setStrokeWidth(style.outline_weight)
         canvas.drawPath(path, paint)
 
-
     def draw_line(self, canvas, structure, x_values, y_values, style):
         """
         Draws a line or mutiline onto the canvas.
@@ -229,8 +231,10 @@ class SkiaRenderer(BaseRenderer):
             
             y_values (List): A List holding the pixel y values.
 
-            style (vector_layer.FeatureStyle): Object storing style infomation
-
+            style (vector_layer.FeatureStyle): Object storing style infomation.
+        
+        Returns:
+            None
         """
         ## Cache colors
         if not style.cached_renderer:
@@ -268,18 +272,109 @@ class SkiaRenderer(BaseRenderer):
         canvas.drawPath(path, paint)
 
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
-        pass
+        """
+        Draws a polygon or mutipolygon onto the canvas.
+
+        Args:
+            canvas (skia.Canvas): The canvas to draw on.
+
+            structure (List): A list holding the structure of the geometry. 
+
+            x_values (List): A List holding the pixel x values.
+            
+            y_values (List): A List holding the pixel y values.
+
+            style (vector_layer.FeatureStyle): Object storing style infomation.
+        
+        Returns:
+            None
+        """
+        ## Cache colors
+        if not style.cached_renderer:
+            style.cache_renderer(self)
+        elif style.cached_renderer != self:
+            style.cache_renderer(self)
+
+        ## Create a path
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+
+            for index in range(pointer, pointer+p_count):
+                path.lineTo(x_values[index], y_values[index])
+            pointer = pointer + p_count
+
+        ## Draw feature background
+        paint = skia.Paint(style._color_cache)
+        paint.setAntiAlias(True)
+        canvas.drawPath(path, paint)
+
+        ## Draw feature outline
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setColor(style._outline_color_cache)
+        paint.setStrokeWidth(style.outline_weight)
+        canvas.drawPath(path, paint)
     
     ##
     ##
     ##
 
     def cache_image(self, image_path):
-        pass
+        """
+        Loads image data into memory, and providing a cached image object.
+
+        Args:
+            image_path (str): The path to the image.
+        
+        Returns:
+            cache_image (skia.Image): The cached image object.
+        """
+        return skia.Image.open(image_path)
 
 
     def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw'):
-        pass
+        """
+        Draws a image onto the canvas.
+
+        Args:
+           canvas (skia.Canvas): The canvas to draw on.
+
+           image_cache (skia.Image): The cached image to draw.
+
+           x (int): The pixel x location to place the image (see align arg).
+           
+           y (int): The pixel y location to place the image (see align arg).
+
+           x_scale (float): The scaling factor in the x direction.
+           
+           y_scale (float): The scaling factor in the y direction.
+
+        Optional Args:
+            align (str): Code for where to anchor the image (uses cardinal 
+            directions).
+
+        Returns:
+            None
+        """
+        if align != 'nw':
+            if align[0] == 'c': ## Center
+                x -= int((image_cache.get_width() * x_scale) / 2.0)
+                y -= int((image_cache.get_height() * y_scale) / 2.0)
+            else:
+                pass #! ADD MORE
+        
+        ## Get width of image
+        w = image_cache.width()
+        h = image_cache.height()
+
+        ## Create a scaled rectangle
+        rect = skia.Rect.MakeXYWH(x,y, int(w * x_scale), int(h * y_scale))
+
+        ## Draw image
+        canvas.drawImageRect(image_cache, rect)
     
     ##
     ##
