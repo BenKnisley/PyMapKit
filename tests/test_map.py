@@ -217,7 +217,7 @@ def test_get_scale():
 
     m.set_scale(50000)
     scale = m.get_scale()
-    assert scale != pytest.approx(50000)
+    assert scale == pytest.approx(50000)
 
     ## Test after projection change
     m.set_projection('EPSG:4326')

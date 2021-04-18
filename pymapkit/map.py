@@ -333,6 +333,9 @@ class Map:
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code
 
+        if proj_unit == '9001':
+            return proj_scale
+
         if proj_unit == '9003': ## 9003 == US survey foot
             ## Meters to feet
             return proj_scale / 3.28084
