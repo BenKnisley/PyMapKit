@@ -124,5 +124,8 @@ def test_cache_color():
     assert result == expected
 
 
-
-
+def test_map_integration():
+    m = pmk.Map()
+    r = pmk.SkiaRenderer()
+    m.set_renderer(r)
+    m.render()
