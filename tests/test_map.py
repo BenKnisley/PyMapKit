@@ -14,7 +14,7 @@ class mock_layer:
         ## Create a mock draw function
         self._activate = MagicMock()
         self._deactivate = MagicMock()
-        self.draw = MagicMock()
+        self.render = MagicMock()
 class mock_renderer:
     def __init__(self):
         ## Create a mock draw function
@@ -305,9 +305,9 @@ def test_render():
     m.render()
 
     ## Assert the each layer had draw method called
-    new_layer1.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
-    new_layer2.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
-    new_layer3.draw.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer1.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer2.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer3.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
     ## Assert that save was called 
     mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, None)
 
@@ -420,7 +420,7 @@ def test_proj2pix():
 
     expected = (
         [1808, 1381, 235, 452], 
-        [1123, 862, -1819, -1435]
+        [-623, -362, 2319, 1935]
     )
 
     actual = m.proj2pix(*test_coords)
@@ -501,7 +501,7 @@ def test_geo2pix():
 
     expected = (
         [1808, 1381, 235, 452], 
-        [1123, 862, -1819, -1435]
+        [-623, -362, 2319, 1935]
     )
     
     actual = m.geo2pix(*test_coords)
