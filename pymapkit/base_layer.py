@@ -9,6 +9,7 @@ class BaseLayer:
         ## Required Attributes
         self.name = None ## Holds the name of the layer
         self.map = None ## Holds the parent map when activated
+        self.alpha = 1
         self.status = False ## Signals what the layer is doing or need done ==>
         ## => Such as 'loading', 'downloading', 'projecting', 'rendering', 'done'
     
