@@ -444,7 +444,7 @@ class Map:
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self.layers:
-            layer.draw(self.renderer, canvas)
+            layer.render(self.renderer, canvas)
         
         ## Save or display canvas
         self.renderer.save(canvas, output_file)
@@ -473,7 +473,23 @@ class Map:
 
             proj_y (int | float | list): The output y value(s).
         """
-        return self.transform_geo2proj.transform(geo_x, geo_y)
+        ## Use geo2proj transform to convert points
+        proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
+
+        ## If data is a list, purge all infs from dataset
+        if isinstance(proj_x, list):
+            proj_x, proj_y = np.array(proj_x), np.array(proj_y)
+
+            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
+            while np.isinf(proj_x).any() or np.isinf(proj_y).any():
+                proj_x[np.where(np.isinf(proj_x))] = proj_x[np.where(np.isinf(proj_x))[0]-1]
+                proj_y[np.where(np.isinf(proj_y))] = proj_y[np.where(np.isinf(proj_y))[0]-1]
+            
+            ## Convert back to python list
+            proj_x, proj_y = list(proj_x), list(proj_y)
+        
+        ## Return data values
+        return proj_x, proj_y
     
     def proj2geo(self, proj_x, proj_y):
         """
@@ -495,7 +511,21 @@ class Map:
 
             geo_y (int | float | list): The output latitude (y) value(s).
         """
-        return self.transform_proj2geo.transform(proj_x, proj_y)
+        geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
+
+        ## If data is a list, purge all infs from dataset
+        if isinstance(geo_x, list):
+            geo_x, geo_y = np.array(geo_x), np.array(geo_y)
+
+            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
+            while np.isinf(geo_x).any() or np.isinf(geo_y).any():
+                geo_x[np.where(np.isinf(geo_x))] = geo_x[np.where(np.isinf(geo_x))[0]-1]
+                geo_y[np.where(np.isinf(geo_y))] = geo_y[np.where(np.isinf(geo_y))[0]-1]
+            
+            ## Convert back to python list
+            geo_x, geo_y = list(geo_x), list(geo_y)
+        
+        return geo_x, geo_y
 
 
     def proj2pix(self, proj_x, proj_y):
@@ -531,7 +561,7 @@ class Map:
         ## Do math logic on all points
         # NOTE: @ self._proj_scale has to be a float!
         pix_x = ((proj_x - self.proj_x) / self._proj_scale) + int(self.width / 2)
-        pix_y = ((proj_y - self.proj_y) / self._proj_scale) + int(self.height / 2)
+        pix_y = -((proj_y - self.proj_y) / self._proj_scale) + int(self.height / 2)
 
         ## Convert numpy array to list
         if list_flag:
