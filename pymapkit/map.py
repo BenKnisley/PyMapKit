@@ -282,20 +282,28 @@ class Map:
     ## Scale Methods
     ##
     
-    def set_scale(self, new_scale):
+    def set_scale(self, new_scale, proj_units=False):
         """
         Set the scale of the map.
 
-        Sets the scale of the map in meters per pixel. Scale is always in m/pix
-        and thus is independent of the projections' base unit. This is done by 
-        converting the m/pix scale to a internal projection scale.
+        Sets the scale of the map. Scale is in m/pix, independent of the map 
+        projections' base unit. Unless the optional `proj_units` flag is set to
+        true, then the new scale is set to use the map's projections units/pix.
 
         Args:
             new_scale (float): The new scale of the map in meters per pixel.
 
+        Optional Args:
+            proj_units (bool): Whether to use the map's projections unit/pix 
+            instead of m/pix. Defaults to false. 
+
         Returns:
             None
         """
+
+        if proj_units:
+            self._proj_scale = float(new_scale)
+            return
 
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code

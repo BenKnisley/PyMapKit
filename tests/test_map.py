@@ -204,6 +204,10 @@ def test_set_scale():
     m.set_scale(50)
     assert m._proj_scale == pytest.approx(164.042)
 
+    ## Test with US-Ft projection with proj_units True
+    m.set_scale(50, True)
+    assert m._proj_scale == pytest.approx(50)
+
 
     ## Test with degree projection
     m.set_projection('EPSG:4326')
