@@ -44,11 +44,36 @@ class BaseLayer:
         ''' Method that returns bounding box of all stored data'''
         pass
     
-    @abc.abstractmethod
     def focus(self):
         ''' Method to move map to focus on layer '''
-        pass
-    
+
+        ## If layer is not activated, raise Exception
+        if self.map == None:
+            raise Exception("Layer is not activated.")
+        
+        ## Get layer extent
+        min_x, min_y, max_x, max_y = self.get_extent()
+
+        ## Calculate center and set new map coord 
+        proj_x = (max_x + min_x) / 2
+        proj_y = (max_y + min_y) / 2
+        self.map.set_projection_coordinates(proj_x, proj_y)
+
+        ## If layer has no area, do not proceed 
+        if (max_x - min_x) == 0 or (max_y - min_y) == 0:
+            return
+
+        ## Calculate best scale for layer
+        s_x = (max_x - min_x) / self.map.width
+        s_y = (max_y - min_y) / self.map.height
+        new_scale = max(s_x, s_y)
+
+        ## Scale out a bit
+        new_scale = new_scale * 1.25
+
+        ## Set newscale
+        self.map.set_scale(new_scale, True)
+
     @abc.abstractmethod
     def set_opacity(self):
         ''' Method to set opacity of whole layer '''
