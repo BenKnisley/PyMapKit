@@ -335,7 +335,7 @@ class SkiaRenderer(BaseRenderer):
         return skia.Image.open(image_path)
 
 
-    def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw'):
+    def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw', opacity=1):
         """
         Draws a image onto the canvas.
 
@@ -356,6 +356,8 @@ class SkiaRenderer(BaseRenderer):
             align (str): Code for where to anchor the image (uses cardinal 
             directions).
 
+            opacity (float): Value 0-1 indicating opacity of image.
+
         Returns:
             None
         """
@@ -373,8 +375,11 @@ class SkiaRenderer(BaseRenderer):
         ## Create a scaled rectangle
         rect = skia.Rect.MakeXYWH(x,y, int(w * x_scale), int(h * y_scale))
 
+        ## Create a paint object for opacity 
+        paint = skia.Paint(Alphaf=opacity)
+        
         ## Draw image
-        canvas.drawImageRect(image_cache, rect)
+        canvas.drawImageRect(image_cache, rect, paint)
     
     ##
     ##
