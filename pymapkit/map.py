@@ -83,10 +83,6 @@ class Map:
         self.proj_x = 0
         self.proj_y = 0
 
-    ##
-    ## Layer methods
-    ##
-
     def add(self, new_layer, index=-1):
         """
         Adds a new layer to the map.
@@ -113,7 +109,6 @@ class Map:
             self.layers.append(new_layer)
         else:
             self.layers.insert(index, new_layer)
-        
 
     def remove(self, del_layer):
         """
@@ -132,12 +127,7 @@ class Map:
         ## Call deactivate on del_layer
         del_layer._deactivate()
         self.layers.remove(del_layer)
-    
 
-    ##
-    ## Reference System Methods
-    ##
-    
     def set_geographic_crs(self, new_crs):
         """
         Sets the base geographic reference system. 
@@ -166,7 +156,6 @@ class Map:
         ## Recreate transformer objects
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
         self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
-
 
     def set_projection(self, new_crs): #@ Rename to set_crs
         """
@@ -198,10 +187,6 @@ class Map:
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
         self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
 
-    ##
-    ## Location Methods
-    ##
-    
     def set_location(self, latitude, longitude):
         """
         Sets the geographic location of the map.
@@ -220,7 +205,6 @@ class Map:
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         self.set_projection_coordinates(proj_x, proj_y)
 
-
     def get_location(self):
         """
         Returns the geographic location of the map.
@@ -238,7 +222,6 @@ class Map:
         geo_x, geo_y = self.proj2geo(self.proj_x, self.proj_y)
         latitude, longitude = geo_y, geo_x ## I do this for now
         return latitude, longitude
-
 
     def set_projection_coordinates(self, new_x, new_y):
         """
@@ -277,11 +260,6 @@ class Map:
         """
         return self.proj_x, self.proj_y
 
-
-    ##
-    ## Scale Methods
-    ##
-    
     def set_scale(self, new_scale, proj_units=False):
         """
         Set the scale of the map.
@@ -352,10 +330,6 @@ class Map:
             ## meters to degrees
             return proj_scale * 110570
 
-    ##
-    ## Canvas Size Methods
-    ##
-
     def set_size(self, width, height):
         """
         Sets the pixel size of the canvas.
@@ -387,10 +361,6 @@ class Map:
         """
         return self.width, self.height
 
-    ##
-    ## Backend, background, and rendering methods
-    ##
-
     def set_renderer(self, renderer):
         """
         Tells the map which renderer to use to render the map.
@@ -411,7 +381,6 @@ class Map:
             self.renderer = get_renderer(renderer)
         else: 
             self.renderer = renderer
-
 
     def render(self, output=None, *args):
         """
@@ -457,10 +426,6 @@ class Map:
         ## Save or display canvas
         self.renderer.save(canvas, output_file)
 
-    ##
-    ## Conversion methods
-    ##
-    
     def geo2proj(self, geo_x, geo_y):
         """
         Converts geographic coordinates to projection coordinates.
@@ -534,7 +499,6 @@ class Map:
             geo_x, geo_y = list(geo_x), list(geo_y)
         
         return geo_x, geo_y
-
 
     def proj2pix(self, proj_x, proj_y):
         """
@@ -622,7 +586,6 @@ class Map:
             proj_y = list(proj_y)
         
         return proj_x, proj_y
-
 
     def geo2pix(self, geo_x, geo_y):
         """
