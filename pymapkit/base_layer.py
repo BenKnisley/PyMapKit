@@ -16,7 +16,15 @@ class BaseLayer:
 
     def _activate(self, new_parent):
         ''' Method called by parent Map object when self is added to it '''
+
+        ## Raise exception if layer is already activated
+        if self.map != None:
+            raise Exception("Layer is already activated and belongs to a map object.")
+        
+        ## Set self.map to new parent
         self.map = new_parent
+
+        ## Run child's activate method
         self.activate()
 
     @abc.abstractmethod
@@ -26,7 +34,13 @@ class BaseLayer:
     
     def _deactivate(self):
         ''' Method called by parent Map object when self is removed from it '''
-        self.parent = None
+        
+        ## Raise exception if layer is not activated
+        if self.map == None:
+            raise Exception("Layer is not activated and does not belongs to a map object.")
+        
+        ## Remove parent map object and call child's deactivate method
+        self.map = None
         self.deactivate()
 
     @abc.abstractmethod
@@ -77,6 +91,7 @@ class BaseLayer:
     @abc.abstractmethod
     def set_opacity(self):
         ''' Method to set opacity of whole layer '''
+        pass
     
     @abc.abstractmethod
     def render(self, renderer, canvas):
