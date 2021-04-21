@@ -26,6 +26,10 @@ class RasterLayer(BaseLayer):
         Returns:
             None
         """
+        ## Implement BaseLayer
+        BaseLayer.__init__(self)
+
+
         ## Update layer status & name
         self.status = 'initializing'
         self.name = "Raster Layer"
