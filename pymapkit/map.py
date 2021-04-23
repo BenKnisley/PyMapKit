@@ -152,10 +152,14 @@ class Map:
         
         else:
             pass #@ NOTE: throw errors
-     
+
         ## Recreate transformer objects
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
         self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+
+        ## Reactivate layers
+        for layer in self.layers:
+            layer.activate()
 
     def set_projection(self, new_crs): #@ Rename to set_crs
         """
@@ -186,6 +190,10 @@ class Map:
         ## Recreate transformer objects
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
         self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+
+        ## Reactivate layers
+        for layer in self.layers:
+            layer.activate()
 
     def set_location(self, latitude, longitude):
         """
