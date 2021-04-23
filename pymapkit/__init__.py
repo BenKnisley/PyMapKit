@@ -19,3 +19,4 @@ from .map import Map
 from .base_renderer import BaseRenderer
 from .skia_renderer import SkiaRenderer
 from .raster_layer import RasterLayer
+from .vector_layer import VectorLayer
