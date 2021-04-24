@@ -175,6 +175,9 @@ class Map:
         Returns:
             None
         """
+        ## Backup location and scale
+        location = self.get_location()
+        scale = self.get_scale()
 
         #! NOTE: Get scale & keep it to change it to the correct scale 
 
@@ -194,6 +197,10 @@ class Map:
         ## Reactivate layers
         for layer in self.layers:
             layer.activate()
+
+        ## Restore location and scale
+        self.set_location(*location)
+        self.set_scale(scale)        
 
     def set_location(self, latitude, longitude):
         """
