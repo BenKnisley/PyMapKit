@@ -464,16 +464,15 @@ class VectorLayer(BaseLayer):
 
 
     def activate(self):
-        
-        if self.geographic_crs == self.map.geographic_crs:
-            x_vals, y_vals = self.map.geo2proj(self.x_values, self.y_values)
-        else:
-            pass
-            #x_vals, y_vals = pyproj.transform(self.geographic_crs, self.map.projected_crs, self.y_values, self.x_values)
-
-
-        self.x_values, self.y_values = x_vals, y_vals
-
+        """
+        """
+        self.x_values, self.y_values = self.map.geo2proj(self.geo_x_values, self.geo_y_values)
+        self.extents_sorted = False
+        self.maxx = []
+        self.maxy = []
+        self.minx = []
+        self.miny = []
+    
 
     def deactivate(self):
         pass
