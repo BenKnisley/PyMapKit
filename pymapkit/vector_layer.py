@@ -479,6 +479,12 @@ class VectorLayer(BaseLayer):
         pass
 
 
+
+    def clear_cache(self):
+        for feature in self.features:
+            feature.style.cached_renderer = None
+
+
     def new(self):
         """
         Creates a new feature inside FeatureSet

@@ -89,6 +89,10 @@ class BaseLayer:
         self.map.set_scale(new_scale, True)
 
     @abc.abstractmethod
+    def clear_cache(self):
+        pass
+
+    @abc.abstractmethod
     def set_opacity(self):
         ''' Method to set opacity of whole layer '''
         pass

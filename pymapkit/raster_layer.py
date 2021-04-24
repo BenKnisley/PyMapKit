@@ -178,6 +178,18 @@ class RasterLayer(BaseLayer):
         """
         self.alpha = opacity
 
+    def clear_cache(self):
+        """
+        Clears cached image.
+
+        Args:
+            None
+        
+        Returns:
+            None
+        """
+        self.image_cache = None
+
     def render(self, renderer, canvas):
         """
         Renders the data onto the given canvas, using the given renderer.
