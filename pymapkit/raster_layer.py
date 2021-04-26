@@ -165,19 +165,7 @@ class RasterLayer(BaseLayer):
         proj_y_min, proj_y_max = proj_y_vals
 
         return proj_x_min, proj_y_min, proj_x_max, proj_y_max
-
-    def set_opacity(self, opacity):
-        """
-        Set the opacity of the whole layer.
-        
-        Args:
-            opacity (float): New opacity value 0 to 1.
-
-        Returns:
-            None
-        """
-        self.alpha = opacity
-
+    
     def clear_cache(self):
         """
         Clears cached image.

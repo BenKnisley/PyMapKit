@@ -92,10 +92,17 @@ class BaseLayer:
     def clear_cache(self):
         pass
 
-    @abc.abstractmethod
-    def set_opacity(self):
-        ''' Method to set opacity of whole layer '''
-        pass
+    def set_opacity(self, new_opacity):
+        """
+        Set the opacity of the whole layer.
+        
+        Args:
+            opacity (float): New opacity value 0 to 1.
+
+        Returns:
+            None
+        """
+        self.alpha = new_opacity
     
     @abc.abstractmethod
     def render(self, renderer, canvas):
