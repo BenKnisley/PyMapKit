@@ -157,7 +157,8 @@ class RasterLayer(BaseLayer):
         ##
         proj_x_vals, proj_y_vals = pyproj.transform(
             raster_crs, self.map.projected_crs, 
-            (raster_x_min, raster_x_max), (raster_y_min, raster_y_max)
+            (raster_x_min, raster_x_max), (raster_y_min, raster_y_max),
+            always_xy=True
         )
         
         ## Unpack 
