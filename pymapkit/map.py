@@ -14,7 +14,6 @@ def get_renderer(renderer_name):
     """ 
     Returns a named renderer instance based on input string
 
-
     Args:
         renderer_name (str): The name of the renderer object to return.
     
@@ -26,6 +25,16 @@ def get_renderer(renderer_name):
         from .skia_renderer import SkiaRenderer
         renderer = SkiaRenderer()
     return renderer
+
+class background:
+    def __init__(self):
+        self.color = 'black'
+    
+    def set_color(self, new_color):
+        self.color = new_color
+    
+    def render(self, renderer, canvas):
+        renderer.draw_background(canvas)
 
 class Map:
     """
