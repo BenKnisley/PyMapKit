@@ -223,10 +223,10 @@ def test_get_scale():
     scale = m.get_scale()
     assert scale == pytest.approx(50000)
 
-    ## Test after projection change
+    ## Test after projection change, that should change scale
     m.set_projection('EPSG:4326')
     scale = m.get_scale()
-    assert scale != pytest.approx(50000)
+    assert scale == pytest.approx(50000)
 
 
 def test_set_size():
@@ -285,7 +285,7 @@ def test_get_renderer():
     """ Test map.get_renderer function """
     ## Test pyskia
     return_obj = pmk.map.get_renderer('pyskia')
-    assert isinstance(return_obj, object)
+    assert isinstance(return_obj, pmk.skia_renderer.SkiaRenderer)
 
 
 def test_render():

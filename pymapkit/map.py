@@ -24,8 +24,8 @@ def get_renderer(renderer_name):
     """
     if renderer_name in ('skia', 'pyskia'):
         from .skia_renderer import SkiaRenderer
-        #! NOTE: Don't forget to update the tests too
-        return object()
+        renderer = SkiaRenderer()
+    return renderer
 
 class Map:
     """
