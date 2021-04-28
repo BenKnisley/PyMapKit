@@ -145,7 +145,7 @@ class Feature:
         self.parent = parent
         self.geometry = geometry
 
-        self.style = FeatureStyle()
+        self.style = FeatureStyle(self)
         self.style.set_defaults(parent.geometry_type)
 
         self.attributes = {}
@@ -204,9 +204,11 @@ class Feature:
         self.parent.map.set_scale(new_scale, True)
 
 class FeatureStyle:
-    def __init__(self):
+    def __init__(self, styled_object):
         self.cached_renderer = None
         
+        self.styled_object = styled_object
+
         self.display = None
 
         self.color = 'green'
@@ -243,7 +245,7 @@ class FeatureStyle:
             self.outline_weight = 1
         
     def cache_renderer(self, renderer):
-        self._color_cache = renderer.cache_color(self.color, opacity=self.opacity)
+        self._color_cache = renderer.cache_color(self.color, opacity=(self.opacity * self.styled_object.parent.alpha))
         self._outline_color_cache = renderer.cache_color(self.outline_color, opacity=self.outline_opacity)
         self.cached_renderer = renderer
     
@@ -596,7 +598,7 @@ class VectorLayer(BaseLayer):
         for geom in self.geometries:
             geom.skip_draw = False
 
-        xs, ys = self.map.pix2proj([0,self.map.width], [0, self.map.height])
+        xs, ys = self.map.pix2proj([0, self.map.width], [0, self.map.height])
         minx, maxx = xs 
         miny, maxy = ys
 
@@ -800,5 +802,8 @@ class VectorLayer(BaseLayer):
                         new_geom.add_subgeometry(x_list, y_list)
         else:
             pass
+            
+        new_layer.geo_x_values = new_layer.x_values
+        new_layer.geo_y_values = new_layer.y_values
 
         return new_layer
