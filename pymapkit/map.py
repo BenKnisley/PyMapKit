@@ -26,7 +26,7 @@ def get_renderer(renderer_name):
         renderer = SkiaRenderer()
     return renderer
 
-class background:
+class Background:
     def __init__(self):
         self.color = 'black'
     
@@ -34,7 +34,7 @@ class background:
         self.color = new_color
     
     def render(self, renderer, canvas):
-        renderer.draw_background(canvas)
+        renderer.draw_background(canvas, self.color)
 
 class Map:
     """
@@ -71,6 +71,8 @@ class Map:
             self.renderer = get_renderer(renderer)
         else: 
             self.renderer = renderer
+        
+        self.background = Background()
 
         ## Create integers to hold width and height. Default 500x500
         self.width: int = 500
@@ -437,11 +439,10 @@ class Map:
            canvas = self.renderer.new_canvas(self.width, self.height)
            output_file = output
         
-        '''
-        if self._background_color:
-            ## Draw background
-            self.renderer.draw_background(canvas, self._background_color)
-        '''
+
+        ## Draw background
+        self.background.render(self.renderer, canvas)
+
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self.layers:
