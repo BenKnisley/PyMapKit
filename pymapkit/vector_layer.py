@@ -294,9 +294,12 @@ class FeatureList:
         return retn
     
     def to_new_layer(self):
-        new_layer = VectorLayer(self.parent.geometry_type, self.parent.field_names, self.parent.projection.srs)
-        for f in self:
+        new_layer = VectorLayer(self.parent.geometry_type, self.parent.field_names)
+        for f in self.features:
             new_layer.add(f)
+        
+        new_layer.geo_x_values, new_layer.geo_y_values = self.parent.map.proj2geo(new_layer.x_values, new_layer.y_values)
+
         return new_layer
 
     def run_on_all(self, method_name, *args):
