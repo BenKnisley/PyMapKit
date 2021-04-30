@@ -425,7 +425,7 @@ class VectorLayer(BaseLayer):
         self.geometry_type = geometry_type
         self.geometries = []
 
-        ## Hold as reference
+        ## Hold geo values as reference
         self.geo_x_values = []
         self.geo_y_values = []
 
@@ -444,21 +444,12 @@ class VectorLayer(BaseLayer):
         ## Update status
         self.status = 'initialized'
 
-    
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return self.features[key]
-        else: 
-            return FeatureDict(self, key)
-    
-    def __len__(self):
-        return len(self.features)
-
     def __repr__(self):
-        repr_string = f"{self.geometry_type.capitalize()} VectorLayer with {len(self)} features."
-        return repr_string
+        """ Returns a string representation of the VectorLayer """
+        return f"{self.geometry_type.capitalize()} VectorLayer with {len(self)} features."
     
     def __add__(self, other):
+        """ Implement add (+) operator """
         new_set = VectorLayer(self.geometry_type, self.field_names)
         
         for feature in self:
@@ -469,6 +460,16 @@ class VectorLayer(BaseLayer):
 
         return new_set
 
+    def __len__(self):
+        """ Returns the number of features stored in layer."""
+        return len(self.features)
+
+    def __getitem__(self, key):
+        """ Returns a feature or a FeatureDict based on given key """
+        if isinstance(key, int):
+            return self.features[key]
+        else: 
+            return FeatureDict(self, key)
 
     def activate(self):
         """
@@ -483,8 +484,6 @@ class VectorLayer(BaseLayer):
         self.miny = []
 
         self.status = 'ready'
-
-    
 
     def deactivate(self):
         ## Update status
@@ -579,6 +578,7 @@ class VectorLayer(BaseLayer):
             has_return = has_return or bool(rtrn)
             rtrn_list.append(rtrn)
     
+    """ Methods for viewport based rendering """
 
     def sort_extents(self):
         """
@@ -629,7 +629,6 @@ class VectorLayer(BaseLayer):
         for _, geom in self.maxy[:ind]:
             geom.skip_draw = True
         
-
 
     def render(self, renderer, canvas):
         """
@@ -683,6 +682,8 @@ class VectorLayer(BaseLayer):
 
         ## Update Status
         self.status = 'rendered'
+
+    """ Extra Constructors """
 
     @classmethod
     def from_path(cls, path):
