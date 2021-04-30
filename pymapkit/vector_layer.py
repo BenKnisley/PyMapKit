@@ -408,11 +408,11 @@ class FeatureDict:
 
 class VectorLayer(BaseLayer):
     """ """
-    def __init__(self, geometry_type, field_names, projection="EPSG:4326"):
+    def __init__(self, geometry_type, field_names):
         ## Init base layer parent
         BaseLayer.__init__(self)
 
-        ## Set name and status
+        ## Set name and update status
         self.status = 'initializing'
         self.name = 'Vector Layer'
 
@@ -421,8 +421,6 @@ class VectorLayer(BaseLayer):
 
         ## >> self.projection = pyproj.Proj(projection)
         self.geographic_crs = pyproj.crs.CRS("EPSG:4326")
-
-
 
         self.geometry_type = geometry_type
         self.geometries = []
@@ -442,6 +440,10 @@ class VectorLayer(BaseLayer):
         self.maxy = []
         self.minx = []
         self.miny = []
+
+        ## Update status
+        self.status = 'initialized'
+
     
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -471,16 +473,22 @@ class VectorLayer(BaseLayer):
     def activate(self):
         """
         """
+        self.status = 'loading'
+
         self.x_values, self.y_values = self.map.geo2proj(self.geo_x_values, self.geo_y_values)
         self.extents_sorted = False
         self.maxx = []
         self.maxy = []
         self.minx = []
         self.miny = []
+
+        self.status = 'ready'
+
     
 
     def deactivate(self):
-        pass
+        ## Update status
+        self.status = 'initialized'
 
 
 
@@ -626,6 +634,9 @@ class VectorLayer(BaseLayer):
     def render(self, renderer, canvas):
         """
         """
+        ## Update Status
+        self.status = 'rendering'
+
         if self.view_sort:
             if not self.extents_sorted:
                 self.sort_extents()
@@ -670,6 +681,8 @@ class VectorLayer(BaseLayer):
         else:
             pass
 
+        ## Update Status
+        self.status = 'rendered'
 
     @classmethod
     def from_path(cls, path):
