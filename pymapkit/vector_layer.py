@@ -459,7 +459,7 @@ class VectorLayer(BaseLayer):
         return repr_string
     
     def __add__(self, other):
-        new_set = VectorLayer(self.geometry_type, self.field_names, self.geographic_crs)
+        new_set = VectorLayer(self.geometry_type, self.field_names)
         
         for feature in self:
             new_set.add(feature)
