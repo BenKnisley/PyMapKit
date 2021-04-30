@@ -45,9 +45,6 @@ class RasterLayer(BaseLayer):
         ## Set up mutable RGB for raster nodata value
         self.nodata_value = (0,0,0)
 
-        ## Init alpha value
-        self.alpha = 1
-
         ## Setup location and placement variables
         self.proj_x = None
         self.proj_y = None
