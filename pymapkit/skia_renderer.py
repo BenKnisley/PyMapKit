@@ -289,11 +289,37 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
-        ## Cache colors
-        if not style.cached_renderer:
-            style.cache_renderer(self)
-        elif style.cached_renderer != self:
-            style.cache_renderer(self)
+        
+        ## If a rendering function is already defined, use it.
+        if style.cached_renderer_fn:
+            #print('Using cached function')
+            style.cached_renderer_fn(canvas, structure, x_values, y_values)
+            return
+
+
+        
+        if style.display == 'basic':
+            color = self.cache_color(style.color, style.opacity)
+            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
+            
+            draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color, style.outline_weight)
+            
+            print("Caching function")
+            style.cached_renderer_fn = cache_fn(draw_poly_basic, color, outline_color, style.outline_weight)
+
+            return
+
+        elif style.display == 'image':
+            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
+            image = self.cache_image(style.path)
+            
+            draw_poly_image(canvas, structure, x_values, y_values, image, outline_color, style.outline_weight)
+            
+            print("Caching function")
+            style.cached_renderer_fn = cache_fn(draw_poly_image, image, outline_color, style.outline_weight)
+            return
+
+            
 
         ## Create a path
         path = skia.Path()
@@ -317,7 +343,10 @@ class SkiaRenderer(BaseRenderer):
         paint.setColor(style._outline_color_cache)
         paint.setStrokeWidth(style.outline_weight)
         canvas.drawPath(path, paint)
-    
+
+
+
+
     ##
     ##
     ##
@@ -387,3 +416,102 @@ class SkiaRenderer(BaseRenderer):
 
     def draw_text(self, canvas, text, text_style):
         pass
+
+
+
+def cache_fn(fn, *args):
+    ## Unpack Args
+    _args = args
+
+    def cached_fn(canvas, structure, x_values, y_values, *_args):
+        #print("I'm cached!!")
+        return fn(canvas, structure, x_values, y_values, *args)
+
+    return cached_fn
+
+
+def draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color, outline_weight):
+    ## Create a path
+    path = skia.Path()
+
+    ## Load points into path
+    pointer = 0
+    for p_count in structure:
+        path.moveTo( x_values[pointer], y_values[pointer] )
+
+        for index in range(pointer, pointer+p_count):
+            path.lineTo(x_values[index], y_values[index])
+        pointer = pointer + p_count
+
+    ## Draw feature background
+    paint = skia.Paint(color)
+    paint.setAntiAlias(True)
+    canvas.drawPath(path, paint)
+
+    ## Draw feature outline
+    paint.setStyle(skia.Paint.kStroke_Style)
+    paint.setColor(outline_color)
+    paint.setStrokeWidth(outline_weight)
+    canvas.drawPath(path, paint)
+
+
+def draw_poly_image(canvas, structure, x_values, y_values, image_cache, outline_color, outline_weight):
+    ## Draw feature background
+
+    ## Create a path
+    path = skia.Path()
+
+    ## Load points into path
+    pointer = 0
+    for p_count in structure:
+        path.moveTo( x_values[pointer], y_values[pointer] )
+
+        for index in range(pointer, pointer+p_count):
+            path.lineTo(x_values[index], y_values[index])
+        pointer = pointer + p_count
+
+    ## Draw feature background
+    #paint = skia.Paint(color)
+
+    paint = skia.Paint()
+
+    paint.setAntiAlias(True)
+
+    x1 = min(x_values)
+    y1 = min(y_values)
+
+    x2 = max(x_values)
+    y2 = max(y_values)
+
+
+    ## Get width of image
+    w = image_cache.width()
+    h = image_cache.height()
+
+    ## Create a scaled rectangle
+
+
+    canvas.save()
+
+    canvas.clipPath(path)
+    canvas.resetMatrix()
+    #canvas.drawImage(image_data, x,y, paint)
+
+    ## Create a paint object for opacity 
+    #paint = skia.Paint(Alphaf=opacity)
+    paint = skia.Paint()
+    rect = skia.Rect.MakeXYWH(x1, y1, x2-x1, y2-y1)
+    canvas.drawImageRect(image_cache, rect, paint)
+    
+
+
+
+    canvas.restore()
+
+    #canvas.drawPath(path, paint)
+
+    ## Draw feature outline
+    paint.setStyle(skia.Paint.kStroke_Style)
+    paint.setColor(outline_color)
+    paint.setStrokeWidth(outline_weight)
+    canvas.drawPath(path, paint)
