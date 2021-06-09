@@ -8,6 +8,8 @@ Created: 5 February, 2021
 """
 from .base_renderer import BaseRenderer
 import skia
+import functools
+
 
 class SkiaRenderer(BaseRenderer):
     """
@@ -147,7 +149,7 @@ class SkiaRenderer(BaseRenderer):
     ##
     
 
-    def draw_background(self, canvas, color):
+    def draw_background(self, canvas, style):
         """
         Draws a single color on the whole canvas.
         
@@ -159,14 +161,20 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
-        ## If given color is not in skia format (int), convert it.
-        if not isinstance(color, int):
-            color = self.cache_color(color)
 
-        ## Create a Skia Paint object and draw paint over whole canvas
-        paint = skia.Paint(Color=color)
-        canvas.drawPaint(paint)
-    
+        ## If a rendering function is already defined, use it.
+        if style.cached_renderer_fn:
+            style.cached_renderer_fn(canvas)
+            return
+        
+        if style.display == 'none':
+            return
+
+        color = self.cache_color(style.background_color, style.opacity)
+
+        draw_background_basic(canvas, color)
+        style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
+
 
     
     ##
@@ -304,9 +312,7 @@ class SkiaRenderer(BaseRenderer):
             
             draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color, style.outline_weight)
             
-            print("Caching function")
-            style.cached_renderer_fn = cache_fn(draw_poly_basic, color, outline_color, style.outline_weight)
-
+            style.cached_renderer_fn = cache_fn(draw_poly_basic, color=color, outline_color=outline_color, outline_weight=style.outline_weight)
             return
 
         elif style.display == 'image':
@@ -315,8 +321,7 @@ class SkiaRenderer(BaseRenderer):
             
             draw_poly_image(canvas, structure, x_values, y_values, image, outline_color, style.outline_weight)
             
-            print("Caching function")
-            style.cached_renderer_fn = cache_fn(draw_poly_image, image, outline_color, style.outline_weight)
+            style.cached_renderer_fn = cache_fn(draw_poly_image, image_cache=image, outline_color=outline_color, outline_weight=style.outline_weight)
             return
 
             
@@ -343,9 +348,6 @@ class SkiaRenderer(BaseRenderer):
         paint.setColor(style._outline_color_cache)
         paint.setStrokeWidth(style.outline_weight)
         canvas.drawPath(path, paint)
-
-
-
 
     ##
     ##
@@ -418,17 +420,22 @@ class SkiaRenderer(BaseRenderer):
         pass
 
 
-
-def cache_fn(fn, *args):
-    ## Unpack Args
+def cache_fn(fn, **args):
+    """
+    """
     _args = args
-
-    def cached_fn(canvas, structure, x_values, y_values, *_args):
-        #print("I'm cached!!")
-        return fn(canvas, structure, x_values, y_values, *args)
-
+    cached_fn = functools.partial(fn, **_args)
     return cached_fn
 
+
+"""****************************
+****** Drawing functions ******
+****************************"""
+
+def draw_background_basic(canvas, color):
+    ## Create a Skia Paint object and draw paint over whole canvas
+    paint = skia.Paint(Color=color)
+    canvas.drawPaint(paint)
 
 def draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color, outline_weight):
     ## Create a path
@@ -453,7 +460,6 @@ def draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color,
     paint.setColor(outline_color)
     paint.setStrokeWidth(outline_weight)
     canvas.drawPath(path, paint)
-
 
 def draw_poly_image(canvas, structure, x_values, y_values, image_cache, outline_color, outline_weight):
     ## Draw feature background

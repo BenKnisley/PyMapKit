@@ -16,7 +16,12 @@ __status__ = "Pre-Alpha"
 
 ## Import Map class
 from .map import Map
+
+## Import Base Classes
 from .base_renderer import BaseRenderer
 from .skia_renderer import SkiaRenderer
+from .base_style import BaseStyle
+
+## Import Layers
 from .raster_layer import RasterLayer
 from .vector_layer import VectorLayer

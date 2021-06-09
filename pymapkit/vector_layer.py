@@ -12,160 +12,93 @@ from operator import methodcaller
 import pyproj
 import ogr
 from .base_layer import BaseLayer
+from .base_style import BaseStyle
 
 
-class BaseStyle:
-    def __init__(self, parent_feature):
+class FeatureStyle(BaseStyle):
+    def __init__(self, parent_feature, parent_style):
         """
         """
-        ## Store ref to stylized parent object
-        self.feature = parent_feature
-
-        ## Create a dict to hold display modes
-        self.display_modes = {'none': ([], [])} # name, (prop list, defaults)
-
-        ## Create a display placeholder
-        self.display = 'none'
-
-        ## Create a cached function placeholder
-        self.cached_renderer_fn = None
-
-        ## Create empty list to hold current dynamic properties and methods
-        self.dynamic_properties = []
-        self.dynamic_methods = []
-
-        parent_feature.dependent = False
-
+        BaseStyle.__init__(self, parent_feature)
+        self.parent_style = parent_style
+        
     def set_display(self, new_display):
-        ## Set display value from new_display
-        self.display = new_display
-        
-        ## If new_display is Ellipsis, overwrite new_display value
         if new_display == ...:
-            new_display = self.feature.parent.style.display
+            super().set_display(self.parent_style.display)
+            self.display = ...
+        else:
+            super().set_display(new_display)
 
-        ## Get property names & default values from ChildClass.display_modes
-        properties, defaults = self.display_modes[new_display]
+    def overwrite_methods(self):
+         for prop in self.dynamic_properties + ["display"]:
+            del self.feature.__dict__['set_' + prop]
+            self.create_new_setter(prop)
 
-        ## Copy existing values if property exists in old and new display
-        values = []
-        for prop, default in zip(properties, defaults):
-            if prop in self.dynamic_properties:
-                values.append(self.__dict__[prop])
-            else:
-                values.append(default)
 
-        ## Delete old dynamic properties
-        for prop in [p for p in self.dynamic_properties if p not in properties]:
-            del self.__dict__[prop]
-        self.dynamic_properties = []
+    def create_new_setter(self, prop_name):
 
-        ## Delete old dynamic methods
-        for method in self.dynamic_methods:
-            del self.feature.__dict__[method]
-        self.dynamic_methods = []
+        def setter_template(self, new_value):
+
+            if prop_name == "display":
+                self.style.set_display(new_value)
+                self.style.overwrite_methods()
+            
+            list(map(methodcaller('set_display', self.style.display), self.features))
+            #list(map(methodcaller('set_'+prop_name, new_value), self.features))
+
+            for f in self.features:
+                f.style.__dict__[prop_name] = new_value
+                f.style.cached_renderer_fn = None
+
+            self.style.__dict__[prop_name] = new_value
+
+
         
+        ## Bind setter and getter to parent feature
+        bound_setter = setter_template.__get__(self.feature, type(self.feature))
 
-        ## Define set_display template
-        def set_display_templ(self, new_value):
-            self.style.set_display(new_value)
-        
-        def get_display_templ(self):
-            return self.style.__dict__['display']
+        ## Link bound_setter as a named method
+        self.feature.__dict__['set_'+prop_name] = bound_setter
 
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_display_templ.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_display'] = bound_setter
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_templ.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_display'] = bound_getter
+        ## Add getter and setter names to dynamic_methods list
+        self.dynamic_methods.append('set_'+prop_name)
     
 
-        for prop_name, default in zip(properties, values):
-
-
-            ## Create the property, and register it with dynamic_properties
-            self.feature.style.__dict__[prop_name] = default
-            self.dynamic_properties.append(prop_name)
-
-            self.create_property_methods(prop_name, default)
-
-    def create_property_methods(self, prop_name, new_value):
-
-            ## Define a property setter method
-            def setter_template(self, new_value):
-                if self.dependent: #! NOTE: This is a simple hack. It works, but should be renamed and revised
-                    list(map(methodcaller('set_'+prop_name, new_value), self.features))
-                    list(map(methodcaller('clear_cache'), self.features))
-                    return
-                
-                self.style.__dict__[prop_name] = new_value
-                print('Clearing cached function')
-                self.clear_cache()
-
-            ## Define a property getter method
-            def getter_template(self):
-                return self.style.__dict__[prop_name]
-            
-            ## Bind setter and getter to parent feature
-            bound_setter = setter_template.__get__(self.feature, type(self.feature))
-            bound_getter = getter_template.__get__(self.feature, type(self.feature))
-
-            ## Link bound_setter as a named method
-            self.feature.__dict__['set_'+prop_name] = bound_setter
-            self.feature.__dict__['get_'+prop_name] = bound_getter
-
-            ## Add getter and setter names to dynamic_methods list
-            self.dynamic_methods.append('set_'+prop_name)
-            self.dynamic_methods.append('get_'+prop_name)
 
     def __getattribute__(self, item):
         ## Create a passthrough to prevent recursion
         if item == "dynamic_properties":
-            return object.__getattribute__(self,item)
-  
-        
-        ## Prepare to override if certain attribute
+            return object.__getattribute__(self, item)
+
         if item in self.dynamic_properties + ["display"]:
             ## Get value of attribute
             value = self.__dict__[item]
 
             ## If attribute value is an Ellipsis, override it
             if value == ...:
-                return self.feature.parent.style.__dict__[item]
+                return self.parent_style.__dict__[item]
             else:
                 return value
         
         ## Recreate original functionality
         return object.__getattribute__(self,item)
 
-    def add_display_mode(self, mode_name, properties, defaults):
-        """
-        Creates a new display mode
-        
-        Creates a new display mode, by adding details to display_modes dict. 
-        To be used by a child class to create display modes for specific 
-        targets.
-        """
-        self.display_modes[mode_name] = (properties, defaults)
 
-class PolyStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        """
-        """
-        BaseStyle.__init__(self, parent_feature)
-        
+class PolyStyle(FeatureStyle):
+    def __init__(self, parent_feature, parent_style):
+        FeatureStyle.__init__(self, parent_feature, parent_style)
+
         self.type = 'polygon'
 
-        self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
+        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
+        self.add_display_mode('basic', 
+                             ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             [..., ..., ..., ..., ...])
+                             #['green', 'black', 0.3, 1, 1])
+        
         self.add_display_mode('image', ['path', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
 
         self.set_display('none')
-
-
-
-    
 
 
 
@@ -301,7 +234,7 @@ class Feature:
         self.parent = parent
         self.geometry = geometry
 
-        self.style = PolyStyle(self)
+        self.style = PolyStyle(self, parent.style)
         self.style.set_display(...)
         #self.style.set_defaults(parent.geometry_type)
 
@@ -357,10 +290,11 @@ class FeatureList:
         self.parent = parent
         self.features = features
 
-        self.style = PolyStyle(self)
-        self.style.set_display(parent.get_display())
+        self.style = PolyStyle(self, None)
+        self.style.set_display(self.parent.style.display)
+        self.style.overwrite_methods()
 
-        self.dependent = True
+
     
     def clear_cache(self):
         for feature in self.features:
@@ -417,8 +351,9 @@ class FeatureDict:
         self.keys = []
         self.features = []
 
-        self.style = PolyStyle(self)
-        self.style.set_display(parent.get_display())
+        #self.style = PolyStyle(self, parent.style)
+        #self.style.set_display(parent.get_display())
+        #self.style.set_display(...)
 
         for feature in self.parent.features:
             self.features.append(feature)
@@ -528,17 +463,16 @@ class VectorLayer(BaseLayer):
 
 
         ## Style 
-        self.style = PolyStyle(self)
-        self.set_display('basic')
+        self.style = PolyStyle(self, None)
 
-        ##
+        ## Set ...
+        self.set_display('basic')
         self.set_color('green')
         self.set_outline_color('black')
         self.set_outline_weight(2)
         self.set_opacity(1)
+        self.set_outline_opacity(1)
         
-
-
 
         ## >> self.projection = pyproj.Proj(projection)
         self.geographic_crs = pyproj.crs.CRS("EPSG:4326")
@@ -613,8 +547,10 @@ class VectorLayer(BaseLayer):
 
 
     def clear_cache(self):
+        '''
+        Clears a style cache
+        '''
         for feature in self.features:
-            #feature.style.cached_renderer = None
             feature.style.cached_renderer_fn = None
 
 
@@ -706,7 +642,6 @@ class VectorLayer(BaseLayer):
     def sort_extents(self):
         """
         """
-        print("Sorting")
         self.maxx = []
         self.minx = []
         self.maxy = []
