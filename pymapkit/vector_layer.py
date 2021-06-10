@@ -83,7 +83,6 @@ class FeatureStyle(BaseStyle):
         ## Recreate original functionality
         return object.__getattribute__(self,item)
 
-
 class PolyStyle(FeatureStyle):
     def __init__(self, parent_feature, parent_style):
         FeatureStyle.__init__(self, parent_feature, parent_style)
@@ -94,6 +93,10 @@ class PolyStyle(FeatureStyle):
         self.add_display_mode('basic', 
                              ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
                              [..., ..., ..., ..., ...])
+        
+        self.add_display_mode('line-fill', 
+                             ['color', 'line_weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             [..., 1, ..., ..., ..., ...])
                              #['green', 'black', 0.3, 1, 1])
         
         self.add_display_mode('image', ['path', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
@@ -448,6 +451,7 @@ class FeatureDict:
                 retn_list.append(feature)
         return FeatureList(self.parent, retn_list)
 
+
 class VectorLayer(BaseLayer):
     """ """
     def __init__(self, geometry_type, field_names):
@@ -464,6 +468,9 @@ class VectorLayer(BaseLayer):
 
         ## Style 
         self.style = PolyStyle(self, None)
+
+        del self.__dict__['set_display']
+        self.style.create_new_setter('display')
 
         ## Set ...
         self.set_display('basic')

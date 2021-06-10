@@ -14,7 +14,7 @@ import functools
 class SkiaRenderer(BaseRenderer):
     """
     Derived from the BaseRenderer abstract class, SkiaRenderer is an 
-    implementation of the drawing API using the PySkia library.
+    implementation of the drawing API using the Skia-Python library.
     """
 
     def new_canvas(self, width, height):
@@ -170,7 +170,7 @@ class SkiaRenderer(BaseRenderer):
         if style.display == 'none':
             return
 
-        color = self.cache_color(style.background_color, style.opacity)
+        color = self.cache_color(style.color, style.opacity)
 
         draw_background_basic(canvas, color)
         style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
@@ -314,6 +314,19 @@ class SkiaRenderer(BaseRenderer):
             
             style.cached_renderer_fn = cache_fn(draw_poly_basic, color=color, outline_color=outline_color, outline_weight=style.outline_weight)
             return
+        
+        elif style.display == 'line-fill':
+            color = self.cache_color(style.color, style.opacity)
+            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
+            
+            draw_poly_line_fill(canvas, structure, x_values, y_values, color, style.line_weight, outline_color, style.outline_weight)
+
+            
+            style.cached_renderer_fn = cache_fn(draw_poly_line_fill, color=color, line_weight=style.line_weight, outline_color=outline_color, outline_weight=style.outline_weight)
+
+            return
+
+
 
         elif style.display == 'image':
             outline_color = self.cache_color(style.outline_color, style.outline_opacity)
@@ -458,6 +471,37 @@ def draw_poly_basic(canvas, structure, x_values, y_values, color, outline_color,
     ## Draw feature outline
     paint.setStyle(skia.Paint.kStroke_Style)
     paint.setColor(outline_color)
+    paint.setStrokeWidth(outline_weight)
+    canvas.drawPath(path, paint)
+
+def draw_poly_line_fill(canvas, structure, x_values, y_values, color, line_weight, outline_color, outline_weight):
+    ## Create a path
+    path = skia.Path()
+
+    ## Load points into path
+    pointer = 0
+    for p_count in structure:
+        path.moveTo( x_values[pointer], y_values[pointer] )
+
+        for index in range(pointer, pointer+p_count):
+            path.lineTo(x_values[index], y_values[index])
+        pointer = pointer + p_count
+
+    ## Draw feature background
+    lattice = skia.Matrix()
+    lattice.setScale(4.0, 4.0)
+    lattice.preRotate(30.0)
+    paint = skia.Paint(PathEffect=skia.Line2DPathEffect.Make(0.0, lattice))
+    paint.setAntiAlias(True)
+
+    paint.setColor(color)
+    canvas.drawPath(path, paint)
+
+    ## Draw feature outline
+    paint = skia.Paint()
+    paint.setAntiAlias(True)
+    paint.setColor(outline_color)
+    paint.setStyle(skia.Paint.kStroke_Style)
     paint.setStrokeWidth(outline_weight)
     canvas.drawPath(path, paint)
 
