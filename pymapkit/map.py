@@ -8,6 +8,7 @@ Created: 5 January, 2021
 """
 import pyproj
 import numpy as np
+from .base_style import BaseStyle
 
 
 def get_renderer(renderer_name):
@@ -26,15 +27,25 @@ def get_renderer(renderer_name):
         renderer = SkiaRenderer()
     return renderer
 
+
 class Background:
     def __init__(self):
-        self.color = 'black'
+        self.style = BackgroundStyle(self)
+        self.style.set_display('basic')
     
-    def set_color(self, new_color):
-        self.color = new_color
-    
+    def clear_cache(self):
+        '''
+        Clears a style cache
+        '''
+        self.style.cached_renderer_fn = None
+
     def render(self, renderer, canvas):
-        renderer.draw_background(canvas, self.color)
+        renderer.draw_background(canvas, self.style)
+
+class BackgroundStyle(BaseStyle):
+    def __init__(self, parent_feature):
+        BaseStyle.__init__(self, parent_feature)
+        self.add_display_mode('basic', ['color', 'opacity'], ['black', 1])
 
 class Map:
     """
@@ -73,6 +84,8 @@ class Map:
             self.renderer = renderer
         
         self.background = Background()
+        #self.style = BackgroundStyle(self)
+        #self.set_display('basic')
 
         ## Create integers to hold width and height. Default 500x500
         self.width: int = 500
@@ -93,6 +106,7 @@ class Map:
         ## Set projection location
         self.proj_x = 0
         self.proj_y = 0
+
 
     def add(self, new_layer, index=-1):
         """
@@ -439,10 +453,8 @@ class Map:
            canvas = self.renderer.new_canvas(self.width, self.height)
            output_file = output
         
-
         ## Draw background
         self.background.render(self.renderer, canvas)
-
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self.layers:
