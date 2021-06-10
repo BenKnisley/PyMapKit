@@ -83,6 +83,35 @@ class FeatureStyle(BaseStyle):
         ## Recreate original functionality
         return object.__getattribute__(self,item)
 
+
+class PointStyle(FeatureStyle):
+    def __init__(self, parent_feature, parent_style):
+        FeatureStyle.__init__(self, parent_feature, parent_style)
+
+        self.type = 'point'
+
+        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
+        self.add_display_mode('basic', 
+                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             ['red', 4, 'black', 1, 1, 1])
+        
+
+        self.set_display('none')
+
+class LineStyle(FeatureStyle):
+    def __init__(self, parent_feature, parent_style):
+        FeatureStyle.__init__(self, parent_feature, parent_style)
+
+        self.type = 'line'
+
+        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
+        self.add_display_mode('basic', 
+                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             ['red', 4, 'black', 1, 1, 1])
+        
+
+        self.set_display('none')
+
 class PolyStyle(FeatureStyle):
     def __init__(self, parent_feature, parent_style):
         FeatureStyle.__init__(self, parent_feature, parent_style)
@@ -92,8 +121,9 @@ class PolyStyle(FeatureStyle):
         #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
         self.add_display_mode('basic', 
                              ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             [..., ..., ..., ..., ...])
-        
+                             ['green', 'black', 1, 1, 1])
+
+
         self.add_display_mode('line-fill', 
                              ['color', 'line_weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
                              [..., 1, ..., ..., ..., ...])
@@ -237,8 +267,12 @@ class Feature:
         self.parent = parent
         self.geometry = geometry
 
-        self.style = PolyStyle(self, parent.style)
+
+        style_class = {'point': PointStyle, 'polygon': PolyStyle}
+        self.style = style_class[geometry.geometry_type](self, parent.style)
+
         self.style.set_display(...)
+
         #self.style.set_defaults(parent.geometry_type)
 
         self.attributes = {}
@@ -465,22 +499,6 @@ class VectorLayer(BaseLayer):
         self.field_names = field_names
         self.features = []
 
-
-        ## Style 
-        self.style = PolyStyle(self, None)
-
-        del self.__dict__['set_display']
-        self.style.create_new_setter('display')
-
-        ## Set ...
-        self.set_display('basic')
-        self.set_color('green')
-        self.set_outline_color('black')
-        self.set_outline_weight(2)
-        self.set_opacity(1)
-        self.set_outline_opacity(1)
-        
-
         ## >> self.projection = pyproj.Proj(projection)
         self.geographic_crs = pyproj.crs.CRS("EPSG:4326")
 
@@ -502,6 +520,19 @@ class VectorLayer(BaseLayer):
         self.maxy = []
         self.minx = []
         self.miny = []
+
+        ## Style 
+
+        style_class = {'point': PointStyle, 'polygon': PolyStyle}
+        self.style = style_class[geometry_type](self, None)
+
+        del self.__dict__['set_display']
+        self.style.create_new_setter('display')
+
+        self.set_display('basic')
+
+        ## Set ...
+
 
         ## Update status
         self.status = 'initialized'
@@ -736,8 +767,8 @@ class VectorLayer(BaseLayer):
                 if feature.geometry.skip_draw:
                     continue
 
-                if not feature.style.cached_renderer: 
-                    feature.style.cache_renderer(renderer)
+                #if not feature.style.cached_renderer: 
+                #    feature.style.cache_renderer(renderer)
                 
                 pix_x, pix_y = self.map.proj2pix(*feature.geometry.get_points())
                 renderer.draw_point(canvas, feature.geometry.structure, pix_x, pix_y, feature.style)
