@@ -26,6 +26,8 @@ class FeatureStyle(BaseStyle):
         if new_display == ...:
             super().set_display(self.parent_style.display)
             self.display = ...
+            for prop in self.dynamic_properties:
+                methodcaller('set_'+prop, ...)
         else:
             super().set_display(new_display)
 
@@ -98,18 +100,20 @@ class PointStyle(FeatureStyle):
 
         self.set_display('none')
 
+
 class LineStyle(FeatureStyle):
     def __init__(self, parent_feature, parent_style):
         FeatureStyle.__init__(self, parent_feature, parent_style)
-
         self.type = 'line'
 
-        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
         self.add_display_mode('basic', 
                              ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['red', 4, 'black', 1, 1, 1])
-        
+                             ['blue', 1, 'black', 0.1, 1, 1])
 
+        self.add_display_mode('dashed', 
+                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             ['blue', 1, 'black', 0.1, 1, 1])
+        
         self.set_display('none')
 
 class PolyStyle(FeatureStyle):
@@ -120,13 +124,13 @@ class PolyStyle(FeatureStyle):
 
         #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
         self.add_display_mode('basic', 
-                             ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['green', 'black', 1, 1, 1])
+                             ['color', 'outline_style', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             ['green', 'solid', 'black', 1, 1, 1])
 
 
         self.add_display_mode('line-fill', 
-                             ['color', 'line_weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             [..., 1, ..., ..., ..., ...])
+                             ['color', 'line_weight', 'outline_style', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
+                             ['green', 1, 'solid', 'black', 1, 1, 1])
                              #['green', 'black', 0.3, 1, 1])
         
         self.add_display_mode('image', ['path', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
@@ -268,7 +272,7 @@ class Feature:
         self.geometry = geometry
 
 
-        style_class = {'point': PointStyle, 'polygon': PolyStyle}
+        style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
         self.style = style_class[geometry.geometry_type](self, parent.style)
 
         self.style.set_display(...)
@@ -523,7 +527,7 @@ class VectorLayer(BaseLayer):
 
         ## Style 
 
-        style_class = {'point': PointStyle, 'polygon': PolyStyle}
+        style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
         self.style = style_class[geometry_type](self, None)
 
         del self.__dict__['set_display']
@@ -742,10 +746,7 @@ class VectorLayer(BaseLayer):
 
                 if feature.geometry.skip_draw:
                     continue
-                
-                #if not feature.style.cached_renderer: 
-                #    feature.style.cache_renderer(renderer)
-                
+                                
                 pix_x, pix_y = self.map.proj2pix(*feature.geometry.get_points())
                 renderer.draw_polygon(canvas, feature.geometry.structure, pix_x, pix_y, feature.style)
         
@@ -754,9 +755,6 @@ class VectorLayer(BaseLayer):
                 
                 if feature.geometry.skip_draw:
                     continue
-
-                if not feature.style.cached_renderer: 
-                    feature.style.cache_renderer(renderer)
                 
                 pix_x, pix_y = self.map.proj2pix(*feature.geometry.get_points())
                 renderer.draw_line(canvas, feature.geometry.structure, pix_x, pix_y, feature.style)
@@ -766,9 +764,6 @@ class VectorLayer(BaseLayer):
             
                 if feature.geometry.skip_draw:
                     continue
-
-                #if not feature.style.cached_renderer: 
-                #    feature.style.cache_renderer(renderer)
                 
                 pix_x, pix_y = self.map.proj2pix(*feature.geometry.get_points())
                 renderer.draw_point(canvas, feature.geometry.structure, pix_x, pix_y, feature.style)
