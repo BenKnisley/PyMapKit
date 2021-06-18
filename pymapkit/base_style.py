@@ -5,122 +5,129 @@ Function: Holds BaseStyle Class
 Author: Ben Knisley [benknisley@gmail.com]
 Date: 8, June 2021
 """
-from operator import methodcaller
+
 
 
 class BaseStyle:
-    def __init__(self, styled_feature):
-        '''
-        '''
-        ## Store reference to styled feature 
-        self.feature = styled_feature
+    def __init__(self, feature):
+        ## Store ref to styled feature
+        self.feature = feature
+        ## Whatever the user names style. feature.style has to be style
+        self.feature.style = self
 
-        ## Store list of display modes
-        self.display_modes = {
-        #> 'name', properties, defaults
-        'none': ([], []) ## None is always an option 
-        }
-        
-        ## Create current style placeholder
-        self.display = 'none'
+        ## Create Dict to hold domain mode properties
+        self.domains = {}
+        ## Create dict to hold current display modes
+        self.current_modes = {}
 
-        ## Create list to hold current style properties for to feature 
-        self.dynamic_properties = []
-        
-        ## Create list to hold current methods bound to feature 
-        self.dynamic_methods = []
+        ## Create dict to hold property values
+        self.managed_properties = {}
 
-        ## Create and bind get and set display methods to styled feature
-        self.create_display_etters()
-
-        ## Create a placeholder for cached rendering function
         self.cached_renderer_fn = None
-    
-    def add_display_mode(self, mode_name, prop_list, default_vals):
-        """
-        Creates a new display mode
-        
-        Creates a new display mode, by adding details to display_modes dict. 
-        To be used by a child class to create display modes for specific 
-        targets.
-        """
-        self.display_modes[mode_name] = (prop_list, default_vals)
 
-    def set_display(self, new_mode):
-        ## Check if new_mode is valid, if yes then set display value
-        if new_mode in self.display_modes:
-            self.display = new_mode
+    def __getitem__(self, key):
+        return self.managed_properties[key]
+
+    def add_domain(self, new_domain_name):
+        self.domains[new_domain_name] = {}
+        self.current_modes[new_domain_name] = None
+        self.managed_properties[new_domain_name + '_mode'] = None
+        self.create_domain_mode_etters(new_domain_name)
+
+    def add_mode(self, domain, new_mode_name):
+        self.domains[domain][new_mode_name] = {}
+
+    def add_property(self, new_prop_name, default_value):
+        self.managed_properties[new_prop_name] = default_value
+        self.create_property_etters(new_prop_name)
+
+    def add_mode_property(self, domain, mode, new_prop_name, default_value):
+        self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
+
+    def set_mode(self, domain, new_mode):
+        ## Get list of current properties
+        current_mode = self.current_modes[domain]
+        if current_mode:
+            current_properties = list(self.domains[domain][current_mode].keys())
         else:
-            raise ValueError(f"'{new_mode}' not a valid display mode.")
+            current_properties = []
+
+        ## Get list properties needed for new_mode
+        incoming_properties = list(self.domains[domain][new_mode].keys())
+
+        ## new_properties
+        new_properties = [p for p in incoming_properties if p not in current_properties]
+        old_properties = [p for p in current_properties if p not in incoming_properties]
+
+        ## Remove old properties etters and from self.properties dict
+        for prop in old_properties:
+            self.remove_property_etters(prop)
+            del self.managed_properties[prop]
+
+        ## Create new property and its etters
+        for prop in new_properties:
+            self.managed_properties[prop] = self.domains[domain][new_mode][prop]
+            self.create_property_etters(prop)
         
-        ## Get property names & default values from ChildClass.display_modes
-        properties, defaults = self.display_modes[new_mode]
+        self.current_modes[domain] = new_mode
+        self.managed_properties[domain + '_mode'] = new_mode
+
+
+    def create_domain_mode_etters(self, domain_name):
+
+        ## Add domain setter to feature
+        def set_display_template(self, new_value):
+            self.style.set_mode(domain_name, new_value)
+            self.style.clear_cache()
         
-        ## Create a dict to hold defaults for properties
-        defaults_dict = {p:d for p,d in zip(properties, defaults)}
+        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_' + domain_name + '_display'] = bound_setter
 
-        ## Get lists of exclusively new a& old dynamic properties
-        old_props = [p for p in self.dynamic_properties if p not in properties]
-        new_props = [p for p in properties if p not in self.dynamic_properties]
-
-        ## Remove property from self & dynamic_properties if in old_props
-        for prop in old_props:
-            del self.__dict__[prop]
-            del self.feature.__dict__['get_' + prop]
-            del self.feature.__dict__['set_' + prop]
-            self.dynamic_properties.remove(prop)
-
-        ## For property exclusively in new_prop, add default val
-        for prop in new_props:
-            self.feature.style.__dict__[prop] = defaults_dict[prop]
-            self.dynamic_properties.append(prop)
-
-            ## Create getter and setter for each new property
-            self.create_property_methods(prop)
-    
-    def create_display_etters(self):
-        """
-        Creates and binds get_display, and set_display to styled feature
-        """
-        ## Define set_display template
-        def set_display_templ(self, new_value):
-            ## call set display on style 
-            self.style.set_display(new_value)
-            self.style.cached_renderer_fn = None
-
-        
-        ## Define get_display template
-        def get_display_templ(self):
-            return self.style.__dict__['display']
-        
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_display_templ.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_display'] = bound_setter
+        ## Add domain getter to feature
+        def get_display_template(self):
+            return self.style.current_modes[domain_name]
 
         ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_templ.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_display'] = bound_getter
+        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+ domain_name +'_display'] = bound_getter
 
-    def create_property_methods(self, prop_name):
+        ## Bind a getter to self too
+        def get_display_template(self):
+            return self.current_modes[domain_name]
 
-            ## Define a property setter method
-            def setter_template(self, new_value):
-                self.style.__dict__[prop_name] = new_value
-                self.clear_cache()
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_display_template.__get__(self, type(self))
+        self.__dict__['get_'+ domain_name +'_display'] = bound_getter
 
-            ## Define a property getter method
-            def getter_template(self):
-                return self.style.__dict__[prop_name]
-            
-            ## Bind setter and getter to parent feature
-            bound_setter = setter_template.__get__(self.feature, type(self.feature))
-            bound_getter = getter_template.__get__(self.feature, type(self.feature))
+    def create_property_etters(self, property_name):
 
-            ## Link bound_setter as a named method
-            self.feature.__dict__['set_'+prop_name] = bound_setter
-            self.feature.__dict__['get_'+prop_name] = bound_getter
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            self.style.managed_properties[property_name] = new_value
+            self.style.clear_cache()
 
-            ## Add getter and setter names to dynamic_methods list
-            self.dynamic_methods.append('set_'+prop_name)
-            self.dynamic_methods.append('get_'+prop_name)
-    
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
+
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
+
+
+        def get_property_template(self):
+            return self.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self, type(self))
+        self.__dict__['get_'+property_name] = bound_getter
+
+    def remove_property_etters(self, property_name):
+        del self.feature.__dict__['get_' + property_name]
+        del self.feature.__dict__['set_' + property_name]
+
+    def clear_cache(self):
+        self.cached_renderer_fn = None

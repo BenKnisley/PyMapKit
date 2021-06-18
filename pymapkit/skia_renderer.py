@@ -167,10 +167,10 @@ class SkiaRenderer(BaseRenderer):
             style.cached_renderer_fn(canvas)
             return
         
-        if style.display == 'none':
+        if style['background_mode'] == 'none':
             return
 
-        color = self.cache_color(style.color, style.opacity)
+        color = self.cache_color(style['background_color'], style['background_opacity'])
 
         draw_background_basic(canvas, color)
         style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
@@ -266,7 +266,6 @@ class SkiaRenderer(BaseRenderer):
         ...
         return
 
-
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
         """
         Draws a polygon or mutipolygon onto the canvas.
@@ -285,47 +284,64 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
-        
-        ## If a rendering function is already defined, use it.
+
+        ## Create skia path object
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+            for index in range(pointer, pointer+p_count):
+                path.lineTo(x_values[index], y_values[index])
+            pointer = pointer + p_count
+
+        ## If a rendering function is already cached, use it.
         if style.cached_renderer_fn:
-            #print('Using cached function')
-            style.cached_renderer_fn(canvas, structure, x_values, y_values)
-            return
-
-
-        
-        if style.display == 'basic':
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            draw_poly_basic(canvas, structure, x_values, y_values, color, style.outline_style, outline_color, style.outline_weight)
-            
-            style.cached_renderer_fn = cache_fn(draw_poly_basic, color=color, outline_style=style.outline_style, outline_color=outline_color, outline_weight=style.outline_weight)
+            style.cached_renderer_fn(canvas, path)
             return
         
-        elif style.display == 'line-fill':
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            draw_poly_line_fill(canvas, structure, x_values, y_values, color, style.line_weight, style.outline_style, outline_color, style.outline_weight)
 
-            
-            style.cached_renderer_fn = cache_fn(draw_poly_line_fill, color=color, outline_style=style.outline_style, line_weight=style.line_weight, outline_color=outline_color, outline_weight=style.outline_weight)
+        ## Fill
+        if  style['fill_mode'] == 'none':
+            def fun(*args): 
+                pass
+            fill_cached_renderer_fn = fun
 
-            return
+        elif style['fill_mode'] == 'basic':
+            fill_color = self.cache_color(style['fill_color'], style['fill_opacity'])
+            draw_poly_basic_fill(canvas, path, fill_color)
+            fill_cached_renderer_fn = cache_fn(draw_poly_basic_fill, fill_color=fill_color)
+        
+        elif style['fill_mode'] == 'line':
+            fill_line_color = self.cache_color(style['fill_line_color'], style['fill_line_opacity'])
+            draw_poly_line_fill(canvas, path, fill_line_color)
+            fill_cached_renderer_fn = cache_fn(draw_poly_line_fill, fill_line_color=fill_line_color)
 
 
-
-        elif style.display == 'image':
+        elif style['fill_mode'] == 'image':
             outline_color = self.cache_color(style.outline_color, style.outline_opacity)
             image = self.cache_image(style.path)
-            
             draw_poly_image(canvas, structure, x_values, y_values, image, outline_color, style.outline_weight)
-            
-            style.cached_renderer_fn = cache_fn(draw_poly_image, image_cache=image, outline_color=outline_color, outline_weight=style.outline_weight)
-            return
+            style.cached_renderer_fn = cache_fn(draw_poly_image, image_cache=image, outline_color=outline_color, outline_weight=style.outline_weight)   
+        
+        else:
+            pass
+        
+        ## Outline
+        if  style['outline_mode'] == 'none':
+            def fun(*args): 
+                pass
+            outline_cached_renderer_fn = fun
 
-            
+        elif style['outline_mode'] == 'solid':
+            outline_color = self.cache_color(style['outline_color'], style['outline_opacity'])
+            outline_weight = style['outline_weight']
+            draw_poly_solid_outline(canvas, path, outline_color, outline_weight)
+            outline_cached_renderer_fn = cache_fn(draw_poly_solid_outline, outline_color=outline_color, outline_weight=outline_weight)
+
+
+        style.cached_renderer_fn = join_fns((fill_cached_renderer_fn, outline_cached_renderer_fn))
 
     ##
     ##
@@ -405,12 +421,21 @@ def cache_fn(fn, **args):
     cached_fn = functools.partial(fn, **_args)
     return cached_fn
 
+def join_fns(functions):
+    def inner(canvas, path):
+        for fn in functions:
+            fn(canvas, path)
+    return inner
+
 
 """****************************
 ****** Drawing functions ******
 ****************************"""
 
 def draw_background_basic(canvas, color):
+    """
+    Fills the whole canvas with a solid color.
+    """
     ## Create a Skia Paint object and draw paint over whole canvas
     paint = skia.Paint(Color=color)
     canvas.drawPaint(paint)
@@ -525,44 +550,42 @@ def draw_line_dashed(canvas, structure, x_values, y_values, color, weight, outli
 
 ## Polygon Display Modes
 
-def draw_poly_basic(canvas, structure, x_values, y_values, color, outline_style, outline_color, outline_weight):
-    ## Create a path
-    path = skia.Path()
-
-    ## Load points into path
-    pointer = 0
-    for p_count in structure:
-        path.moveTo( x_values[pointer], y_values[pointer] )
-
-        for index in range(pointer, pointer+p_count):
-            path.lineTo(x_values[index], y_values[index])
-        pointer = pointer + p_count
-
-    ## Draw feature background
-    paint = skia.Paint(color)
+def draw_poly_basic_fill(canvas, path, fill_color):
+    """
+    Fills a given Skia path with a single color.
+    """
+    ## Create paint object
+    paint = skia.Paint(fill_color)
     paint.setAntiAlias(True)
     canvas.drawPath(path, paint)
 
 
-    ## Draw feature outline
+def draw_poly_line_fill(canvas, path, fill_line_color):
+    """
+    Fills a given Skia path with a line fill.
+    """
+    ## Draw feature background
+    lattice = skia.Matrix()
+    lattice.setScale(4.0, 4.0)
+    lattice.preRotate(30.0)
+    paint = skia.Paint(PathEffect=skia.Line2DPathEffect.Make(0.0, lattice))
+    paint.setAntiAlias(True)
+    paint.setColor(fill_line_color)
+    canvas.drawPath(path, paint)
+
+
+def draw_poly_solid_outline(canvas, path, outline_color, outline_weight):
     paint = skia.Paint(outline_color)
     paint.setStrokeWidth(outline_weight)
     paint.setAntiAlias(True)
     paint.setStyle(skia.Paint.kStroke_Style)
-
-
-    if outline_style == 'none':
-        return
-    if outline_style == 'solid':
-        pass
-    elif outline_style == 'dashed':
-        paint.setPathEffect(skia.DashPathEffect.Make([10.0, 5.0, 2.0, 5.0], 0.0))
-        
     canvas.drawPath(path, paint)
 
 
 
 
+
+'''
 def draw_poly_line_fill(canvas, structure, x_values, y_values, color, line_weight, outline_style, outline_color, outline_weight):
     ## Create a path
     path = skia.Path()
@@ -662,3 +685,4 @@ def draw_poly_image(canvas, structure, x_values, y_values, image_cache, outline_
     paint.setColor(outline_color)
     paint.setStrokeWidth(outline_weight)
     canvas.drawPath(path, paint)
+'''

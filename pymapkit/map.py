@@ -27,25 +27,16 @@ def get_renderer(renderer_name):
         renderer = SkiaRenderer()
     return renderer
 
-
-class Background:
-    def __init__(self):
-        self.style = BackgroundStyle(self)
-        self.style.set_display('basic')
-    
-    def clear_cache(self):
-        '''
-        Clears a style cache
-        '''
-        self.style.cached_renderer_fn = None
-
-    def render(self, renderer, canvas):
-        renderer.draw_background(canvas, self.style)
-
 class BackgroundStyle(BaseStyle):
     def __init__(self, parent_feature):
         BaseStyle.__init__(self, parent_feature)
-        self.add_display_mode('basic', ['color', 'opacity'], ['black', 1])
+
+        self.add_domain('background')
+        self.add_mode('background', 'color')
+        self.add_mode_property('background', 'color', 'color', 'white')
+        self.add_mode_property('background', 'color', 'opacity', 1)
+        self.set_mode('background', 'color')
+    
 
 class Map:
     """
@@ -83,9 +74,8 @@ class Map:
         else: 
             self.renderer = renderer
         
-        self.background = Background()
-        #self.style = BackgroundStyle(self)
-        #self.set_display('basic')
+        #self.background = Background()
+        self.style = BackgroundStyle(self)
 
         ## Create integers to hold width and height. Default 500x500
         self.width: int = 500
@@ -454,7 +444,7 @@ class Map:
            output_file = output
         
         ## Draw background
-        self.background.render(self.renderer, canvas)
+        self.renderer.draw_background(canvas, self.style)
 
         ## Draw each layer, pass renderer, and canvas to each object
         for layer in self.layers:

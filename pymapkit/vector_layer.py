@@ -15,127 +15,94 @@ from .base_layer import BaseLayer
 from .base_style import BaseStyle
 
 
-class FeatureStyle(BaseStyle):
-    def __init__(self, parent_feature, parent_style):
-        """
-        """
+
+
+def build_style(style, geo_type):
+    style.type = geo_type
+
+    if geo_type == 'polygon':
+        style.add_domain('fill')
+        style.add_mode('fill', 'none')
+        style.add_mode('fill', 'basic')
+        style.add_mode_property('fill', 'basic', 'color', 'green')
+        style.add_mode_property('fill', 'basic', 'opacity', 1)
+
+        style.add_mode('fill', 'line')
+        style.add_mode_property('fill', 'line', 'line_color', 'black')
+        style.add_mode_property('fill', 'line', 'line_opacity', 1)
+
+        style.set_mode('fill', 'basic')
+
+        style.add_domain('outline')
+        style.add_mode('outline', 'none')
+        style.add_mode('outline', 'solid')
+        style.add_mode_property('outline', 'solid', 'color', 'black')
+        style.add_mode_property('outline', 'solid', 'weight', 1)
+        style.add_mode_property('outline', 'solid', 'opacity', 1)
+        style.set_mode('outline', 'solid')
+    elif True:
+        pass
+
+class LayerStyle(BaseStyle):
+    def __init__(self, parent_feature):
         BaseStyle.__init__(self, parent_feature)
-        self.parent_style = parent_style
-        
-    def set_display(self, new_display):
-        if new_display == ...:
-            super().set_display(self.parent_style.display)
-            self.display = ...
-            for prop in self.dynamic_properties:
-                methodcaller('set_'+prop, ...)
-        else:
-            super().set_display(new_display)
-
-    def overwrite_methods(self):
-         for prop in self.dynamic_properties + ["display"]:
-            del self.feature.__dict__['set_' + prop]
-            self.create_new_setter(prop)
+        self.layer = parent_feature
 
 
-    def create_new_setter(self, prop_name):
+    def create_domain_mode_etters(self, domain_name):
 
-        def setter_template(self, new_value):
-
-            if prop_name == "display":
-                self.style.set_display(new_value)
-                self.style.overwrite_methods()
-            
-            list(map(methodcaller('set_display', self.style.display), self.features))
-            #list(map(methodcaller('set_'+prop_name, new_value), self.features))
-
+        ## Add domain setter to feature
+        def set_display_template(self, new_value):
             for f in self.features:
-                f.style.__dict__[prop_name] = new_value
-                f.style.cached_renderer_fn = None
-
-            self.style.__dict__[prop_name] = new_value
-
-
+                f.style.set_mode(domain_name, new_value)
+                f.style.clear_cache()
         
-        ## Bind setter and getter to parent feature
-        bound_setter = setter_template.__get__(self.feature, type(self.feature))
+        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_' + domain_name + '_display'] = bound_setter
 
-        ## Link bound_setter as a named method
-        self.feature.__dict__['set_'+prop_name] = bound_setter
+        ## Add domain getter to feature
+        def get_display_template(self):
+            return self.style.current_modes[domain_name]
 
-        ## Add getter and setter names to dynamic_methods list
-        self.dynamic_methods.append('set_'+prop_name)
-    
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+ domain_name +'_display'] = bound_getter
 
+        ## Bind a getter to self too
+        def get_display_template(self):
+            return self.current_modes[domain_name]
 
-    def __getattribute__(self, item):
-        ## Create a passthrough to prevent recursion
-        if item == "dynamic_properties":
-            return object.__getattribute__(self, item)
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_display_template.__get__(self, type(self))
+        self.__dict__['get_'+ domain_name +'_display'] = bound_getter
 
-        if item in self.dynamic_properties + ["display"]:
-            ## Get value of attribute
-            value = self.__dict__[item]
+    def create_property_etters(self, property_name):
 
-            ## If attribute value is an Ellipsis, override it
-            if value == ...:
-                return self.parent_style.__dict__[item]
-            else:
-                return value
-        
-        ## Recreate original functionality
-        return object.__getattribute__(self,item)
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            for f in self.features:
+                if property_name in f.style.managed_properties:
+                    f.style.managed_properties[property_name] = new_value
+                f.style.clear_cache()
 
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
 
-class PointStyle(FeatureStyle):
-    def __init__(self, parent_feature, parent_style):
-        FeatureStyle.__init__(self, parent_feature, parent_style)
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
 
-        self.type = 'point'
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
 
-        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
-        self.add_display_mode('basic', 
-                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['red', 4, 'black', 1, 1, 1])
-        
-
-        self.set_display('none')
-
-
-class LineStyle(FeatureStyle):
-    def __init__(self, parent_feature, parent_style):
-        FeatureStyle.__init__(self, parent_feature, parent_style)
-        self.type = 'line'
-
-        self.add_display_mode('basic', 
-                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['blue', 1, 'black', 0.1, 1, 1])
-
-        self.add_display_mode('dashed', 
-                             ['color', 'weight', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['blue', 1, 'black', 0.1, 1, 1])
-        
-        self.set_display('none')
-
-class PolyStyle(FeatureStyle):
-    def __init__(self, parent_feature, parent_style):
-        FeatureStyle.__init__(self, parent_feature, parent_style)
-
-        self.type = 'polygon'
-
-        #self.add_display_mode('basic', ['color', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
-        self.add_display_mode('basic', 
-                             ['color', 'outline_style', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['green', 'solid', 'black', 1, 1, 1])
+    def clear_cache(self):
+        for f in self.layer:
+            f.style.cached_renderer_fn = None
 
 
-        self.add_display_mode('line-fill', 
-                             ['color', 'line_weight', 'outline_style', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], 
-                             ['green', 1, 'solid', 'black', 1, 1, 1])
-                             #['green', 'black', 0.3, 1, 1])
-        
-        self.add_display_mode('image', ['path', 'outline_color', 'outline_weight', 'opacity', 'outline_opacity'], [..., ..., ..., ..., 1, 1])
 
-        self.set_display('none')
+
 
 
 
@@ -166,7 +133,6 @@ class Geometry:
             #! CHANGE ADDRESS OF ALL FOLLOWING GEOMS IN PARENT
             pass
         
-
     def get_points(self):
         x_values = self.parent.x_values[self.start_address:self.start_address+self.length]
         y_values = self.parent.y_values[self.start_address:self.start_address+self.length]
@@ -272,10 +238,10 @@ class Feature:
         self.geometry = geometry
 
 
-        style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
-        self.style = style_class[geometry.geometry_type](self, parent.style)
-
-        self.style.set_display(...)
+        #style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
+        #self.style = style_class[geometry.geometry_type](self)
+        self.style = BaseStyle(self)
+        build_style(self.style, self.parent.geometry_type)
 
         #self.style.set_defaults(parent.geometry_type)
 
@@ -330,17 +296,8 @@ class FeatureList:
     def __init__(self, parent, features):
         self.parent = parent
         self.features = features
-
-        self.style = PolyStyle(self, None)
-        self.style.set_display(self.parent.style.display)
-        self.style.overwrite_methods()
-
-
-    
-    def clear_cache(self):
-        for feature in self.features:
-            feature.style.cached_renderer_fn = None
-
+        self.style = LayerStyle(self)
+        build_style(self.style, self.parent.geometry_type)
     
     def __len__(self):
         return len(self.features)
@@ -391,20 +348,10 @@ class FeatureDict:
         self.field = field
         self.keys = []
         self.features = []
-
-        #self.style = PolyStyle(self, parent.style)
-        #self.style.set_display(parent.get_display())
-        #self.style.set_display(...)
-
+    
         for feature in self.parent.features:
             self.features.append(feature)
             self.keys.append(feature[self.field])
-    
-    def clear_cache(self):
-        for feature in self.features:
-            #feature.style.cached_renderer = None
-            feature.style.cached_renderer_fn = None
-
 
     def __getitem__(self, compair):
         return_features = []
@@ -489,7 +436,6 @@ class FeatureDict:
                 retn_list.append(feature)
         return FeatureList(self.parent, retn_list)
 
-
 class VectorLayer(BaseLayer):
     """ """
     def __init__(self, geometry_type, field_names):
@@ -525,18 +471,9 @@ class VectorLayer(BaseLayer):
         self.minx = []
         self.miny = []
 
-        ## Style 
-
-        style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
-        self.style = style_class[geometry_type](self, None)
-
-        del self.__dict__['set_display']
-        self.style.create_new_setter('display')
-
-        self.set_display('basic')
-
-        ## Set ...
-
+        ## Style
+        self.style = LayerStyle(self)
+        build_style(self.style, self.geometry_type)
 
         ## Update status
         self.status = 'initialized'
@@ -585,17 +522,6 @@ class VectorLayer(BaseLayer):
     def deactivate(self):
         ## Update status
         self.status = 'initialized'
-
-
-
-    def clear_cache(self):
-        '''
-        Clears a style cache
-        '''
-        for feature in self.features:
-            feature.style.cached_renderer_fn = None
-
-
 
     def new(self):
         """
@@ -729,7 +655,6 @@ class VectorLayer(BaseLayer):
         for _, geom in self.maxy[:ind]:
             geom.skip_draw = True
         
-
     def render(self, renderer, canvas):
         """
         """
