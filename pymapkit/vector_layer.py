@@ -15,8 +15,6 @@ from .base_layer import BaseLayer
 from .base_style import BaseStyle
 
 
-
-
 def build_style(style, geo_type):
     style.type = geo_type
 
@@ -53,6 +51,9 @@ class LayerStyle(BaseStyle):
 
         ## Add domain setter to feature
         def set_display_template(self, new_value):
+            self.style.set_mode(domain_name, new_value)
+            self.style.clear_cache()
+            
             for f in self.features:
                 f.style.set_mode(domain_name, new_value)
                 f.style.clear_cache()
@@ -99,12 +100,6 @@ class LayerStyle(BaseStyle):
     def clear_cache(self):
         for f in self.layer:
             f.style.cached_renderer_fn = None
-
-
-
-
-
-
 
 class Geometry:
     """
