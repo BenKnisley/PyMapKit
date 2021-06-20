@@ -199,21 +199,35 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
-        ## If a rendering function is already defined, use it.
-        if style.cached_renderer_fn:
-            style.cached_renderer_fn(canvas, structure, x_values, y_values)
-            return
 
-        if style.display == 'basic':
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
+        ## If a rendering function is already cached, use it.
+        if style.cached_renderer_fn:
+            style.cached_renderer_fn(canvas, path)
+            return
+        
+        ## Fill
+        if  style['display_mode'] == 'none':
+            def fun(*args): 
+                pass
+            fill_cached_renderer_fn = fun
+
+        elif style['display_mode'] == 'circle':
+
+            ## Create a path
+            path = skia.Path()
+
+            ## Add points to path
+            pointer = 0
+            for p_count in structure:
+                for index in range(pointer, pointer+p_count):
+                    path.addCircle(x_values[index], y_values[index], style['weight'])
+                pointer += p_count
+
+            color = self.cache_color(style['color'], style['opacity'])
+            #outline_color = self.cache_color(style['outline_color'], style['outline_opacity'])
             
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            draw_point_basic(canvas, structure, x_values, y_values, color, style.weight, outline_color, style.outline_weight)
-            
-            style.cached_renderer_fn = cache_fn(draw_point_basic, color=color, weight=style.weight, outline_color=outline_color, outline_weight=style.outline_weight)
+            draw_point_basic(canvas, path, color)
+            style.cached_renderer_fn = cache_fn(draw_point_basic, color=color)
             return
         ...
         return
@@ -442,27 +456,19 @@ def draw_background_basic(canvas, color):
 
 ## Point Display Modes
 
-def draw_point_basic(canvas, structure, x_values, y_values, color, weight, outline_color, outline_weight):
-    ## Create a path
-    path = skia.Path()
-
-    ## Add points to path
-    pointer = 0
-    for p_count in structure:
-        for index in range(pointer, pointer+p_count):
-            path.addCircle(x_values[index], y_values[index], weight)
-        pointer += p_count
+def draw_point_basic(canvas, path, color):
     
     ## Draw background
     paint = skia.Paint(AntiAlias=True)
     paint.setColor(color)
+    #paint.setStrokeWidth(weight)
     canvas.drawPath(path, paint)
     
     ## Draw outline
-    paint.setStyle(skia.Paint.kStroke_Style)
-    paint.setColor(outline_color)
-    paint.setStrokeWidth(outline_weight)
-    canvas.drawPath(path, paint)
+    #paint.setStyle(skia.Paint.kStroke_Style)
+    #paint.setColor(color)
+    #paint.setStrokeWidth(weight)
+    #canvas.drawPath(path, paint)
     return
 
 

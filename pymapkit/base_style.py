@@ -31,20 +31,34 @@ class BaseStyle:
     def add_domain(self, new_domain_name):
         self.domains[new_domain_name] = {}
         self.current_modes[new_domain_name] = None
-        self.managed_properties[new_domain_name + '_mode'] = None
+        
+        if new_domain_name:
+            self.managed_properties[new_domain_name + '_mode'] = None
+        
         self.create_domain_mode_etters(new_domain_name)
 
-    def add_mode(self, domain, new_mode_name):
+    def add_mode(self, new_mode_name, domain=None):
+
+        if domain == None:
+            if None not in self.domains:
+                self.add_domain(None)
+
         self.domains[domain][new_mode_name] = {}
 
-    def add_property(self, new_prop_name, default_value):
-        self.managed_properties[new_prop_name] = default_value
-        self.create_property_etters(new_prop_name)
 
-    def add_mode_property(self, domain, mode, new_prop_name, default_value):
-        self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
+    def add_property(self, new_prop_name, default_value, mode=None, domain=None):
+        if domain:
+            self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
+        else:
+            if mode:
+                self.domains[domain][mode][new_prop_name] = default_value
+            else:
+                ## Add top level property
+                self.managed_properties[new_prop_name] = default_value
+                self.create_property_etters(new_prop_name)
 
-    def set_mode(self, domain, new_mode):
+
+    def set_mode(self, new_mode, domain=None):
         ## Get list of current properties
         current_mode = self.current_modes[domain]
         if current_mode:
@@ -70,18 +84,31 @@ class BaseStyle:
             self.create_property_etters(prop)
         
         self.current_modes[domain] = new_mode
-        self.managed_properties[domain + '_mode'] = new_mode
+        
+        if domain:
+            mode_prop_name = domain + '_mode'
+        else:
+            mode_prop_name = 'display_mode'
+
+        self.managed_properties[mode_prop_name] = new_mode
 
 
-    def create_domain_mode_etters(self, domain_name):
+    def create_domain_mode_etters(self, domain_name=None):
 
         ## Add domain setter to feature
         def set_display_template(self, new_value):
-            self.style.set_mode(domain_name, new_value)
+            self.style.set_mode(new_value, domain_name)
             self.style.clear_cache()
         
+        if domain_name:
+            setter_name = 'set_' + domain_name + '_display'
+            getter_name = 'get_' + domain_name + '_display'
+        else:
+            setter_name = 'set_display'
+            getter_name = 'get_display'
+
         bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_' + domain_name + '_display'] = bound_setter
+        self.feature.__dict__[setter_name] = bound_setter
 
         ## Add domain getter to feature
         def get_display_template(self):
@@ -89,7 +116,7 @@ class BaseStyle:
 
         ## Link, and bind set_display as a named method of the parent feature
         bound_getter = get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+ domain_name +'_display'] = bound_getter
+        self.feature.__dict__[getter_name] = bound_getter
 
         ## Bind a getter to self too
         def get_display_template(self):
@@ -97,7 +124,7 @@ class BaseStyle:
 
         ## Link, and bind set_display as a named method of the parent feature
         bound_getter = get_display_template.__get__(self, type(self))
-        self.__dict__['get_'+ domain_name +'_display'] = bound_getter
+        self.__dict__[getter_name] = bound_getter
 
     def create_property_etters(self, property_name):
 

@@ -32,10 +32,10 @@ class BackgroundStyle(BaseStyle):
         BaseStyle.__init__(self, parent_feature)
 
         self.add_domain('background')
-        self.add_mode('background', 'color')
-        self.add_mode_property('background', 'color', 'color', 'white')
-        self.add_mode_property('background', 'color', 'opacity', 1)
-        self.set_mode('background', 'color')
+        self.add_mode('color', 'background')
+        self.add_property('color', 'white', 'color', 'background')
+        self.add_property('opacity', 1, 'color', 'background')
+        self.set_mode('color', 'background')
     
 
 class Map:

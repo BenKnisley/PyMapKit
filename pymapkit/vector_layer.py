@@ -16,29 +16,72 @@ from .base_style import BaseStyle
 
 
 def build_style(style, geo_type):
+    """
+    Takes a style object and adds domains, modes, and properties to create
+    a style object useful for thr given geometry type. Normal expected 
+    usage is for either a BaseStyle object for feature, or a LayerStyle for
+    layers.
+    """
     style.type = geo_type
 
-    if geo_type == 'polygon':
+    if geo_type == 'point':
+
+        ## Add domains for point
+        #style.add_domain(None) ## This is implied
+
+        ## Create modes for fill
+        style.add_mode('none')
+        style.add_mode('circle')
+        ## Square
+        ## Triangle
+        ## Icon
+
+        ## Add properties to point display mode
+        style.add_property('color', 'red', 'circle')
+        style.add_property('weight', 3, 'circle')
+        style.add_property('opacity', 1, 'circle')
+        
+        ## Set default mode
+        style.set_mode('circle')
+
+
+    elif geo_type == 'line':
+        pass
+
+    elif geo_type == 'polygon':
+        ## Create domains for polygon styles
         style.add_domain('fill')
-        style.add_mode('fill', 'none')
-        style.add_mode('fill', 'basic')
-        style.add_mode_property('fill', 'basic', 'color', 'green')
-        style.add_mode_property('fill', 'basic', 'opacity', 1)
-
-        style.add_mode('fill', 'line')
-        style.add_mode_property('fill', 'line', 'line_color', 'black')
-        style.add_mode_property('fill', 'line', 'line_opacity', 1)
-
-        style.set_mode('fill', 'basic')
-
         style.add_domain('outline')
-        style.add_mode('outline', 'none')
-        style.add_mode('outline', 'solid')
-        style.add_mode_property('outline', 'solid', 'color', 'black')
-        style.add_mode_property('outline', 'solid', 'weight', 1)
-        style.add_mode_property('outline', 'solid', 'opacity', 1)
-        style.set_mode('outline', 'solid')
-    elif True:
+
+        ## Create modes for fill
+        style.add_mode('none', 'fill')
+        style.add_mode('basic', 'fill')
+        style.add_mode('line', 'fill')
+
+        ## Add Properties for basic fill mode
+        style.add_property('color', 'green', 'basic', 'fill')
+        style.add_property('opacity', 1, 'basic', 'fill')
+
+        ## Add properties for line fill mode
+        style.add_property('line_color', 'black', 'line', 'fill')
+        style.add_property('line_opacity', 1, 'line', 'fill')
+
+        ## Set default fill mode
+        style.set_mode('basic', 'fill')
+
+        ## Add modes for outline 
+        style.add_mode('none', 'outline')
+        style.add_mode('solid', 'outline')
+
+        ## Add properties for solid outline mode 
+        style.add_property('color', 'black', 'solid', 'outline')
+        style.add_property('weight', 1, 'solid', 'outline')
+        style.add_property('opacity', 1, 'solid', 'outline')
+        
+        ## Set default outline mode
+        style.set_mode('solid', 'outline')
+
+    else:
         pass
 
 class LayerStyle(BaseStyle):
@@ -51,15 +94,22 @@ class LayerStyle(BaseStyle):
 
         ## Add domain setter to feature
         def set_display_template(self, new_value):
-            self.style.set_mode(domain_name, new_value)
+            self.style.set_mode(new_value, domain_name)
             self.style.clear_cache()
             
             for f in self.features:
-                f.style.set_mode(domain_name, new_value)
+                f.style.set_mode(new_value, domain_name)
                 f.style.clear_cache()
         
+        if domain_name:
+            setter_name = 'set_' + domain_name + '_display'
+            getter_name = 'get_' + domain_name + '_display'
+        else:
+            setter_name = 'set_display'
+            getter_name = 'get_display'
+        
         bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_' + domain_name + '_display'] = bound_setter
+        self.feature.__dict__[setter_name] = bound_setter
 
         ## Add domain getter to feature
         def get_display_template(self):
@@ -67,7 +117,7 @@ class LayerStyle(BaseStyle):
 
         ## Link, and bind set_display as a named method of the parent feature
         bound_getter = get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+ domain_name +'_display'] = bound_getter
+        self.feature.__dict__[getter_name] = bound_getter
 
         ## Bind a getter to self too
         def get_display_template(self):
@@ -75,7 +125,7 @@ class LayerStyle(BaseStyle):
 
         ## Link, and bind set_display as a named method of the parent feature
         bound_getter = get_display_template.__get__(self, type(self))
-        self.__dict__['get_'+ domain_name +'_display'] = bound_getter
+        self.__dict__[getter_name] = bound_getter
 
     def create_property_etters(self, property_name):
 
