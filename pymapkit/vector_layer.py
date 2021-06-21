@@ -32,21 +32,53 @@ def build_style(style, geo_type):
         ## Create modes for fill
         style.add_mode('none')
         style.add_mode('circle')
-        ## Square
-        ## Triangle
-        ## Icon
+        style.add_mode('square')
+        style.add_mode('triangle')
+        style.add_mode('icon')
 
-        ## Add properties to point display mode
+
+        ## Add properties to circle display mode
         style.add_property('color', 'red', 'circle')
         style.add_property('weight', 3, 'circle')
         style.add_property('opacity', 1, 'circle')
+
+        ## Add properties to circle display mode
+        style.add_property('color', 'red', 'square')
+        style.add_property('weight', 3, 'square')
+        style.add_property('opacity', 1, 'square')
+        
+        ## Add properties to circle display mode
+        style.add_property('color', 'red', 'triangle')
+        style.add_property('weight', 3, 'triangle')
+        style.add_property('opacity', 1, 'triangle')
+
+        ## Add properties to circle display mode
+        style.add_property('path', 'red', 'icon')
+        style.add_property('weight', 3, 'icon')
+        style.add_property('opacity', 1, 'icon')
         
         ## Set default mode
         style.set_mode('circle')
 
 
     elif geo_type == 'line':
-        pass
+        ## Add domains for point
+        #style.add_domain(None) ## This is implied
+
+        ## Create modes for fill
+        style.add_mode('none')
+        style.add_mode('solid')
+        ## Square
+        ## Triangle
+        ## Icon
+
+        ## Add properties to point display mode
+        style.add_property('color', 'blue', 'solid')
+        style.add_property('weight', 1, 'solid')
+        style.add_property('opacity', 1, 'solid')
+        
+        ## Set default mode
+        style.set_mode('solid')
 
     elif geo_type == 'polygon':
         ## Create domains for polygon styles
@@ -57,6 +89,7 @@ def build_style(style, geo_type):
         style.add_mode('none', 'fill')
         style.add_mode('basic', 'fill')
         style.add_mode('line', 'fill')
+        style.add_mode('image', 'fill')
 
         ## Add Properties for basic fill mode
         style.add_property('color', 'green', 'basic', 'fill')
@@ -65,6 +98,10 @@ def build_style(style, geo_type):
         ## Add properties for line fill mode
         style.add_property('line_color', 'black', 'line', 'fill')
         style.add_property('line_opacity', 1, 'line', 'fill')
+
+        ## Add properties for image fill mode
+        style.add_property('image_path', 'None', 'image', 'fill')
+        style.add_property('opacity', 1, 'image', 'fill')
 
         ## Set default fill mode
         style.set_mode('basic', 'fill')

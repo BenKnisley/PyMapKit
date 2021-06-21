@@ -185,37 +185,38 @@ class SkiaRenderer(BaseRenderer):
             None
         """
 
+        ## Create a point list
+        point_list = []
+
+        ## Add points to path
+        pointer = 0
+        for p_count in structure:
+            for index in range(pointer, pointer+p_count):
+                point_list.append((x_values[index], y_values[index]))
+            pointer += p_count
+
         ## If a rendering function is already cached, use it.
         if style.cached_renderer_fn:
-            style.cached_renderer_fn(canvas, path)
+            style.cached_renderer_fn(canvas, point_list)
             return
+
         
         ## Fill
         if  style['display_mode'] == 'none':
-            def fun(*args): 
-                pass
-            fill_cached_renderer_fn = fun
+            ## Cache em
+            fill_cached_renderer_fn = empty_fn()
 
         elif style['display_mode'] == 'circle':
-
-            ## Create a path
-            path = skia.Path()
-
-            ## Add points to path
-            pointer = 0
-            for p_count in structure:
-                for index in range(pointer, pointer+p_count):
-                    path.addCircle(x_values[index], y_values[index], style['weight']/2)
-                pointer += p_count
-
+            ## Pull relevant data from style
             color = self.cache_color(style['color'], style['opacity'])
-            #outline_color = self.cache_color(style['outline_color'], style['outline_opacity'])
+            weight = style['weight'] / 2
             
-            draw_point_basic(canvas, path, color)
-            style.cached_renderer_fn = cache_fn(draw_point_basic, color=color)
-            return
-        ...
-        return
+            ## Draw point, & cache function and parameters for rendering
+            draw_point_circle(canvas, point_list, color, weight)
+            style.cached_renderer_fn = cache_fn(draw_point_circle, color=color, weight=weight)
+        
+        else:
+            print(f'''"{style['display_mode']}" display mode not yet supported by this renderer''')
 
     def draw_line(self, canvas, structure, x_values, y_values, style):
         """
@@ -235,35 +236,37 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
+
+        ## Create skia path object
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+            for index in range(pointer, pointer+p_count):
+                path.lineTo(x_values[index], y_values[index])
+            pointer = pointer + p_count
+
         ## If a rendering function is already defined, use it.
         if style.cached_renderer_fn:
-            style.cached_renderer_fn(canvas, structure, x_values, y_values)
+            style.cached_renderer_fn(canvas, path)
             return
 
-        if style.display == 'basic':
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            draw_line_basic(canvas, structure, x_values, y_values, color, style.weight, outline_color, style.outline_weight)
-            
-            style.cached_renderer_fn = cache_fn(draw_line_basic, color=color, weight=style.weight, outline_color=outline_color, outline_weight=style.outline_weight)
+                ## Fill
+        if  style['display_mode'] == 'none':
+            style.cached_renderer_fn = empty_fn()
+
+        elif style['display_mode'] == 'solid':
+            color = self.cache_color(style['color'], style['opacity'])
+            weight = style['weight'] / 2
+
+            draw_line_solid(canvas, path, color, weight)
+            style.cached_renderer_fn = cache_fn(draw_line_solid, color=color, weight=weight)
+        
+        else:
+            pass
             return
-        elif style.display == 'dashed':
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            color = self.cache_color(style.color, style.opacity)
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            
-            draw_line_dashed(canvas, structure, x_values, y_values, color, style.weight, outline_color, style.outline_weight)
-            
-            style.cached_renderer_fn = cache_fn(draw_line_dashed, color=color, weight=style.weight, outline_color=outline_color, outline_weight=style.outline_weight)
-            return
-        ...
-        return
 
     def draw_polygon(self, canvas, structure, x_values, y_values, style):
         """
@@ -303,9 +306,7 @@ class SkiaRenderer(BaseRenderer):
 
         ## Fill
         if  style['fill_mode'] == 'none':
-            def fun(*args): 
-                pass
-            fill_cached_renderer_fn = fun
+            fill_cached_renderer_fn = empty_fn()
 
         elif style['fill_mode'] == 'basic':
             fill_color = self.cache_color(style['fill_color'], style['fill_opacity'])
@@ -317,21 +318,17 @@ class SkiaRenderer(BaseRenderer):
             draw_poly_line_fill(canvas, path, fill_line_color)
             fill_cached_renderer_fn = cache_fn(draw_poly_line_fill, fill_line_color=fill_line_color)
 
-
         elif style['fill_mode'] == 'image':
-            outline_color = self.cache_color(style.outline_color, style.outline_opacity)
-            image = self.cache_image(style.path)
-            draw_poly_image(canvas, structure, x_values, y_values, image, outline_color, style.outline_weight)
-            style.cached_renderer_fn = cache_fn(draw_poly_image, image_cache=image, outline_color=outline_color, outline_weight=style.outline_weight)   
-        
+            image_cache = self.cache_image(style['fill_image_path'])
+            draw_poly_image_fill(canvas, path, image_cache)
+            fill_cached_renderer_fn = cache_fn(draw_poly_image_fill, image_cache=image_cache)
+
         else:
             pass
         
         ## Outline
         if  style['outline_mode'] == 'none':
-            def fun(*args): 
-                pass
-            outline_cached_renderer_fn = fun
+            outline_cached_renderer_fn = empty_fn()
 
         elif style['outline_mode'] == 'solid':
             outline_color = self.cache_color(style['outline_color'], style['outline_opacity'])
@@ -404,6 +401,10 @@ class SkiaRenderer(BaseRenderer):
         pass
 
 
+"""****************************
+****** Caching functions ******
+****************************"""
+
 def cache_fn(fn, **args):
     """
     """
@@ -417,10 +418,16 @@ def join_fns(functions):
             fn(canvas, path)
     return inner
 
+def empty_fn():
+    def fun(*args): 
+        pass
+    return fun
 
 """****************************
 ****** Drawing functions ******
 ****************************"""
+
+## Background display Modes
 
 def draw_background_basic(canvas, color):
     """
@@ -432,102 +439,30 @@ def draw_background_basic(canvas, color):
 
 ## Point Display Modes
 
-def draw_point_basic(canvas, path, color):
+def draw_point_circle(canvas, point_list, color, weight):
     
-    ## Draw background
     paint = skia.Paint(AntiAlias=True)
     paint.setColor(color)
-    #paint.setStrokeWidth(weight)
-    canvas.drawPath(path, paint)
-    
-    ## Draw outline
-    #paint.setStyle(skia.Paint.kStroke_Style)
-    #paint.setColor(color)
-    #paint.setStrokeWidth(weight)
-    #canvas.drawPath(path, paint)
+
+
+    for point in point_list:
+         path = skia.Path()
+         path.addCircle(point[0], point[1], weight)
+         canvas.drawPath(path, paint)
+
     return
 
+## Line Display modes
 
-## Line Display Modes
-def draw_line_basic(canvas, structure, x_values, y_values, color, weight, outline_color, outline_weight):
-        ## Create a path
-        path = skia.Path()
+def draw_line_solid(canvas, path, color, weight):
+     ## Create line paint
+    paint = skia.Paint(color)
+    paint.setStyle(skia.Paint.kStroke_Style)
+    paint.setStrokeWidth(weight)
+    paint.setAntiAlias(True)
 
-        ## Load points into path
-        pointer = 0
-        for p_count in structure:
-            path.moveTo( x_values[pointer], y_values[pointer] )
-            for index in range(pointer, pointer+p_count):
-                path.lineTo( x_values[index], y_values[index] )
-            pointer += p_count
-        
-        ## Create outline paint
-        paint = skia.Paint(outline_color)
-        paint.setStyle(skia.Paint.kStroke_Style)
-        paint.setStrokeWidth(weight+outline_weight)
-        paint.setAntiAlias(True)
-
-        ## Draw outline path
-        canvas.drawPath(path, paint)
-
-        ## Create line paint
-        paint = skia.Paint(color)
-        paint.setStyle(skia.Paint.kStroke_Style)
-        paint.setStrokeWidth(weight)
-        paint.setAntiAlias(True)
-
-        ## Draw line path
-        canvas.drawPath(path, paint)
-
-## Line Display Modes
-def draw_line_dashed(canvas, structure, x_values, y_values, color, weight, outline_color, outline_weight):
-        ## Create a path
-        path = skia.Path()
-
-        ## Load points into path
-        pointer = 0
-        for p_count in structure:
-            path.moveTo( x_values[pointer], y_values[pointer] )
-            for index in range(pointer, pointer+p_count):
-                path.lineTo( x_values[index], y_values[index] )
-            pointer += p_count
-        
-        ## Create outline paint
-        #paint = skia.Paint()
-        #paint.setStyle(skia.Paint.kStroke_Style)
-
-        paint = skia.Paint(
-            Color=outline_color,
-            AntiAlias=True,
-            PathEffect=skia.DashPathEffect.Make([10.0, 5.0, 2.0, 5.0], 0.0),
-            StrokeWidth=2.0,
-            Style=skia.Paint.kStroke_Style,
-        )
-        paint.setAntiAlias(True)
-        paint.setStrokeWidth(weight+outline_weight)
-        
-        ## Draw outline path
-        canvas.drawPath(path, paint)
-
-        ## Create line paint
-        #paint = skia.Paint(color)
-        #paint.setStyle(skia.Paint.kStroke_Style)
-        #paint.setStrokeWidth(weight)
-
-        paint = skia.Paint(
-            Color=color,
-            AntiAlias=True,
-            PathEffect=skia.DashPathEffect.Make([10.0, 5.0, 2.0, 5.0], 0.0),
-            StrokeWidth=2.0,
-            Style=skia.Paint.kStroke_Style,
-        )
-        paint.setAntiAlias(True)
-        paint.setStrokeWidth(weight)
-
-        ## Draw line path
-        canvas.drawPath(path, paint)
-
-
+    ## Draw line path
+    canvas.drawPath(path, paint)
 
 
 ## Polygon Display Modes
@@ -540,6 +475,32 @@ def draw_poly_basic_fill(canvas, path, fill_color):
     paint = skia.Paint(fill_color)
     paint.setAntiAlias(True)
     canvas.drawPath(path, paint)
+
+def draw_poly_image_fill(canvas, path, image_cache):
+    
+    x1,y1, x2, y2 = path.getBounds()
+
+
+    ## Get width of image
+    w = image_cache.width()
+    h = image_cache.height()
+
+    ## Create a scaled rectangle
+
+    canvas.save()
+
+    canvas.clipPath(path)
+    canvas.resetMatrix()
+    #canvas.drawImage(image_data, x,y, paint)
+
+    ## Create a paint object for opacity 
+    #paint = skia.Paint(Alphaf=opacity)
+    paint = skia.Paint()
+    paint.setAntiAlias(True)
+    rect = skia.Rect.MakeXYWH(x1, y1, x2-x1, y2-y1)
+    canvas.drawImageRect(image_cache, rect, paint)
+
+    canvas.restore()
 
 
 def draw_poly_line_fill(canvas, path, fill_line_color):
@@ -554,7 +515,6 @@ def draw_poly_line_fill(canvas, path, fill_line_color):
     paint.setAntiAlias(True)
     paint.setColor(fill_line_color)
     canvas.drawPath(path, paint)
-
 
 def draw_poly_solid_outline(canvas, path, outline_color, outline_weight):
     paint = skia.Paint(outline_color)
@@ -667,4 +627,87 @@ def draw_poly_image(canvas, structure, x_values, y_values, image_cache, outline_
     paint.setColor(outline_color)
     paint.setStrokeWidth(outline_weight)
     canvas.drawPath(path, paint)
+
+
+
+
+## Line Display Modes
+def draw_line_basic(canvas, structure, x_values, y_values, color, weight, outline_color, outline_weight):
+        ## Create a path
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+            for index in range(pointer, pointer+p_count):
+                path.lineTo( x_values[index], y_values[index] )
+            pointer += p_count
+        
+        ## Create outline paint
+        paint = skia.Paint(outline_color)
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setStrokeWidth(weight+outline_weight)
+        paint.setAntiAlias(True)
+
+        ## Draw outline path
+        canvas.drawPath(path, paint)
+
+        ## Create line paint
+        paint = skia.Paint(color)
+        paint.setStyle(skia.Paint.kStroke_Style)
+        paint.setStrokeWidth(weight)
+        paint.setAntiAlias(True)
+
+        ## Draw line path
+        canvas.drawPath(path, paint)
+
+## Line Display Modes
+def draw_line_dashed(canvas, structure, x_values, y_values, color, weight, outline_color, outline_weight):
+        ## Create a path
+        path = skia.Path()
+
+        ## Load points into path
+        pointer = 0
+        for p_count in structure:
+            path.moveTo( x_values[pointer], y_values[pointer] )
+            for index in range(pointer, pointer+p_count):
+                path.lineTo( x_values[index], y_values[index] )
+            pointer += p_count
+        
+        ## Create outline paint
+        #paint = skia.Paint()
+        #paint.setStyle(skia.Paint.kStroke_Style)
+
+        paint = skia.Paint(
+            Color=outline_color,
+            AntiAlias=True,
+            PathEffect=skia.DashPathEffect.Make([10.0, 5.0, 2.0, 5.0], 0.0),
+            StrokeWidth=2.0,
+            Style=skia.Paint.kStroke_Style,
+        )
+        paint.setAntiAlias(True)
+        paint.setStrokeWidth(weight+outline_weight)
+        
+        ## Draw outline path
+        canvas.drawPath(path, paint)
+
+        ## Create line paint
+        #paint = skia.Paint(color)
+        #paint.setStyle(skia.Paint.kStroke_Style)
+        #paint.setStrokeWidth(weight)
+
+        paint = skia.Paint(
+            Color=color,
+            AntiAlias=True,
+            PathEffect=skia.DashPathEffect.Make([10.0, 5.0, 2.0, 5.0], 0.0),
+            StrokeWidth=2.0,
+            Style=skia.Paint.kStroke_Style,
+        )
+        paint.setAntiAlias(True)
+        paint.setStrokeWidth(weight)
+
+        ## Draw line path
+        canvas.drawPath(path, paint)
+
 '''
