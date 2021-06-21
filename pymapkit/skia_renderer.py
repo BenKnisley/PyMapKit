@@ -72,10 +72,6 @@ class SkiaRenderer(BaseRenderer):
             image = self.surface.makeImageSnapshot()
             image.save(output, skia.kPNG)
 
-    ##
-    ##
-    ##
-
     def cache_color(self, input_color, opacity=1):
         """
         Converts a given color to a Skia color 
@@ -144,11 +140,6 @@ class SkiaRenderer(BaseRenderer):
         ## Return a skia.Color object
         return skia.Color(*input_color)
 
-    ##
-    ##
-    ##
-    
-
     def draw_background(self, canvas, style):
         """
         Draws a single color on the whole canvas.
@@ -174,12 +165,6 @@ class SkiaRenderer(BaseRenderer):
 
         draw_background_basic(canvas, color)
         style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
-
-
-    
-    ##
-    ##
-    ##
 
     def draw_point(self, canvas, structure, x_values, y_values, style):
         """
@@ -220,7 +205,7 @@ class SkiaRenderer(BaseRenderer):
             pointer = 0
             for p_count in structure:
                 for index in range(pointer, pointer+p_count):
-                    path.addCircle(x_values[index], y_values[index], style['weight'])
+                    path.addCircle(x_values[index], y_values[index], style['weight']/2)
                 pointer += p_count
 
             color = self.cache_color(style['color'], style['opacity'])
@@ -357,10 +342,6 @@ class SkiaRenderer(BaseRenderer):
 
         style.cached_renderer_fn = join_fns((fill_cached_renderer_fn, outline_cached_renderer_fn))
 
-    ##
-    ##
-    ##
-
     def cache_image(self, image_path):
         """
         Loads image data into memory, and providing a cached image object.
@@ -372,7 +353,6 @@ class SkiaRenderer(BaseRenderer):
             cache_image (skia.Image): The cached image object.
         """
         return skia.Image.open(image_path)
-
 
     def draw_image(self, canvas, image_cache, x, y, x_scale, y_scale, align='nw', opacity=1):
         """
@@ -419,10 +399,6 @@ class SkiaRenderer(BaseRenderer):
         
         ## Draw image
         canvas.drawImageRect(image_cache, rect, paint)
-    
-    ##
-    ##
-    ##
 
     def draw_text(self, canvas, text, text_style):
         pass

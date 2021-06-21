@@ -89,7 +89,6 @@ class LayerStyle(BaseStyle):
         BaseStyle.__init__(self, parent_feature)
         self.layer = parent_feature
 
-
     def create_domain_mode_etters(self, domain_name):
 
         ## Add domain setter to feature
