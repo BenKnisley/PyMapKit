@@ -19,7 +19,7 @@ def build_style(style, geo_type):
     """
     Takes a style object and adds domains, modes, and properties to create
     a style object useful for thr given geometry type. Normal expected 
-    usage is for either a BaseStyle object for feature, or a LayerStyle for
+    usage is for either a FeatureStyle object for feature, or a LayerStyle for
     layers.
     """
     style.type = geo_type
@@ -187,6 +187,41 @@ class LayerStyle(BaseStyle):
         for f in self.layer:
             f.style.cached_renderer_fn = None
 
+class FeatureStyle(BaseStyle):
+    def __init__(self, parent_feature):
+        BaseStyle.__init__(self, parent_feature)
+
+    def create_property_etters(self, property_name):
+
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            self.style.managed_properties[property_name] = new_value
+            self.style.clear_cache()
+            ## Put feature to render last
+            self.parent.features.remove(self)
+            self.parent.features.append(self)
+
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
+
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
+
+
+        def get_property_template(self):
+            return self.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self, type(self))
+        self.__dict__['get_'+property_name] = bound_getter
+
+
 class Geometry:
     """
     A class that abstracts a geometry
@@ -321,7 +356,7 @@ class Feature:
 
         #style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
         #self.style = style_class[geometry.geometry_type](self)
-        self.style = BaseStyle(self)
+        self.style = FeatureStyle(self)
         build_style(self.style, self.parent.geometry_type)
 
         #self.style.set_defaults(parent.geometry_type)
@@ -335,9 +370,6 @@ class Feature:
 
     def __setitem__(self, field_name, value):
         self.attributes[field_name] = value
-
-    def clear_cache(self):
-        self.style.cached_renderer_fn = None
 
     ## 
     def focus(self):
