@@ -21,6 +21,7 @@ class mock_renderer:
         self.is_canvas = MagicMock()
         self.is_canvas.return_value = True
         self.save = MagicMock()
+        self.draw_background = MagicMock()
 
 
 def test_map_init():
@@ -307,6 +308,9 @@ def test_render():
 
     ## Call render with no args
     m.render()
+
+    ## Assert that draw_background was called
+    mock_renderer_obj.draw_background.assert_called_once()
 
     ## Assert the each layer had draw method called
     new_layer1.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
