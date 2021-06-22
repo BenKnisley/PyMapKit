@@ -14,6 +14,105 @@ import ogr
 from .base_layer import BaseLayer
 from .base_style import BaseStyle
 
+class LayerStyle(BaseStyle):
+    def __init__(self, parent_feature):
+        BaseStyle.__init__(self, parent_feature)
+        self.layer = parent_feature
+
+    def create_domain_mode_etters(self, domain_name):
+
+        ## Add domain setter to feature
+        def set_display_template(self, new_value):
+            self.style.set_mode(new_value, domain_name)
+            self.style.clear_cache()
+            
+            for f in self.features:
+                f.style.set_mode(new_value, domain_name)
+                f.style.clear_cache()
+        
+        if domain_name:
+            setter_name = 'set_' + domain_name + '_display'
+            getter_name = 'get_' + domain_name + '_display'
+        else:
+            setter_name = 'set_display'
+            getter_name = 'get_display'
+        
+        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__[setter_name] = bound_setter
+
+        ## Add domain getter to feature
+        def get_display_template(self):
+            return self.style.current_modes[domain_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__[getter_name] = bound_getter
+
+        ## Bind a getter to self too
+        def get_display_template(self):
+            return self.current_modes[domain_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_display_template.__get__(self, type(self))
+        self.__dict__[getter_name] = bound_getter
+
+    def create_property_etters(self, property_name):
+
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            for f in self.features:
+                if property_name in f.style.managed_properties:
+                    f.style.managed_properties[property_name] = new_value
+                f.style.clear_cache()
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
+
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
+
+    def clear_cache(self):
+        for f in self.layer:
+            f.style.cached_renderer_fn = None
+
+class FeatureStyle(BaseStyle):
+    def __init__(self, parent_feature):
+        BaseStyle.__init__(self, parent_feature)
+
+    def create_property_etters(self, property_name):
+
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            self.style.managed_properties[property_name] = new_value
+            self.style.clear_cache()
+            ## Put feature to render last
+            self.parent.features.remove(self)
+            self.parent.features.append(self)
+
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
+
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
+
+
+        def get_property_template(self):
+            return self.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self, type(self))
+        self.__dict__['get_'+property_name] = bound_getter
 
 def build_style(style, geo_type):
     """
@@ -120,106 +219,6 @@ def build_style(style, geo_type):
 
     else:
         pass
-
-class LayerStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-        self.layer = parent_feature
-
-    def create_domain_mode_etters(self, domain_name):
-
-        ## Add domain setter to feature
-        def set_display_template(self, new_value):
-            self.style.set_mode(new_value, domain_name)
-            self.style.clear_cache()
-            
-            for f in self.features:
-                f.style.set_mode(new_value, domain_name)
-                f.style.clear_cache()
-        
-        if domain_name:
-            setter_name = 'set_' + domain_name + '_display'
-            getter_name = 'get_' + domain_name + '_display'
-        else:
-            setter_name = 'set_display'
-            getter_name = 'get_display'
-        
-        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[setter_name] = bound_setter
-
-        ## Add domain getter to feature
-        def get_display_template(self):
-            return self.style.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[getter_name] = bound_getter
-
-        ## Bind a getter to self too
-        def get_display_template(self):
-            return self.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self, type(self))
-        self.__dict__[getter_name] = bound_getter
-
-    def create_property_etters(self, property_name):
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            for f in self.features:
-                if property_name in f.style.managed_properties:
-                    f.style.managed_properties[property_name] = new_value
-                f.style.clear_cache()
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-    def clear_cache(self):
-        for f in self.layer:
-            f.style.cached_renderer_fn = None
-
-class FeatureStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-
-    def create_property_etters(self, property_name):
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            self.style.managed_properties[property_name] = new_value
-            self.style.clear_cache()
-            ## Put feature to render last
-            self.parent.features.remove(self)
-            self.parent.features.append(self)
-
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-
-        def get_property_template(self):
-            return self.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self, type(self))
-        self.__dict__['get_'+property_name] = bound_getter
 
 
 class Geometry:
