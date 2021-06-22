@@ -114,6 +114,7 @@ class FeatureStyle(BaseStyle):
         bound_getter = get_property_template.__get__(self, type(self))
         self.__dict__['get_'+property_name] = bound_getter
 
+
 def build_style(style, geo_type):
     """
     Takes a style object and adds domains, modes, and properties to create
@@ -167,14 +168,20 @@ def build_style(style, geo_type):
         ## Create modes for fill
         style.add_mode('none')
         style.add_mode('solid')
+        style.add_mode('dashed')
         ## Square
         ## Triangle
         ## Icon
 
-        ## Add properties to point display mode
+        ## Add properties to solid display mode
         style.add_property('color', 'blue', 'solid')
         style.add_property('weight', 1, 'solid')
         style.add_property('opacity', 1, 'solid')
+        
+        ## Add properties to dashed display mode
+        style.add_property('color', 'blue', 'dashed')
+        style.add_property('weight', 1, 'dashed')
+        style.add_property('opacity', 1, 'dashed')
         
         ## Set default mode
         style.set_mode('solid')
