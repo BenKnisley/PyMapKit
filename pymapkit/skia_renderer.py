@@ -6,9 +6,9 @@ Function: Implements the drawing api using the PySkia library.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 5 February, 2021
 """
-from .base_renderer import BaseRenderer
-import skia
 import functools
+import skia
+from .base_renderer import BaseRenderer
 
 
 class SkiaRenderer(BaseRenderer):
