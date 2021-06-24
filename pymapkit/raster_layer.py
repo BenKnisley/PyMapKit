@@ -151,17 +151,18 @@ class RasterLayer(BaseLayer):
 
         ## This block is a hack, if raster is larger than projection,
         # then get_extent returns projection max
-        if raster_x_min <= self.map.projected_crs.area_of_use.west:
-            raster_x_min = self.map.projected_crs.area_of_use.west
+        if self.map.projected_crs.area_of_use:
+            if raster_x_min <= self.map.projected_crs.area_of_use.west:
+                raster_x_min = self.map.projected_crs.area_of_use.west
 
-        if raster_y_min >= self.map.projected_crs.area_of_use.south:
-            raster_y_min = self.map.projected_crs.area_of_use.south
+            if raster_y_min >= self.map.projected_crs.area_of_use.south:
+                raster_y_min = self.map.projected_crs.area_of_use.south
 
-        if raster_x_max >= self.map.projected_crs.area_of_use.east:
-            raster_x_max = self.map.projected_crs.area_of_use.east
+            if raster_x_max >= self.map.projected_crs.area_of_use.east:
+                raster_x_max = self.map.projected_crs.area_of_use.east
 
-        if raster_y_max <= self.map.projected_crs.area_of_use.north:
-            raster_y_max = self.map.projected_crs.area_of_use.north
+            if raster_y_max <= self.map.projected_crs.area_of_use.north:
+                raster_y_max = self.map.projected_crs.area_of_use.north
 
 
         ##
