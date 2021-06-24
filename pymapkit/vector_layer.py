@@ -187,6 +187,11 @@ def build_style(style, geo_type):
         style.set_mode('solid')
 
     elif geo_type == 'polygon':
+
+        ## Add properties for whole feature
+        style.add_property('display', True)
+        style.add_property('opacity', 1)
+
         ## Create domains for polygon styles
         style.add_domain('fill')
         style.add_domain('outline')
@@ -226,7 +231,6 @@ def build_style(style, geo_type):
 
     else:
         pass
-
 
 class Geometry:
     """

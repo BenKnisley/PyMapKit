@@ -311,12 +311,18 @@ class SkiaRenderer(BaseRenderer):
             return
         
 
+        ## Whole feature none display override
+        if style['display'] in ('none', False, None):
+            style.cached_renderer_fn = empty_fn()
+            return
+
         ## Fill
-        if  style['fill_mode'] == 'none':
+        if style['fill_mode'] == 'none':
             fill_cached_renderer_fn = empty_fn()
 
         elif style['fill_mode'] == 'basic':
-            fill_color = self.cache_color(style['fill_color'], style['fill_opacity'])
+            total_opacity = style['opacity'] * style['fill_opacity']
+            fill_color = self.cache_color(style['fill_color'], total_opacity)
             draw_poly_basic_fill(canvas, path, fill_color)
             fill_cached_renderer_fn = cache_fn(draw_poly_basic_fill, fill_color=fill_color)
         
@@ -338,7 +344,8 @@ class SkiaRenderer(BaseRenderer):
             outline_cached_renderer_fn = empty_fn()
 
         elif style['outline_mode'] == 'solid':
-            outline_color = self.cache_color(style['outline_color'], style['outline_opacity'])
+            total_opacity = style['opacity'] * style['outline_opacity']
+            outline_color = self.cache_color(style['outline_color'], total_opacity)
             outline_weight = style['outline_weight']
             draw_poly_solid_outline(canvas, path, outline_color, outline_weight)
             outline_cached_renderer_fn = cache_fn(draw_poly_solid_outline, outline_color=outline_color, outline_weight=outline_weight)
