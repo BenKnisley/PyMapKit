@@ -25,3 +25,4 @@ from .base_style import BaseStyle
 ## Import Layers
 from .raster_layer import RasterLayer
 from .vector_layer import VectorLayer
+from .tile_layer import TileLayer
