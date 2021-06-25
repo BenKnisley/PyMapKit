@@ -264,6 +264,38 @@ def test_get_size():
     assert m.get_size()[0] == 350
     assert m.get_size()[1] == 410
 
+def test_zoom_in():
+    """ Test Map.zoom_in method """
+    m = pmk.Map()
+
+    ## Default scale change
+    m._proj_scale = 5000
+    m.zoom_in()
+    assert m._proj_scale == 3333.3333333333335
+
+
+    ## Factor arg scale change
+    m._proj_scale = 5000
+    m.zoom_in(2)
+    assert m._proj_scale == 2500
+
+def test_zoom_out():
+    """ Test Map.zoom_out method """
+    m = pmk.Map()
+
+    ## Default scale change
+    m._proj_scale = 5000
+    m.zoom_out()
+    assert m._proj_scale == 7500
+
+
+    ## Factor arg scale change
+    m._proj_scale = 5000
+    m.zoom_out(2)
+    assert m._proj_scale == 10000
+
+
+
 
 def test_set_renderer(mocker):
     """ Test Map.get_renderer method """

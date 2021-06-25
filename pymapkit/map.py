@@ -391,6 +391,40 @@ class Map:
         """
         return self.width, self.height
 
+    def zoom_in(self, factor=1.5):
+        """
+        Zooms the map in by shrinking the map scale.
+
+        Changes the map scale by dividing by a factor (1.5 default).
+
+        Args:
+            None
+
+        Optional Args:
+            factor (int | float): The scaling factor to divide by.
+
+        Returns:
+            None
+        """
+        self.set_scale(self.get_scale()/factor)
+
+    def zoom_out(self, factor=1.5):
+        """
+        Zooms the map out by increasing the map scale.
+
+        Changes the map scale by multiplying by a factor (1.5 default).
+
+        Args:
+            None
+
+        Optional Args:
+            factor (int | float): The scaling factor to multiplying by.
+
+        Returns:
+            None
+        """
+        self.set_scale(self.get_scale() * factor)
+
     def set_renderer(self, renderer):
         """
         Tells the map which renderer to use to render the map.
