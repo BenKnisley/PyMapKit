@@ -7,13 +7,11 @@ import abc
 class BaseLayer:
     def __init__(self):
         ## Required Attributes
-        self.name = None ## Holds the name of the layer
         self.map = None ## Holds the parent map when activated
-        self.alpha = 1
+        self.name = None ## Holds the name of the layer
         self.status = False ## Signals what the layer is doing or need done ==>
         ## => Such as 'loading', 'downloading', 'projecting', 'rendering', 'done'
     
-
     def _activate(self, new_parent):
         ''' Method called by parent Map object when self is added to it '''
 
@@ -51,7 +49,7 @@ class BaseLayer:
     @abc.abstractmethod
     def __repr__(self):
         ''' What string should represent the layer '''
-        pass
+        return "BaseLayer Object"
     
     @abc.abstractmethod
     def get_extent(self):
@@ -88,22 +86,6 @@ class BaseLayer:
         ## Set newscale
         self.map.set_scale(new_scale, True)
 
-    @abc.abstractmethod
-    def clear_cache(self):
-        pass
-
-    def set_opacity(self, new_opacity):
-        """
-        Set the opacity of the whole layer.
-        
-        Args:
-            opacity (float): New opacity value 0 to 1.
-
-        Returns:
-            None
-        """
-        self.alpha = new_opacity
-    
     @abc.abstractmethod
     def render(self, renderer, canvas):
         ''' Method '''
