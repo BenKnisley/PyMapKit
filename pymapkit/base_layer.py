@@ -25,11 +25,6 @@ class BaseLayer:
         ## Run child's activate method
         self.activate()
 
-    @abc.abstractmethod
-    def activate(self):
-        ''' Method called by _activate. Holds functions to be preformed to activate layer''' 
-        pass
-    
     def _deactivate(self):
         ''' Method called by parent Map object when self is removed from it '''
         
@@ -41,21 +36,6 @@ class BaseLayer:
         self.map = None
         self.deactivate()
 
-    @abc.abstractmethod
-    def deactivate(self):
-        ''' Method called by parent Map object when self is removed from it '''
-        pass
-
-    @abc.abstractmethod
-    def __repr__(self):
-        ''' What string should represent the layer '''
-        return "BaseLayer Object"
-    
-    @abc.abstractmethod
-    def get_extent(self):
-        ''' Method that returns bounding box of all stored data'''
-        pass
-    
     def focus(self):
         ''' Method to move map to focus on layer '''
 
@@ -85,6 +65,26 @@ class BaseLayer:
 
         ## Set newscale
         self.map.set_scale(new_scale, True)
+
+    @abc.abstractmethod
+    def __repr__(self):
+        ''' What string should represent the layer '''
+        return "BaseLayer Object"
+    
+    @abc.abstractmethod
+    def activate(self):
+        ''' Method called by _activate. Holds functions to be preformed to activate layer''' 
+        pass
+    
+    @abc.abstractmethod
+    def deactivate(self):
+        ''' Method called by parent Map object when self is removed from it '''
+        pass
+
+    @abc.abstractmethod
+    def get_extent(self):
+        ''' Method that returns bounding box of all stored data'''
+        pass
 
     @abc.abstractmethod
     def render(self, renderer, canvas):
