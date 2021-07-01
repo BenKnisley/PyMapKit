@@ -4,7 +4,7 @@ Date: 19 January, 2020
 """
 import abc
 
-class BaseLayer:
+class BaseLayer(metaclass=abc.ABCMeta):
     """
     A class defining a map layer. A base class for all other map layer classes
     to be derived. Contains common functionality and abstract method.
@@ -141,7 +141,6 @@ class BaseLayer:
         Returns:
             None
         '''
-        pass
     
     @abc.abstractmethod
     def deactivate(self):
@@ -157,7 +156,6 @@ class BaseLayer:
         Returns:
             None
         '''
-        pass
 
     @abc.abstractmethod
     def get_extent(self):
@@ -174,7 +172,6 @@ class BaseLayer:
             max_x (float): The maximum x projection coordinate of the data.
             max_y (float): The maximum y projection coordinate of the data.
         '''
-        pass
 
     @abc.abstractmethod
     def render(self, renderer, canvas):
@@ -190,4 +187,3 @@ class BaseLayer:
         Returns:
             None
         '''
-        pass
