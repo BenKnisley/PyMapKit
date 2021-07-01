@@ -203,7 +203,7 @@ class Map:
             self.projected_crs = pyproj.crs.CRS(new_crs)
         
         else:
-            print('error')
+            raise Exception("Input not a valid CRS")
         
         ## Recreate transformer objects
         self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
