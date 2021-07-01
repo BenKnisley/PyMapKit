@@ -7,11 +7,13 @@ from unittest.mock import MagicMock
 from pytest_mock import mocker
 import pymapkit as pmk
 import pyproj
+import numpy as np
 
 
-class mock_layer:
+class MockLayer:
     def __init__(self):
         ## Create a mock draw function
+        self.activate = MagicMock()
         self._activate = MagicMock()
         self._deactivate = MagicMock()
         self.render = MagicMock()
@@ -29,14 +31,23 @@ def test_map_init():
     m = pmk.Map()
     assert isinstance(m, pmk.Map)
 
+    ## Test 'renderer' Optional Arg string input
+    m = pmk.Map(renderer='pyskia')
+    assert isinstance(m.renderer, pmk.SkiaRenderer)
+
+    ## Test 'renderer' Optional Arg object input
+    r = pmk.SkiaRenderer()
+    m = pmk.Map(renderer=r)
+    assert r == m.renderer
+
 
 def test_map_add():
     """ Test Map.add adds layer to layer list"""
     m = pmk.Map()
-    new_layer0 = mock_layer()
-    new_layer1 = mock_layer()
-    new_layer2 = mock_layer()
-    new_layer3 = mock_layer()
+    new_layer0 = MockLayer()
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
     m.add(new_layer1)
     m.add(new_layer2)
     m.add(new_layer3)
@@ -53,9 +64,9 @@ def test_map_add():
 def test_map_remove():
     """ Test Map.add adds layer to layer list"""
     m = pmk.Map()
-    new_layer1 = mock_layer()
-    new_layer2 = mock_layer()
-    new_layer3 = mock_layer()
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
 
     m.add(new_layer1)
     m.add(new_layer2)
@@ -72,9 +83,21 @@ def test_set_projection():
     """ Test Map.set_projection method """
     m = pmk.Map()
 
+    ## Add mock layers to map, and reset mocked activate method
+    mock_layer1 = MockLayer()
+    mock_layer2 = MockLayer()
+    m.add(mock_layer1)
+    m.add(mock_layer2)
+    mock_layer1.activate.reset_mock()
+    mock_layer2.activate.reset_mock()
+
     ## Hold these to test if changed
     old_transform_geo2proj = m.transform_geo2proj
     old_transform_proj2geo = m.transform_proj2geo
+
+    ## Test unsupported input type raises exception
+    with pytest.raises(Exception):
+        m.set_projection(3)
 
     ## Test set with text
     m.set_projection('EPSG:32023')
@@ -85,10 +108,24 @@ def test_set_projection():
     assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
     assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
 
+    ## Check that method calls layer activate method
+    mock_layer1.activate.assert_called_once()
+    mock_layer2.activate.assert_called_once()
+
+
 
 def test_set_geographic_crs():
     """ Test Map.set_projection method """
     m = pmk.Map()
+
+    mock_layer1 = MockLayer()
+    mock_layer2 = MockLayer()
+
+    ## Add mock layers to map, and reset mocked activate method
+    m.add(mock_layer1)
+    m.add(mock_layer2)
+    mock_layer1.activate.reset_mock()
+    mock_layer2.activate.reset_mock()
 
     ##
     ## Test set with text
@@ -107,6 +144,9 @@ def test_set_geographic_crs():
     assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
     assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
 
+    ## Check that method calls layer activate method
+    mock_layer1.activate.assert_called_once()
+    mock_layer2.activate.assert_called_once()
 
 def test_set_location():
     """ Test Map.set_projection method """
@@ -329,9 +369,9 @@ def test_render():
     m.set_renderer(mock_renderer_obj)
 
     ## Create mock layers
-    new_layer1 = mock_layer()
-    new_layer2 = mock_layer()
-    new_layer3 = mock_layer()
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
 
     ## Add layers to canvas
     m.add(new_layer1)
@@ -377,13 +417,16 @@ def test_geo2proj():
 
     ## Test list 
     test_coords = (
-        [22.52, -3.13, -83.1, -77.1], 
-        [33.45, 43.80, -31.8, -22.9]
+        [22.52, -3.13, -83.1, -77.1, np.inf], 
+        [33.45, 43.80, -31.8, -22.9, np.inf]
+        # value
     )
-    
+
+    ## NOTE: (inf,inf) ==> (inf,inf) => (5169978.7942,-26917578.0576)>
+    #> AKA the last good value
     expected = (
-        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942], 
-        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576]
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942,  5169978.7942], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576, -26917578.0576]
     )
 
     actual = m.geo2proj(*test_coords)
@@ -414,13 +457,13 @@ def test_proj2geo():
 
     ## Test list 
     test_coords = (
-        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942], 
-        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576]
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942, np.inf], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576, np.inf]
     )
     
     expected = (
-        [22.52, -3.13, -83.1, -77.1], 
-        [33.45, 43.80, -31.8, -22.9]
+        [22.52, -3.13, -83.1, -77.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9, -22.9]
     )
 
     actual = m.proj2geo(*test_coords)
