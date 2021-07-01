@@ -5,7 +5,21 @@ Date: 19 January, 2020
 import abc
 
 class BaseLayer:
+    """
+    A class defining a map layer. A base class for all other map layer classes
+    to be derived. Contains common functionality and abstract method.
+    """
     def __init__(self):
+        """
+        Initialize a BaseLayer object.
+        Setup instance variables: map, name, and status.
+
+        Args:
+            None
+    
+        Returns:
+            None
+        """
         ## Required Attributes
         self.map = None ## Holds the parent map when activated
         self.name = None ## Holds the name of the layer
@@ -13,8 +27,19 @@ class BaseLayer:
         ## => Such as 'loading', 'downloading', 'projecting', 'rendering', 'done'
     
     def _activate(self, new_parent):
-        ''' Method called by parent Map object when self is added to it '''
+        '''
+        Start activating the layer. 
 
+        This method is called when the layer object is added to a Map object.
+        It saves a reference to the map object as self.map, then calls the 
+        subclassed layer's 'activate' method to complete activation.
+
+        Args:
+            new_parent (Map): The map object that has added and
+    
+        Returns:
+            None
+        '''
         ## Raise exception if layer is already activated
         if self.map != None:
             raise Exception("Layer is already activated and belongs to a map object.")
@@ -26,8 +51,19 @@ class BaseLayer:
         self.activate()
 
     def _deactivate(self):
-        ''' Method called by parent Map object when self is removed from it '''
-        
+        '''
+        Start deactivating the layer. 
+
+        This method is called when the layer object is removed from a Map 
+        object. It removes the reference to the map object, then calls the 
+        subclassed layer's 'deactivate' method to complete deactivation.
+
+        Args:
+            None
+    
+        Returns:
+            None
+        '''
         ## Raise exception if layer is not activated
         if self.map == None:
             raise Exception("Layer is not activated and does not belongs to a map object.")
@@ -37,8 +73,19 @@ class BaseLayer:
         self.deactivate()
 
     def focus(self):
-        ''' Method to move map to focus on layer '''
+        ''' 
+        Focus on the layer.
 
+        Sets the parent map's scale and location to best showcase the layer.
+        Requires that layer object is activated, and child layer class has 
+        get_extent method properly implemented.
+
+        Args:
+            None
+    
+        Returns:
+            None
+        '''
         ## If layer is not activated, raise Exception
         if self.map == None:
             raise Exception("Layer is not activated.")
@@ -68,25 +115,79 @@ class BaseLayer:
 
     @abc.abstractmethod
     def __repr__(self):
-        ''' What string should represent the layer '''
+        '''
+        Abstract method to be implemented by child layer. 
+        Magic method for generating a string representation of the layer.
+
+        Args:
+            None
+    
+        Returns:
+            repr_str (str): A string representation of the layer.
+        '''
         return "BaseLayer Object"
     
     @abc.abstractmethod
     def activate(self):
-        ''' Method called by _activate. Holds functions to be preformed to activate layer''' 
+        '''
+        Abstract method to be implemented by child layer. 
+        Contains any code required by a layer to fully activate it with the new
+        map object. Called by BaseLayer._activate after it adds the parent map 
+        object to the layer.
+
+        Args:
+            None
+    
+        Returns:
+            None
+        '''
         pass
     
     @abc.abstractmethod
     def deactivate(self):
-        ''' Method called by parent Map object when self is removed from it '''
+        ''' 
+        Abstract method to be implemented by child layer. 
+        Contains any code required by a layer to fully deactivate and reset it.
+        Called by BaseLayer._deactivate which actually removes the map object 
+        from the layer.
+
+        Args:
+            None
+    
+        Returns:
+            None
+        '''
         pass
 
     @abc.abstractmethod
     def get_extent(self):
-        ''' Method that returns bounding box of all stored data'''
+        ''' 
+        Abstract method to be implemented by child layer. 
+        Returns the extent of the data in projection coordinates.
+        
+        Args:
+        None
+    
+        Returns:
+            min_x (float): The minimum x projection coordinate of the data.
+            min_y (float): The minimum y projection coordinate of the data.
+            max_x (float): The maximum x projection coordinate of the data.
+            max_y (float): The maximum y projection coordinate of the data.
+        '''
         pass
 
     @abc.abstractmethod
     def render(self, renderer, canvas):
-        ''' Method '''
+        ''' 
+        Abstract method to be implemented by child layer. 
+        Draws the layer onto a canvas using the renderer.
+
+        Args:
+        renderer (BaseRenderer): The renderer to use to draw on the canvas.
+
+        canvas (Unknown): The canvas to draw on.
+    
+        Returns:
+            None
+        '''
         pass
