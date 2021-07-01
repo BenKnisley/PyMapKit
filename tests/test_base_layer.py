@@ -4,9 +4,12 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 29 June, 2020
 """
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import Base, MagicMock
 import pymapkit as pmk
 
+## Remove abstract methods just for testing
+BaseLayer = pmk.base_layer.BaseLayer
+BaseLayer.__abstractmethods__ = {}
 
 class MockMap:
     def __init__(self):
@@ -26,6 +29,12 @@ def test_baselayer_init():
     assert "name" in l.__dict__
     assert "map" in l.__dict__
     assert "status" in l.__dict__
+
+
+def test_baselayer_repr():
+    """ Test BaseLayer.__repr__ """
+    l = pmk.base_layer.BaseLayer()
+    assert str(l) == "BaseLayer Object"
 
 def test_baselayer_activate():
     """
@@ -74,14 +83,20 @@ def test_baselayer_deactivate():
     with pytest.raises(Exception):
         l._deactivate()
 
-
 def test_baselayer_focus():
     """
     Test BaseLayer.focus method
     """
-    ## Create BaseLayer and activated it with a new MockMap object
+    ## Create BaseLayer and a new MockMap object
     l = pmk.base_layer.BaseLayer()
     mock_map = MockMap()
+
+
+    ## Before activating, test that it throws error
+    with pytest.raises(Exception):
+        l.focus()
+    
+    ## Activate layer with mock_map
     l.map = mock_map
 
     ## width, height, min_x, min_y, max_x, max_y, scale, proj_x, proj_y
@@ -111,3 +126,34 @@ def test_baselayer_focus():
         ## Reset mocks
         mock_map.set_scale.reset_mock()
         mock_map.set_projection_coordinates.reset_mock()
+
+
+    ## Test that 0 X difference doesn't change scale
+    mock_map.width = 500
+    mock_map.height = 500
+    l.get_extent = lambda: (250, 0, 250, 1000)
+    
+    ## Call method
+    l.focus()
+
+    ## Test that method calculated expected coordinates values
+    mock_map.set_projection_coordinates.assert_called_once_with(250, 500)
+    mock_map.set_scale.assert_not_called()
+
+    ## Reset mocks
+    mock_map.set_scale.reset_mock()
+    mock_map.set_projection_coordinates.reset_mock()
+
+    ## Test that 0 Y difference doesn't change scale
+    l.get_extent = lambda: (0, 500, 1000, 500)
+    
+    ## Call method
+    l.focus()
+
+    ## Test that method calculated expected coordinates values
+    mock_map.set_projection_coordinates.assert_called_once_with(500, 500)
+    mock_map.set_scale.assert_not_called()
+
+    ## Reset mocks
+    mock_map.set_scale.reset_mock()
+    mock_map.set_projection_coordinates.reset_mock()
