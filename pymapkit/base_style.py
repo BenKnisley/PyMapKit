@@ -6,9 +6,18 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 8, June 2021
 """
 
-
-
 class BaseStyle:
+    """
+    The BaseStyle class holds properties and adds methods to a parent object.
+    It lets a user build a style profile using: add_domain, add_mode, and 
+    add_property methods. A domain is set of modes and properties that are 
+    independent of each other, like outline and fill. A mode is a way to render
+    a domain and a set of properties that goes with that. For example: in the 
+    fill domain of a polygon, you could have several modes: like solid color 
+    fill or image fill. Both of these are separate modes with different 
+    properties. A property is a named value, e.g. fill_color = 'red'
+    """
+
     def __init__(self, feature):
         ## Store ref to styled feature
         self.feature = feature
@@ -45,7 +54,6 @@ class BaseStyle:
 
         self.domains[domain][new_mode_name] = {}
 
-
     def add_property(self, new_prop_name, default_value, mode=None, domain=None):
         if domain:
             self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
@@ -56,6 +64,7 @@ class BaseStyle:
                 ## Add top level property
                 self.managed_properties[new_prop_name] = default_value
                 self.create_property_etters(new_prop_name)
+
 
 
     def set_mode(self, new_mode, domain=None):
@@ -91,6 +100,7 @@ class BaseStyle:
             mode_prop_name = 'display_mode'
 
         self.managed_properties[mode_prop_name] = new_mode
+
 
 
     def create_domain_mode_etters(self, domain_name=None):
@@ -157,4 +167,7 @@ class BaseStyle:
         del self.feature.__dict__['set_' + property_name]
 
     def clear_cache(self):
+        """
+        This Method
+        """
         self.cached_renderer_fn = None
