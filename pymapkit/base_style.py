@@ -8,9 +8,9 @@ Date: 8, June 2021
 
 class BaseStyle:
     """
-    The BaseStyle class holds properties and adds methods to a parent object.
-    It lets a user build a style profile using: add_domain, add_mode, and 
-    add_property methods. A domain is set of modes and properties that are 
+    The BaseStyle class holds properties and adds methods to a parent (a styled)
+    object. It lets a user build a style profile using: add_domain, add_mode, 
+    and add_property methods. A domain is set of modes and properties that are 
     independent of each other, like outline and fill. A mode is a way to render
     a domain and a set of properties that goes with that. For example: in the 
     fill domain of a polygon, you could have several modes: like solid color 
@@ -19,13 +19,26 @@ class BaseStyle:
     """
 
     def __init__(self, feature):
+        """
+        Initializes a BaseStyle instance.
+        Setup instance variables: feature, domains, current_modes and 
+        managed_properties.
+        
+        Args:
+            feature (object): The object to style.
+    
+        Returns:
+            None
+        """
         ## Store ref to styled feature
         self.feature = feature
+
         ## Whatever the user names style. feature.style has to be style
         self.feature.style = self
 
         ## Create Dict to hold domain mode properties
         self.domains = {}
+
         ## Create dict to hold current display modes
         self.current_modes = {}
 
@@ -35,9 +48,33 @@ class BaseStyle:
         self.cached_renderer_fn = None
 
     def __getitem__(self, key):
+        """
+        Returns the value of a property
+        
+        Args:
+            key (string): The name of the property.
+    
+        Returns:
+            value (*): The value of the property.
+        
+        Requires:
+            The key must be a key in the managed_properties dict.
+
+        Result:
+            None
+        """
         return self.managed_properties[key]
 
     def add_domain(self, new_domain_name):
+        """
+        Adds a new domain to the style profile.
+
+        Args:
+            new_domain_name (string): The name for the new domain.
+    
+        Returns:
+            None
+        """
         self.domains[new_domain_name] = {}
         self.current_modes[new_domain_name] = None
         
@@ -47,7 +84,19 @@ class BaseStyle:
         self.create_domain_mode_etters(new_domain_name)
 
     def add_mode(self, new_mode_name, domain=None):
+        """
+        Adds a new mode to the style profile.
 
+        Args:
+            new_mode_name (string): The name for the new mode.
+        
+        Optional Args:
+            domain (string): The name of the domain to add the mode to. Default
+            is None, which adds the mode to the entire style.
+
+        Returns:
+            None
+        """
         if domain == None:
             if None not in self.domains:
                 self.add_domain(None)
@@ -55,6 +104,25 @@ class BaseStyle:
         self.domains[domain][new_mode_name] = {}
 
     def add_property(self, new_prop_name, default_value, mode=None, domain=None):
+        """
+        Adds a managed property to the style profile.
+        
+        Args:
+            new_prop_name (string): The name for the new property.
+
+            default_value (*): The value to give the property when it is first 
+            created.
+        
+        Optional Args:
+            mode (string): The name of the mode to add the property to. 
+            Default is None, which adds the property to the entire style.
+
+            domain (string): The name of the domain to add the property to. 
+            Default is None, which adds the property to the entire style.
+
+        Returns:
+            None
+        """
         if domain:
             self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
         else:
@@ -65,9 +133,20 @@ class BaseStyle:
                 self.managed_properties[new_prop_name] = default_value
                 self.create_property_etters(new_prop_name)
 
+    def set_mode(self, mode_name, domain=None):
+        """
+        Sets which mode is active for a domain.
 
+        Args:
+            mode_name (string): The name for the mode to activate.
+        
+        Optional Args:
+            domain (string): The name of the domain to the mode belongs to.
+            Default is None, which is for modes with no domain.
 
-    def set_mode(self, new_mode, domain=None):
+        Returns:
+            None
+        """
         ## Get list of current properties
         current_mode = self.current_modes[domain]
         if current_mode:
@@ -76,7 +155,7 @@ class BaseStyle:
             current_properties = []
 
         ## Get list properties needed for new_mode
-        incoming_properties = list(self.domains[domain][new_mode].keys())
+        incoming_properties = list(self.domains[domain][mode_name].keys())
 
         ## new_properties
         new_properties = [p for p in incoming_properties if p not in current_properties]
@@ -89,22 +168,35 @@ class BaseStyle:
 
         ## Create new property and its etters
         for prop in new_properties:
-            self.managed_properties[prop] = self.domains[domain][new_mode][prop]
+            self.managed_properties[prop] = self.domains[domain][mode_name][prop]
             self.create_property_etters(prop)
         
-        self.current_modes[domain] = new_mode
+        self.current_modes[domain] = mode_name
         
         if domain:
             mode_prop_name = domain + '_mode'
         else:
             mode_prop_name = 'display_mode'
 
-        self.managed_properties[mode_prop_name] = new_mode
-
-
+        self.managed_properties[mode_prop_name] = mode_name
 
     def create_domain_mode_etters(self, domain_name=None):
+        """
+        Creates mode setting methods for a domain and attaches them to the 
+        styled object.
 
+        Args:
+            None
+        
+        Optional Args:
+            domain_name (string): The name of the domain to create a getter and
+            setter for. The default is None, which creates a domainless getter 
+            and setter.
+
+        Returns:
+            None
+        """
+        
         ## Add domain setter to feature
         def set_display_template(self, new_value):
             self.style.set_mode(new_value, domain_name)
@@ -137,7 +229,17 @@ class BaseStyle:
         self.__dict__[getter_name] = bound_getter
 
     def create_property_etters(self, property_name):
+        """
+        Creates property getter and setter methods for a property and attaches 
+        them to the styled object.
 
+        Args:
+            property_name (string): The name of the property to create a getter
+            and setter for.
+
+        Returns:
+            None
+        """
         ## Define [g][s]et_display templates
         def set_property_template(self, new_value):
             self.style.managed_properties[property_name] = new_value
@@ -163,11 +265,27 @@ class BaseStyle:
         self.__dict__['get_'+property_name] = bound_getter
 
     def remove_property_etters(self, property_name):
+        """
+        Detaches property getter and setter methods from the styled object.
+
+        Args:
+            property_name (string): The name of the property to remove the 
+            getter and setter of.
+
+        Returns:
+            None
+        """
         del self.feature.__dict__['get_' + property_name]
         del self.feature.__dict__['set_' + property_name]
 
     def clear_cache(self):
         """
-        This Method
+        Clears the cached renderer function
+
+        Args:
+            None
+        
+        Returns:
+            None
         """
         self.cached_renderer_fn = None
