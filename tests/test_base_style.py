@@ -20,7 +20,6 @@ class MockFeature:
         self.style = None
 
 
-
 def test_base_style_init():
     """ Test BaseStyle.__init__ Method """
     f = MockFeature()
@@ -53,6 +52,48 @@ def test_create_domain_mode_etters():
 
 def test_create_domain_mode_etters_inner_fns():
     assert True
+
+
+def test_add_domain():
+    """ Test BaseStyle.add_domain Method """
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+    
+    ## Call method
+    domain_name = 'bingo'
+    s.add_domain(domain_name)
+
+    ## Assert that domain key was added to domain dict
+    assert domain_name in s.domains
+
+    ## Assert that the new domain's value is an empty dict
+    assert s.domains[domain_name] == {}
+    
+    ## Assert that a managed property key was added for new domain
+    assert s.managed_properties[domain_name + '_mode'] == None
+
+    ## Assert that the method calls create_domain_mode_etters for new domain
+    assert "set_" + domain_name + "_display" in f.__dict__
+    assert "get_" + domain_name + "_display" in f.__dict__
+
+
+    ## Call method again
+    domain_name = 'test2'
+    s.add_domain(domain_name)
+
+    ## Assert that domain key was added to domain dict
+    assert domain_name in s.domains
+
+    ## Assert that the new domain's value is an empty dict
+    assert s.domains[domain_name] == {}
+    
+    ## Assert that a managed property key was added for new domain
+    assert s.managed_properties[domain_name + '_mode'] == None
+
+    ## Assert that the method calls create_domain_mode_etters for new domain
+    assert "set_" + domain_name + "_display" in f.__dict__
+    assert "get_" + domain_name + "_display" in f.__dict__
+
 
 
 def test_create_property_etters():
