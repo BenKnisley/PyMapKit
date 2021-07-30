@@ -94,6 +94,33 @@ def test_add_domain():
     assert "set_" + domain_name + "_display" in f.__dict__
     assert "get_" + domain_name + "_display" in f.__dict__
 
+def test_add_mode():
+    """ Test BaseStyle.add_mode Method """
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+
+    mode_name = "mode_1"
+    s.add_mode(mode_name)
+
+    ## Assert that None domain was added to domain dict when adding domainless
+    # mode
+    assert None in s.domains
+
+    ## Assert that mode was added to the the None domain
+    assert s.domains[None] == {mode_name:{}}
+
+    ## With Domain test
+    domain_name = "domain1"
+    mode_name = "mode_2"
+
+    s.add_domain(domain_name)
+    s.add_mode(mode_name, domain_name)
+
+    ## Assert that mode was added to the the correct domain
+    assert s.domains[domain_name] == {mode_name:{}}
+
+    
+    
 
 
 def test_create_property_etters():
