@@ -78,7 +78,8 @@ class BaseStyle:
         self.domains[new_domain_name] = {}
         self.current_modes[new_domain_name] = None
         
-        self.managed_properties[new_domain_name + '_mode'] = None
+        if new_domain_name != None: 
+            self.managed_properties[new_domain_name + '_mode'] = None
         
         self.create_domain_mode_etters(new_domain_name)
 
