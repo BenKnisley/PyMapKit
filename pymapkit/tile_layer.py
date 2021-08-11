@@ -119,7 +119,7 @@ class TileLayer(BaseLayer):
         or (tile_y < 0) or (tile_y > max_val):
             return None
 
-        print(zoom_lvl, tile_x, tile_y)
+        #print(zoom_lvl, tile_x, tile_y)
 
         if (zoom_lvl, tile_x, tile_y) in self.tile_store:
             return self.tile_store[(zoom_lvl, tile_x, tile_y)]
