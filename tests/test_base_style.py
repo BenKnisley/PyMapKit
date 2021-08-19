@@ -119,9 +119,36 @@ def test_add_mode():
     ## Assert that mode was added to the the correct domain
     assert s.domains[domain_name] == {mode_name:{}}
 
-    
-    
 
+def test_add_property():
+    """ Test BaseStyle.add_property Method """
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+    
+    ## Test adding property top-level
+    prop_name = 'flavor'
+    prop_val = 'apple_cin'
+    s.add_property(prop_name, prop_val)
+    assert s.managed_properties[prop_name] == prop_val
+
+    ## Test with mode
+    mode_name = "mode_1"
+    prop_name = 'my_prop'
+    prop_val = 'abc123'
+    s.add_mode(mode_name)
+    s.add_property(prop_name, prop_val, mode_name)
+    assert s.domains[None][mode_name][prop_name] == prop_val
+
+    ## Test with mode
+    domain_name = "bingo"
+    mode_name = "mode_2"
+    prop_name = 'my_prop2'
+    prop_val = 'bingo_val'
+    s.add_domain(domain_name)
+    s.add_mode(mode_name, domain_name)
+    s.add_property(prop_name, prop_val, mode_name, domain_name)
+    assert s.domains[domain_name][mode_name][domain_name + '_' + prop_name] == prop_val
+    
 
 def test_create_property_etters():
     """ Test BaseStyle.create_property_etters Method """
