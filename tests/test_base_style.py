@@ -119,7 +119,6 @@ def test_add_mode():
     ## Assert that mode was added to the the correct domain
     assert s.domains[domain_name] == {mode_name:{}}
 
-
 def test_add_property():
     """ Test BaseStyle.add_property Method """
     f = MockFeature()
@@ -149,6 +148,58 @@ def test_add_property():
     s.add_property(prop_name, prop_val, mode_name, domain_name)
     assert s.domains[domain_name][mode_name][domain_name + '_' + prop_name] == prop_val
     
+def test_set_mode():
+    """ Test BaseStyle.set_mode Method """
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+
+    domain_name = "domain"
+    mode0_name = "first_mode"
+    mode1_name = "second_mode"
+    prop1_name = 'prop1'; prop1_val = '123'
+    prop2_name = 'prop2'; prop2_val = 'abc'
+
+    ## Setup style tree
+    s.add_domain(domain_name) 
+    s.add_mode(mode0_name, domain_name)
+    s.add_mode(mode1_name, domain_name)
+    s.add_property(prop1_name, prop1_val, mode1_name, domain_name)
+    s.add_property(prop2_name, prop2_val, mode1_name, domain_name)
+
+    ## Update property names with prepended domain name
+    prop1_name = domain_name + '_' + prop1_name
+    prop2_name = domain_name + '_' + prop2_name
+    
+    ## Run set mode method
+    s.set_mode(mode1_name, domain_name)
+
+    ## Assert that current mode is set correctly
+    assert s.current_modes[domain_name] == mode1_name
+
+    ## Assert mode1 properties are in managed property dict
+    assert prop1_name in s.managed_properties
+    assert prop2_name in s.managed_properties
+
+    ## Set to different mode 
+    s.set_mode(mode0_name, domain_name)
+
+    ## Assert that current mode changed
+    assert s.current_modes[domain_name] == mode0_name
+
+    ## Assert that properties are removed from managed_properties
+    assert prop1_name not in s.managed_properties
+    assert prop2_name not in s.managed_properties
+
+    ## Assert that domain mode is in managaged properties
+    mode_prop_name = domain_name + '_mode'
+    assert mode_prop_name in s.managed_properties
+
+    ## Test if mode is added none domain
+    s.add_mode('my_mode', domain=None)
+    s.set_mode('my_mode', domain=None)
+    mode_prop_name = 'display_mode'
+    assert mode_prop_name in s.managed_properties
+
 
 def test_create_property_etters():
     """ Test BaseStyle.create_property_etters Method """
@@ -179,6 +230,3 @@ def test_clear_cache():
 
     ## Test that the renderer was cleared
     assert s.cached_renderer_fn == None
-
-
-    
