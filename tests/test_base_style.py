@@ -50,8 +50,47 @@ def test_create_domain_mode_etters():
     assert "get_test_display" in f.__dict__
     assert "get_test_display" in s.__dict__
 
-def test_create_domain_mode_etters_inner_fns():
-    assert True
+def test_create_domain_mode_etters_inner_set_display_template():
+    """ Test BaseStyle.create_domain_mode_etters' inner functions """
+    ## Creates a MockFeature and a BaseStyle Object
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+
+    ## Add Mock methods called by set_display_template inner fn
+    s.set_mode = MagicMock()
+    s.clear_cache = MagicMock()
+
+    ## Set style properties
+    domain_name = None
+    mode_name = 'TestMode'
+
+    ## Call parent method which binds target inner function as f.set_display
+    s.create_domain_mode_etters(domain_name)
+
+    ## Call target function bound as f.set_display
+    f.set_display(mode_name)
+    
+    ## Make assertions
+    s.set_mode.assert_called_once_with(mode_name, domain_name)
+    s.clear_cache.assert_called_once()
+
+    ## Reset mocks
+    s.set_mode.reset_mock()
+    s.clear_cache.reset_mock()
+
+    ## Set style properties
+    domain_name = 'TestDomain'
+    mode_name = 'TestMode2'
+
+    ## Call parent method binding target inner fn as f.set_TestDomain_display
+    s.create_domain_mode_etters(domain_name)
+
+    ## Call target function bound as f.set_TestDomain_display
+    f.set_TestDomain_display(mode_name)
+    
+    ## Make assertions
+    s.set_mode.assert_called_once_with(mode_name, domain_name)
+    s.clear_cache.assert_called_once()
 
 
 def test_add_domain():
@@ -215,6 +254,7 @@ def test_create_property_etters():
 
 def test_create_property_etters_inner_fns():
     pass
+
 
 def test_clear_cache():
     """ Test BaseStyle.clear_cache Method """
