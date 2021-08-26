@@ -213,19 +213,19 @@ class BaseStyle:
         self.feature.__dict__[setter_name] = bound_setter
 
         ## Add domain getter to feature
-        def get_display_template(self):
+        def feature_get_display_template(self):
             return self.style.current_modes[domain_name]
 
         ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
+        bound_getter = feature_get_display_template.__get__(self.feature, type(self.feature))
         self.feature.__dict__[getter_name] = bound_getter
 
         ## Bind a getter to self too
-        def get_display_template(self):
+        def style_get_display_template(self):
             return self.current_modes[domain_name]
 
         ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self, type(self))
+        bound_getter = style_get_display_template.__get__(self, type(self))
         self.__dict__[getter_name] = bound_getter
 
     def create_property_etters(self, property_name):
