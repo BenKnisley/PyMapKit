@@ -288,7 +288,60 @@ def test_create_property_etters():
     assert "get_bingo" in s.__dict__
 
 def test_create_property_etters_inner_fns():
-    pass
+    """ Test BaseStyle.create_domain_mode_etters Method """
+    ## Creates a MockFeature and a BaseStyle Object
+    f = MockFeature()
+    s = pmk.BaseStyle(f)
+
+    ## Set up MagicMock for clear_cache method
+    s.clear_cache = MagicMock()
+    
+    ## Setup style tree for no domain
+    domain_name = None
+    mode_name = 'mode'
+    prop_name = 'color'
+    prop_value1 = 'orange'
+    prop_value2 = 'green'
+    s.add_domain(domain_name)
+    s.add_mode(mode_name, domain_name)
+    s.add_property(prop_name, prop_value1, mode_name, domain_name)
+    s.set_mode(mode_name, domain_name)
+
+    ## Call target function
+    f.set_color(prop_value2)
+    
+    ## Make assertions
+    assert s.managed_properties[prop_name] == prop_value2
+    s.clear_cache.assert_called_once()
+    s.clear_cache.reset_mock()
+    
+    ## Setup style tree for bingo domain
+    domain_name = 'bingo'
+    mode_name = 'mode1'
+    prop_name = 'myprop'
+    prop_value1 = 'val1'
+    prop_value2 = 'val2'
+    s.add_domain(domain_name)
+    s.add_mode(mode_name, domain_name)
+    s.add_property(prop_name, prop_value1, mode_name, domain_name)
+    s.set_mode(mode_name, domain_name)
+
+    ## Call target function
+    f.set_bingo_myprop(prop_value2)
+
+    ## Make assertions
+    assert s.managed_properties[domain_name + '_' + prop_name] == prop_value2
+    s.clear_cache.assert_called_once()
+    
+    '''
+    Test Getters  
+    '''
+    assert s.get_color() == s.managed_properties['color']
+    assert f.get_color() == s.managed_properties['color']
+    assert s.get_bingo_myprop() == s.managed_properties['bingo_myprop']
+    assert f.get_bingo_myprop() == s.managed_properties['bingo_myprop']
+
+        
 
 
 def test_clear_cache():
