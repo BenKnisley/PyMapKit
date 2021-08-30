@@ -95,7 +95,6 @@ def test_create_domain_mode_etters_inner_set_display_template():
     s.set_mode.assert_called_once_with(mode_name, domain_name)
     s.clear_cache.assert_called_once()
 
-
 def test_create_domain_mode_etters_inner_get_display_template():
     """ 
     Test BaseStyle.create_domain_mode_etters' inner functions
@@ -125,8 +124,6 @@ def test_create_domain_mode_etters_inner_get_display_template():
     ## Call target function bound as f.set_display
     assert f.get_display() == s.current_modes[domain_name]
     assert s.get_display() == s.current_modes[domain_name]
-
-
 
 def test_add_domain():
     """ Test BaseStyle.add_domain Method """
@@ -274,7 +271,6 @@ def test_set_mode():
     mode_prop_name = 'display_mode'
     assert mode_prop_name in s.managed_properties
 
-
 def test_create_property_etters():
     """ Test BaseStyle.create_property_etters Method """
     ## Creates a MockFeature and a BaseStyle Object
@@ -340,9 +336,6 @@ def test_create_property_etters_inner_fns():
     assert f.get_color() == s.managed_properties['color']
     assert s.get_bingo_myprop() == s.managed_properties['bingo_myprop']
     assert f.get_bingo_myprop() == s.managed_properties['bingo_myprop']
-
-        
-
 
 def test_clear_cache():
     """ Test BaseStyle.clear_cache Method """
