@@ -1,0 +1,639 @@
+"""
+Author: Ben Knisley [benknisley@gmail.com]
+Date: 10 January, 2020
+"""
+import pytest
+from unittest.mock import MagicMock
+from pytest_mock import mocker
+import pymapkit as pmk
+import pyproj
+import numpy as np
+
+
+class MockLayer:
+    def __init__(self):
+        ## Create a mock draw function
+        self.activate = MagicMock()
+        self._activate = MagicMock()
+        self._deactivate = MagicMock()
+        self.render = MagicMock()
+class mock_renderer:
+    def __init__(self):
+        ## Create a mock draw function
+        self.is_canvas = MagicMock()
+        self.is_canvas.return_value = True
+        self.save = MagicMock()
+        self.draw_background = MagicMock()
+
+
+def test_map_init():
+    """ Test Map.__init__ """
+    m = pmk.Map()
+    assert isinstance(m, pmk.Map)
+
+    ## Test 'renderer' Optional Arg string input
+    m = pmk.Map(renderer='pyskia')
+    assert isinstance(m.renderer, pmk.SkiaRenderer)
+
+    ## Test 'renderer' Optional Arg object input
+    r = pmk.SkiaRenderer()
+    m = pmk.Map(renderer=r)
+    assert r == m.renderer
+
+
+def test_map_add():
+    """ Test Map.add adds layer to layer list"""
+    m = pmk.Map()
+    new_layer0 = MockLayer()
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
+    m.add(new_layer1)
+    m.add(new_layer2)
+    m.add(new_layer3)
+    m.add(new_layer0, 0)
+
+    assert len(m.layers) == 4, "Map.add method did not add layer to map object"
+    assert m.layers[0] == new_layer0, "Map.add(index=0) method did not add layer to begining of list"
+    assert m.layers[1] == new_layer1, "Map.add method did not add layer to end of list"
+    assert m.layers[2] == new_layer2, "Map.add method did not add layer to end of list"
+    assert m.layers[3] == new_layer3, "Map.add method did not add layer to end of list"
+    new_layer1._activate.assert_called_once_with(m)
+
+
+def test_map_remove():
+    """ Test Map.add adds layer to layer list"""
+    m = pmk.Map()
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
+
+    m.add(new_layer1)
+    m.add(new_layer2)
+    m.add(new_layer3)
+
+    m.remove(new_layer3)
+
+    assert len(m.layers) == 2, "Map.add method did not remove layer from map object"
+    assert new_layer3 not in m.layers, "Map.add method did not remove correct layer from map object"
+    new_layer3._deactivate.assert_called_once()
+
+
+def test_set_projection():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    ## Add mock layers to map, and reset mocked activate method
+    mock_layer1 = MockLayer()
+    mock_layer2 = MockLayer()
+    m.add(mock_layer1)
+    m.add(mock_layer2)
+    mock_layer1.activate.reset_mock()
+    mock_layer2.activate.reset_mock()
+
+    ## Hold these to test if changed
+    old_transform_geo2proj = m.transform_geo2proj
+    old_transform_proj2geo = m.transform_proj2geo
+
+    ## Test unsupported input type raises exception
+    with pytest.raises(Exception):
+        m.set_projection(3)
+
+    ## Test set with text
+    m.set_projection('EPSG:32023')
+
+    ## Check that projected_crs is correct, geo_crs is the same, and that the transforms updated
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:32023")
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4326")
+    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
+    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
+
+    ## Check that method calls layer activate method
+    mock_layer1.activate.assert_called_once()
+    mock_layer2.activate.assert_called_once()
+
+
+
+def test_set_geographic_crs():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    mock_layer1 = MockLayer()
+    mock_layer2 = MockLayer()
+
+    ## Add mock layers to map, and reset mocked activate method
+    m.add(mock_layer1)
+    m.add(mock_layer2)
+    mock_layer1.activate.reset_mock()
+    mock_layer2.activate.reset_mock()
+
+    ##
+    ## Test set with text
+    ##
+
+    ## Hold these to test if changed
+    old_transform_geo2proj = m.transform_geo2proj
+    old_transform_proj2geo = m.transform_proj2geo
+
+    ## Call set_geographic_crs
+    m.set_geographic_crs('EPSG:4267')
+
+    ## Check that geographic_crs is correct, proj_crs is the same, and that the transforms updated
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4267")
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:3785")
+    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
+    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
+
+    ## Check that method calls layer activate method
+    mock_layer1.activate.assert_called_once()
+    mock_layer2.activate.assert_called_once()
+
+def test_set_location():
+    """ Test Map.set_projection method """
+    m = pmk.Map()
+
+    geographic_crs = pyproj.crs.CRS("EPSG:4326")
+    projected_crs = pyproj.crs.CRS("EPSG:3785")
+    m.set_geographic_crs(geographic_crs)
+    m.set_projection(projected_crs)
+
+    tranform = pyproj.Transformer.from_crs(geographic_crs, projected_crs)
+
+    ## Basic case
+    try_x, try_y = tranform.transform(40, -83)
+    m.set_location(40, -83)
+    assert m.proj_x == try_x
+    assert m.proj_y == try_y
+
+    ## Edge case - values to big
+    try_x, try_y = tranform.transform(200, 200)
+    m.set_location(200, 200)
+    assert m.proj_x == try_x
+    assert m.proj_y == try_y
+
+
+def test_get_location():
+    """ Test Map.get_projection method """
+    m = pmk.Map()
+
+    m.set_location(40.0, 83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(40.0)
+    assert lon == pytest.approx(83.0)
+
+    m.set_location(-35, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-35)
+    assert lon == pytest.approx(-83.0)
+
+    m.set_location(35, -83.0)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(35)
+    assert lon == pytest.approx(-83.0)
+
+    m.set_location(-35.0, 83.1)
+    lat, lon = m.get_location()
+    assert lat == pytest.approx(-35.0)
+    assert lon == pytest.approx(83.1)
+
+
+def test_set_projection_coordinates():
+    """ Test Map.set_projection_coordinates method """
+    m = pmk.Map()
+    m.set_projection("EPSG:3785")
+    
+    ## Set first test values
+    test_x, test_y = 7453953, 5593228
+    
+    ## Call set_projection_coordinates method
+    m.set_projection_coordinates(test_x, test_y)
+
+    ## Test that the projection values changed
+    assert m.proj_x == test_x
+    assert m.proj_y == test_y
+
+
+def test_get_projection_coordinates():
+    """ Test Map.get_projection_coordinates method """
+    m = pmk.Map()
+    m.set_projection("EPSG:3785")
+    
+    ## Set first test values
+    test_x, test_y = 7453953, 5593228
+    
+    ## Call set_projection_coordinates method
+    m.set_projection_coordinates(test_x, test_y)
+
+    ## Get Results from get_projection_coordinates 
+    result_x, result_y = m.get_projection_coordinates()
+
+    assert result_x == test_x
+    assert result_y == test_y
+
+
+def test_set_scale():
+    """ Test Map.set_scale method """
+    m = pmk.Map()
+
+    ## Do basic it changed test
+    old_proj_scale = m._proj_scale
+    m.set_scale(50)
+    assert m._proj_scale != old_proj_scale
+
+    ## Test with US-Ft projection
+    m.set_projection('EPSG:32023')
+    m.set_scale(50)
+    assert m._proj_scale == pytest.approx(164.042)
+
+    ## Test with US-Ft projection with proj_units True
+    m.set_scale(50, True)
+    assert m._proj_scale == pytest.approx(50)
+
+
+    ## Test with degree projection
+    m.set_projection('EPSG:4326')
+    m.set_scale(50)
+    assert m._proj_scale == pytest.approx(0.000452202)
+
+
+def test_get_scale():
+    """ Test Map.get_scale method """
+    m = pmk.Map()
+
+    m.set_scale(50000)
+    scale = m.get_scale()
+    assert scale == pytest.approx(50000)
+
+    ## Test after projection change, that should change scale
+    m.set_projection('EPSG:4326')
+    scale = m.get_scale()
+    assert scale == pytest.approx(50000)
+
+
+def test_set_size():
+    """ Test Map.set_size method """
+    m = pmk.Map()
+
+    m.set_size(100, 100)
+    assert m.width == 100
+    assert m.height == 100
+
+    m.set_size(500, 100)
+    assert m.width == 500
+    assert m.height == 100
+
+    m.set_size(800, 1000)
+    assert m.width == 800
+    assert m.height == 1000
+
+
+def test_get_size():
+    """ Test Map.get_size method """
+    m = pmk.Map()
+
+    m.set_size(100, 100)
+    assert m.get_size()[0] == 100
+    assert m.get_size()[1] == 100
+
+
+    m.width = 350
+    assert m.get_size()[0] == 350
+    assert m.get_size()[1] == 100
+
+    m.height = 410
+    assert m.get_size()[0] == 350
+    assert m.get_size()[1] == 410
+
+def test_zoom_in():
+    """ Test Map.zoom_in method """
+    m = pmk.Map()
+
+    ## Default scale change
+    m._proj_scale = 5000
+    m.zoom_in()
+    assert m._proj_scale == 3333.3333333333335
+
+
+    ## Factor arg scale change
+    m._proj_scale = 5000
+    m.zoom_in(2)
+    assert m._proj_scale == 2500
+
+def test_zoom_out():
+    """ Test Map.zoom_out method """
+    m = pmk.Map()
+
+    ## Default scale change
+    m._proj_scale = 5000
+    m.zoom_out()
+    assert m._proj_scale == 7500
+
+
+    ## Factor arg scale change
+    m._proj_scale = 5000
+    m.zoom_out(2)
+    assert m._proj_scale == 10000
+
+
+
+
+def test_set_renderer(mocker):
+    """ Test Map.get_renderer method """
+    m = pmk.Map()
+
+    ## Test directly setting renderer object
+    fake_renderer_obj = object()
+    m.set_renderer(fake_renderer_obj)
+    assert m.renderer == fake_renderer_obj
+
+    ## Test that setting renderer from string calls get_renderer correctly
+    fake_renderer_obj = object()
+    get_renderer_patch = mocker.patch("pymapkit.map.get_renderer", return_value=fake_renderer_obj)
+    m.set_renderer("fake_renderer")
+    get_renderer_patch.assert_called_once_with("fake_renderer")
+    assert m.renderer == fake_renderer_obj
+
+
+def test_get_renderer():
+    """ Test map.get_renderer function """
+    ## Test pyskia
+    return_obj = pmk.map.get_renderer('pyskia')
+    assert isinstance(return_obj, pmk.skia_renderer.SkiaRenderer)
+
+
+def test_render():
+    """ Test map.render method """
+    m = pmk.Map()
+
+    mock_renderer_obj = mock_renderer()
+    m.set_renderer(mock_renderer_obj)
+
+    ## Create mock layers
+    new_layer1 = MockLayer()
+    new_layer2 = MockLayer()
+    new_layer3 = MockLayer()
+
+    ## Add layers to canvas
+    m.add(new_layer1)
+    m.add(new_layer2)
+    m.add(new_layer3)
+
+    ## Call render with no args
+    m.render()
+
+    ## Assert that draw_background was called
+    mock_renderer_obj.draw_background.assert_called_once()
+
+    ## Assert the each layer had draw method called
+    new_layer1.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer2.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    new_layer3.render.assert_called_once_with(mock_renderer_obj, mock_renderer_obj)
+    ## Assert that save was called 
+    mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, None)
+
+    ## Reset mock renderer
+    mock_renderer_obj = mock_renderer()
+    m.set_renderer(mock_renderer_obj)
+
+    ## Call with file arg
+    m.render("./file.png")
+
+    ## Assert that save was called 
+    mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, "./file.png")
+
+
+def test_geo2proj():
+    """ Test Map.geo2proj method """
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+
+    ## Test singlet integer input
+    test_coord = (-83, 40)
+    expected = (1859916.4298, 728826.5006)
+    actual = m.geo2proj(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+
+    ## Test list 
+    test_coords = (
+        [22.52, -3.13, -83.1, -77.1, np.inf], 
+        [33.45, 43.80, -31.8, -22.9, np.inf]
+        # value
+    )
+
+    ## NOTE: (inf,inf) ==> (inf,inf) => (5169978.7942,-26917578.0576)>
+    #> AKA the last good value
+    expected = (
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942,  5169978.7942], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576, -26917578.0576]
+    )
+
+    actual = m.geo2proj(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x)
+        assert expected_y == pytest.approx(actual_y)
+
+
+def test_proj2geo():
+    """ Test Map.proj2geo method """
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+
+    ## Test singlet integer input
+    test_coord = (1859916, 728826)
+    expected = (-83, 40)
+    actual = m.proj2geo(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+
+
+    ## Test list 
+    test_coords = (
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942, np.inf], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576, np.inf]
+    )
+    
+    expected = (
+        [22.52, -3.13, -83.1, -77.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9, -22.9]
+    )
+
+    actual = m.proj2geo(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x)
+        assert expected_y == pytest.approx(actual_y)
+
+
+def test_proj2pix():
+    """ Test Map.proj2pix method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (m.proj_x, m.proj_y)
+    expected = (250, 250) ## Half of canvas size
+    actual = m.proj2pix(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+
+    ## Test list input
+    test_coords = (
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576]
+    )
+
+    expected = (
+        [1808, 1381, 235, 452], 
+        [-623, -362, 2319, 1935]
+    )
+
+    actual = m.proj2pix(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x)
+        assert expected_y == pytest.approx(actual_y)
+
+
+def test_pix2proj():
+    """ Test Map.pix2proj method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (250, 250) ## Half of canvas size
+    expected = (m.proj_x, m.proj_y) 
+    actual = m.pix2proj(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+
+    
+    ## Test list input
+    test_coords = (
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
+    )
+
+    expected = (
+        [27416968.3248, 20414646.4987, 1606378.3434, 5169978.7942], 
+        [15047776.1068, 10772468.3457, -33210736.0296, -26917578.0576]
+    )
+    
+    actual = m.pix2proj(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x, abs=5000*2)
+        assert expected_y == pytest.approx(actual_y, abs=5000*2)
+    
+
+def test_geo2pix():
+    """ Test Map.geo2pix method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (-83, 40)
+    expected = (250, 250) 
+    actual = m.geo2pix(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+    
+    ## Test list input
+    test_coords = (
+        [22.52, -3.13, -83.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9]
+    )
+
+    expected = (
+        [1808, 1381, 235, 452], 
+        [-623, -362, 2319, 1935]
+    )
+    
+    actual = m.geo2pix(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x)
+        assert expected_y == pytest.approx(actual_y)
+    
+
+def test_pix2geo():
+    """ Test Map.pix2geo method """
+    ## Setup parameters
+    m = pmk.Map()
+    m.set_geographic_crs('EPSG:4267') ## NAD84
+    m.set_projection("EPSG:32023") ## Ohio South FT
+    m.set_size(500, 500)
+    m.set_location(40, -83)
+    m.set_scale(5000)
+
+    ## Test singlet input
+    test_coord = (250, 250) 
+    expected = (-83, 40)
+    actual = m.pix2geo(*test_coord)
+    assert expected[0] == pytest.approx(actual[0])
+    assert expected[1] == pytest.approx(actual[1])
+    
+    ## Test list input
+    test_coords = (
+        [1808, 1381, 235, 452], 
+        [1123, 862, -1819, -1435]
+    )
+
+    expected = (
+        [22.52, -3.13, -83.1, -77.1], 
+        [33.45, 43.80, -31.8, -22.9]
+    )
+    
+    actual = m.pix2geo(*test_coords)
+
+    ## Assert output is list
+    assert isinstance(actual[0], list)
+    assert isinstance(actual[1], list)
+
+    ## Test for expected results
+    for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
+        assert expected_x == pytest.approx(actual_x , abs=0.1)
+        assert expected_y == pytest.approx(actual_y , abs=0.1)
