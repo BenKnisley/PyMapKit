@@ -7,6 +7,10 @@ from setuptools import setup
 
 ## Extract version from package __init__.py
 from pymapkit import __version__ as version
+from pymapkit import __author__ as author
+from pymapkit import __email__ as email
+from pymapkit import __license__ as license
+
 
 ## Get long description from readme file
 with open('README.md') as f:
@@ -14,10 +18,10 @@ with open('README.md') as f:
 
 setup(
     name = "pymapkit",
-    license = "MIT",
+    license = license,
     version = version,
-    author = "Ben Knisley",
-    author_email = "benknisley@gmail.com",
+    author = author,
+    author_email = email,
     
     description = ("A Python based open-source mapping toolkit"),
     long_description=long_desc_txt,
