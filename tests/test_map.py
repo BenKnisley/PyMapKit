@@ -17,6 +17,7 @@ class MockLayer:
         self._activate = MagicMock()
         self._deactivate = MagicMock()
         self.render = MagicMock()
+
 class mock_renderer:
     def __init__(self):
         ## Create a mock draw function
@@ -40,7 +41,6 @@ def test_map_init():
     m = pmk.Map(renderer=r)
     assert r == m.renderer
 
-
 def test_map_add():
     """ Test Map.add adds layer to layer list"""
     m = pmk.Map()
@@ -60,7 +60,6 @@ def test_map_add():
     assert m.layers[3] == new_layer3, "Map.add method did not add layer to end of list"
     new_layer1._activate.assert_called_once_with(m)
 
-
 def test_map_remove():
     """ Test Map.add adds layer to layer list"""
     m = pmk.Map()
@@ -77,7 +76,6 @@ def test_map_remove():
     assert len(m.layers) == 2, "Map.add method did not remove layer from map object"
     assert new_layer3 not in m.layers, "Map.add method did not remove correct layer from map object"
     new_layer3._deactivate.assert_called_once()
-
 
 def test_set_projection():
     """ Test Map.set_projection method """
@@ -111,8 +109,6 @@ def test_set_projection():
     ## Check that method calls layer activate method
     mock_layer1.activate.assert_called_once()
     mock_layer2.activate.assert_called_once()
-
-
 
 def test_set_geographic_crs():
     """ Test Map.set_projection method """
@@ -171,7 +167,6 @@ def test_set_location():
     assert m.proj_x == try_x
     assert m.proj_y == try_y
 
-
 def test_get_location():
     """ Test Map.get_projection method """
     m = pmk.Map()
@@ -196,7 +191,6 @@ def test_get_location():
     assert lat == pytest.approx(-35.0)
     assert lon == pytest.approx(83.1)
 
-
 def test_set_projection_coordinates():
     """ Test Map.set_projection_coordinates method """
     m = pmk.Map()
@@ -211,7 +205,6 @@ def test_set_projection_coordinates():
     ## Test that the projection values changed
     assert m.proj_x == test_x
     assert m.proj_y == test_y
-
 
 def test_get_projection_coordinates():
     """ Test Map.get_projection_coordinates method """
@@ -229,7 +222,6 @@ def test_get_projection_coordinates():
 
     assert result_x == test_x
     assert result_y == test_y
-
 
 def test_set_scale():
     """ Test Map.set_scale method """
@@ -255,7 +247,6 @@ def test_set_scale():
     m.set_scale(50)
     assert m._proj_scale == pytest.approx(0.000452202)
 
-
 def test_get_scale():
     """ Test Map.get_scale method """
     m = pmk.Map()
@@ -268,7 +259,6 @@ def test_get_scale():
     m.set_projection('EPSG:4326')
     scale = m.get_scale()
     assert scale == pytest.approx(50000)
-
 
 def test_set_size():
     """ Test Map.set_size method """
@@ -285,7 +275,6 @@ def test_set_size():
     m.set_size(800, 1000)
     assert m.width == 800
     assert m.height == 1000
-
 
 def test_get_size():
     """ Test Map.get_size method """
@@ -334,9 +323,6 @@ def test_zoom_out():
     m.zoom_out(2)
     assert m._proj_scale == 10000
 
-
-
-
 def test_set_renderer(mocker):
     """ Test Map.get_renderer method """
     m = pmk.Map()
@@ -353,13 +339,11 @@ def test_set_renderer(mocker):
     get_renderer_patch.assert_called_once_with("fake_renderer")
     assert m.renderer == fake_renderer_obj
 
-
 def test_get_renderer():
     """ Test map.get_renderer function """
     ## Test pyskia
     return_obj = pmk.map.get_renderer('pyskia')
     assert isinstance(return_obj, pmk.skia_renderer.SkiaRenderer)
-
 
 def test_render():
     """ Test map.render method """
@@ -401,7 +385,6 @@ def test_render():
     ## Assert that save was called 
     mock_renderer_obj.save.assert_called_once_with(mock_renderer_obj, "./file.png")
 
-
 def test_geo2proj():
     """ Test Map.geo2proj method """
     m = pmk.Map()
@@ -440,7 +423,6 @@ def test_geo2proj():
         assert expected_x == pytest.approx(actual_x)
         assert expected_y == pytest.approx(actual_y)
 
-
 def test_proj2geo():
     """ Test Map.proj2geo method """
     m = pmk.Map()
@@ -476,7 +458,6 @@ def test_proj2geo():
     for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
         assert expected_x == pytest.approx(actual_x)
         assert expected_y == pytest.approx(actual_y)
-
 
 def test_proj2pix():
     """ Test Map.proj2pix method """
@@ -516,7 +497,6 @@ def test_proj2pix():
     for actual_x, actual_y, expected_x, expected_y in zip(*actual, *expected):
         assert expected_x == pytest.approx(actual_x)
         assert expected_y == pytest.approx(actual_y)
-
 
 def test_pix2proj():
     """ Test Map.pix2proj method """
@@ -558,7 +538,6 @@ def test_pix2proj():
         assert expected_x == pytest.approx(actual_x, abs=5000*2)
         assert expected_y == pytest.approx(actual_y, abs=5000*2)
     
-
 def test_geo2pix():
     """ Test Map.geo2pix method """
     ## Setup parameters
@@ -598,7 +577,6 @@ def test_geo2pix():
         assert expected_x == pytest.approx(actual_x)
         assert expected_y == pytest.approx(actual_y)
     
-
 def test_pix2geo():
     """ Test Map.pix2geo method """
     ## Setup parameters
