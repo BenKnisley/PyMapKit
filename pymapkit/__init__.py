@@ -11,7 +11,7 @@ __maintainer__ = "Ben Knisley"
 __email__ = "benknisley@gmail.com"
 __copyright__ = "Copyright 2021, Ben Knisley"
 __license__ = "MIT"
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __status__ = "Pre-Alpha"
 
 ## Import Map class
