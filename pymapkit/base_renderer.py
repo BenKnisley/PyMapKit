@@ -365,7 +365,7 @@ class BaseRenderer(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def draw_text(self, canvas, text, text_style):
+    def draw_text(self, canvas, text, x, y, text_style):
         """
         Abstract method to be implemented by subclass. 
 
