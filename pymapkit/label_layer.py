@@ -126,6 +126,17 @@ class TextBlock:
                 return (self.layer.map.get_size()[1] - self.get_height()) - self.padding
             return input
 
+    def add_line(self, text, position=-1):
+        new_text_line = TextLine(text)
+        if position == -1:
+            self.text_lines.append(new_text_line)
+        else:
+            self.text_lines.insert(position, new_text_line)
+        return new_text_line
+
+
+        
+
     def render(self, renderer, canvas):
         """
         """
@@ -284,7 +295,6 @@ class StaticTextLayer(BaseLayer):
         new_text_block = TextBlock(self, input_text, x_place, y_place)
         self.text_elements.append(new_text_block)
         return new_text_block
-
 
     def render(self, renderer, canvas):
         ''' 
