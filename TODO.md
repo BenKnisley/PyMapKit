@@ -65,3 +65,6 @@ PyMapKit Todo List
 
 - [] Add custom Exceptions
  
+
+
+- Add List Modes to BaseStyle

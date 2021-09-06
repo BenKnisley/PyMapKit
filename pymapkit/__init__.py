@@ -26,3 +26,5 @@ from .base_style import BaseStyle
 from .raster_layer import RasterLayer
 from .vector_layer import VectorLayer
 from .tile_layer import TileLayer
+
+from .label_layer import StaticTextLayer
