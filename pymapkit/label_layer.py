@@ -16,11 +16,11 @@ class TextLine:
         ## Setup variable to hold the text value
         self.text = text
 
-        ## Setup text line style profile
+        ## Setup style object
         self.style = TextLineStyle(self)
 
-
     def __repr__(self):
+        """ Returns self.text as objects' string representation """
         return self.text
 
     def get_height(self):
@@ -53,10 +53,11 @@ class TextBlock:
 
         ## Set text align
         self.align = 'left'
-        self.padding = 10 ##Px
+        self.padding = 10 ## Px
 
         ## Create a TextLine instance for each line
-        text_lines = [TextLine(w.strip()) for w in init_string.split('\\')]
+        init_string = init_string.replace('\\', '\n')
+        text_lines = [TextLine(w.strip()) for w in init_string.split('\n')]
         self.text_lines = text_lines if text_lines else []
 
 
@@ -70,7 +71,6 @@ class TextBlock:
         ## Placement vars
         self.x = x_place
         self.y = y_place
-
 
     def __repr__(self):
         retn_text = self.text_lines[0].text if self.text_lines else ""
@@ -92,7 +92,6 @@ class TextBlock:
 
     def get_height(self):
         return sum([l.get_height() for l in self.text_lines])
-
 
     def alignment_offset(self, line_width):
         if self.align == 'left':
@@ -126,8 +125,6 @@ class TextBlock:
             elif input == 'b':
                 return (self.layer.map.get_size()[1] - self.get_height()) - self.padding
             return input
-
-
 
     def render(self, renderer, canvas):
         """
@@ -208,8 +205,6 @@ class TextBlockStyle(BaseStyle):
             f.style.cached_renderer_fn = None
 
 
-
-
 class StaticTextLayer(BaseLayer):
     """
     A class and a MapLayer to hold text blocks.
@@ -223,11 +218,6 @@ class StaticTextLayer(BaseLayer):
 
         ## Create a list to hold text elements
         self.text_elements = []
-
-    def add_text_block(self, input_text, x_place, y_place):
-        """
-        """
-        self.text_elements.append(TextBlock(self, input_text, x_place, y_place))
 
     def __getitem__(self, key):
         """ Returns"""
@@ -287,6 +277,14 @@ class StaticTextLayer(BaseLayer):
             max_x (float): The maximum x projection coordinate of the data.
             max_y (float): The maximum y projection coordinate of the data.
         '''
+
+    def add_text_block(self, input_text, x_place, y_place):
+        """
+        """
+        new_text_block = TextBlock(self, input_text, x_place, y_place)
+        self.text_elements.append(new_text_block)
+        return new_text_block
+
 
     def render(self, renderer, canvas):
         ''' 
