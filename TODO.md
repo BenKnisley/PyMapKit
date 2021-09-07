@@ -65,3 +65,10 @@ PyMapKit Todo List
 
 - [] Add custom Exceptions
  
+ 
+
+
+- Add List Modes to BaseStyle
+
+
+- BaseLayer.focus should account for None from get_extent

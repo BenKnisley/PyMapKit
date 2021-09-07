@@ -291,8 +291,6 @@ class BaseStyle:
         self.cached_renderer_fn = None
 
 
-
-
 class ParentStyle(BaseStyle):
     """
     A class for styling all child elements of an iterable object. 
@@ -321,6 +319,11 @@ class ParentStyle(BaseStyle):
             for f in parent_feature:
                 f.style.set_mode(new_value, domain_name)
                 f.style.clear_cache()
+
+                if isinstance(f.style, ParentStyle):
+                    for sub_f in f:
+                        print(sub_f)
+                
     
         def parent_get_display_template(self):
             return self.style.current_modes[domain_name]
@@ -361,10 +364,20 @@ class ParentStyle(BaseStyle):
 
         ## Define [g][s]et_display templates
         def set_property_template(self, new_value):
+            """
+            """
             for f in parent_feature:
                 if property_name in f.style.managed_properties:
                     f.style.managed_properties[property_name] = new_value
                 f.style.clear_cache()
+
+                if isinstance(f.style, ParentStyle):
+                    for sub_f in f:
+                        if property_name in f.style.managed_properties:
+                            sub_f.style.managed_properties[property_name] = new_value
+                            sub_f.__dict__['set_' + property_name](new_value)
+                        sub_f.style.clear_cache()
+
 
         ## Link, and bind set_display as a named method of the parent feature
         bound_setter = set_property_template.__get__(self.feature, type(self.feature))
