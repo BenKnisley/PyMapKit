@@ -289,3 +289,94 @@ class BaseStyle:
             None
         """
         self.cached_renderer_fn = None
+
+
+
+
+class ParentStyle(BaseStyle):
+    """
+    A class for styling all child elements of an iterable object. 
+
+    Requires that parent_feature must be interable.
+    """
+    def __init__(self, parent_feature):
+        BaseStyle.__init__(self, parent_feature)
+
+    def create_domain_mode_etters(self, domain_name):
+        """
+        """
+
+        ## Create a local copy of self.feature to avoid 'self' collisions in 
+        # bound inner functions 
+        parent_feature = self.feature
+
+        """
+        <INNER FUNCTIONS>
+        """
+        
+        def parent_set_display_template(self, new_value):
+            self.style.set_mode(new_value, domain_name)
+            self.style.clear_cache()
+            
+            for f in parent_feature:
+                f.style.set_mode(new_value, domain_name)
+                f.style.clear_cache()
+    
+        def parent_get_display_template(self):
+            return self.style.current_modes[domain_name]
+        
+        def child_get_display_template(self):
+            return self.current_modes[domain_name]
+
+        """
+        </INNER FUNCTIONS>
+        """
+
+        if domain_name:
+            setter_name = 'set_' + domain_name + '_display'
+            getter_name = 'get_' + domain_name + '_display'
+        else:
+            setter_name = 'set_display' 
+            getter_name = 'get_display'
+        
+
+        ## Bind etters to parent
+        bound_setter = parent_set_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__[setter_name] = bound_setter
+
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = parent_get_display_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__[getter_name] = bound_getter
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = child_get_display_template.__get__(self, type(self))
+        self.__dict__[getter_name] = bound_getter
+
+    def create_property_etters(self, property_name):
+
+        ## Create a local copy of self.feature to avoid 'self' collisions in 
+        # bound inner functions 
+        parent_feature = self.feature
+
+        ## Define [g][s]et_display templates
+        def set_property_template(self, new_value):
+            for f in parent_feature:
+                if property_name in f.style.managed_properties:
+                    f.style.managed_properties[property_name] = new_value
+                f.style.clear_cache()
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['set_'+property_name] = bound_setter
+
+        def get_property_template(self):
+            return self.style.managed_properties[property_name]
+
+        ## Link, and bind set_display as a named method of the parent feature
+        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
+        self.feature.__dict__['get_'+property_name] = bound_getter
+
+    def clear_cache(self):
+        for f in self.feature:
+            f.style.cached_renderer_fn = None
