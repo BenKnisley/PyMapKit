@@ -3,7 +3,19 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 2 September, 2021
 """
 from .base_layer import BaseLayer
-from .base_style import BaseStyle
+from .base_style import BaseStyle, ParentStyle
+
+
+
+def build_textline_style(style):
+    """
+    """
+    style.add_property('font_size', 12)
+    style.add_property('typeface', None)
+    style.add_property('color', 'black')
+    style.add_property('bold', False)
+    style.add_property('italic', False)
+
 
 
 class TextLine:
@@ -16,8 +28,9 @@ class TextLine:
         ## Setup variable to hold the text value
         self.text = text
 
-        ## Setup style object
-        self.style = TextLineStyle(self)
+        ## Setup style
+        self.style = BaseStyle(self)
+        build_textline_style(self.style)
 
     def __repr__(self):
         """ Returns self.text as objects' string representation """
@@ -30,18 +43,6 @@ class TextLine:
     def get_width(self):
         """ Returns the width of the text line in pixels. """
         return (self.style['font_size'] * 0.5) * len(self.text)
-
-class TextLineStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-
-        ## Setup style
-        self.add_property('font_size', 12)
-        self.add_property('typeface', None)
-        self.add_property('color', 'black')
-        self.add_property('bold', False)
-        self.add_property('italic', False)
-        
 
 class TextBlock:
     def __init__(self, parent, init_string, x_place, y_place):
@@ -60,13 +61,9 @@ class TextBlock:
         text_lines = [TextLine(w.strip()) for w in init_string.split('\n')]
         self.text_lines = text_lines if text_lines else []
 
-
-        self.style = TextBlockStyle(self)
-        self.style.add_property('font_size', 12)
-        self.style.add_property('typeface', None)
-        self.style.add_property('color', 'black')
-        self.style.add_property('bold', False)
-        self.style.add_property('italic', False)
+        ## Setup style
+        self.style = ParentStyle(self)
+        build_textline_style(self.style)
 
         ## Placement vars
         self.x = x_place
@@ -134,9 +131,6 @@ class TextBlock:
             self.text_lines.insert(position, new_text_line)
         return new_text_line
 
-
-        
-
     def render(self, renderer, canvas):
         """
         """
@@ -149,72 +143,6 @@ class TextBlock:
             y_index += text_line.get_height()
             renderer.draw_text(canvas, text_line.text, x + line_x_off, y_index, text_line.style)
 
-class TextBlockStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-        self.layer = parent_feature
-
-    def create_domain_mode_etters(self, domain_name):
-
-        ## Add domain setter to feature
-        def set_display_template(self, new_value):
-            self.style.set_mode(new_value, domain_name)
-            self.style.clear_cache()
-            
-            for f in self:
-                f.style.set_mode(new_value, domain_name)
-                f.style.clear_cache()
-        
-        if domain_name:
-            setter_name = 'set_' + domain_name + '_display'
-            getter_name = 'get_' + domain_name + '_display'
-        else:
-            setter_name = 'set_display'
-            getter_name = 'get_display'
-        
-        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[setter_name] = bound_setter
-
-        ## Add domain getter to feature
-        def get_display_template(self):
-            return self.style.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[getter_name] = bound_getter
-
-        ## Bind a getter to self too
-        def get_display_template(self):
-            return self.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self, type(self))
-        self.__dict__[getter_name] = bound_getter
-
-    def create_property_etters(self, property_name):
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            for f in self:
-                if property_name in f.style.managed_properties:
-                    f.style.managed_properties[property_name] = new_value
-                f.style.clear_cache()
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-    def clear_cache(self):
-        for f in self.layer:
-            f.style.cached_renderer_fn = None
-
 
 class StaticTextLayer(BaseLayer):
     """
@@ -226,6 +154,10 @@ class StaticTextLayer(BaseLayer):
 
         ## Setup layer name
         self.name = "Static Text Layer"
+
+        ## Setup style
+        self.style = ParentStyle(self)
+        build_textline_style(self.style)
 
         ## Create a list to hold text elements
         self.text_elements = []
@@ -288,6 +220,7 @@ class StaticTextLayer(BaseLayer):
             max_x (float): The maximum x projection coordinate of the data.
             max_y (float): The maximum y projection coordinate of the data.
         '''
+        return None
 
     def add_text_block(self, input_text, x_place, y_place):
         """
