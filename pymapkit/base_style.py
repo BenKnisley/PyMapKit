@@ -103,6 +103,9 @@ class StyleDomain:
             domain_mode_property_name = self.name + '_mode'
             self.style.managed_properties[domain_mode_property_name].value = mode_name
 
+        ## Clear rendering function cache
+        self.style.cached_renderer_fn = None
+
         for child_style in self.style.children_styles:
             child_style.domains[self.name].set_mode(mode_name)
 
@@ -119,11 +122,10 @@ class StyleDomain:
         def set_mode_template(self, new_mode_name):
             ## Set mode for features' style
             style_self.domains[domain_name].set_mode(new_mode_name)
-            style_self.cached_renderer_fn = None
-
+            
             ## Set mode for all children styles as well
-            #for child_style in style_self.children_styles:
-            #    child_style.domains[domain_name].set_mode(new_mode_name)
+            for child_style in style_self.children_styles:
+                child_style.domains[domain_name].set_mode(new_mode_name)
 
         ### <END INNER FUNCTION LOGIC>
         
@@ -187,6 +189,7 @@ class StyleProperty:
         """ """
         ## Change to new value
         self.value = new_value
+        self.style.cached_renderer_fn = None
 
         ## Call set_value on all children_styles
         for child_style in self.style.children_styles:
@@ -202,7 +205,6 @@ class StyleProperty:
 
         def set_prop_template(self, new_value):
             prop.set_value(new_value)
-            prop.style.cached_renderer_fn = None
         
         def get_prop_template(self):
             return prop.get_value()

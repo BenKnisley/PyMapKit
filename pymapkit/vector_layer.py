@@ -238,6 +238,100 @@ def build_style(style, geo_type):
         pass
 
 
+def get_style_object(feature, geo_type, parent_style=None):
+    """
+    """
+    style = Style(feature)
+
+    if geo_type == 'point':
+
+        #point_domain = style.add_domain('display')
+        
+        ## Create modes for fill
+        point_domain.add_mode('none')
+        circle_mode = style.add_mode('circle')
+        square_mode = style.add_mode('square')
+        triangle_mode = style.add_mode('triangle')
+        icon_mode = style.add_mode('icon')
+
+
+        ## Add properties to circle display mode
+        circle_mode.add_property('color', 'red')
+        circle_mode.add_property('weight', 3)
+        circle_mode.add_property('opacity', 1)
+
+        ## Add properties to square display mode
+        square_mode.add_property('color', 'red')
+        square_mode.add_property('weight', 3)
+        square_mode.add_property('opacity', 1)
+        
+        ## Add properties to circle display mode
+        triangle_mode.add_property('color', 'red')
+        triangle_mode.add_property('weight', 3)
+        triangle_mode.add_property('opacity', 1)
+
+        ## Add properties to circle display mode
+        icon_mode.add_property('path', 'red')
+        icon_mode.add_property('weight', 3)
+        icon_mode.add_property('opacity', 1)
+        
+        ## Set default mode
+        point_domain.set_mode('circle')
+
+    elif geo_type == 'line':
+        pass
+    elif geo_type == 'polygon':
+        ## Add properties for whole feature
+        style.add_property('display', True)
+        style.add_property('opacity', 1)
+
+        ## Create fill domain for polygon styles
+        fill_domain = style.add_domain('fill')
+
+        ## Create modes for fill domain
+        _ = fill_domain.add_mode('none')
+        fill_solid_mode = fill_domain.add_mode('basic')
+        fill_line_mode = fill_domain.add_mode('line')
+        fill_image_mode = fill_domain.add_mode('image')
+
+        ## Add Properties for basic fill mode
+        fill_solid_mode.add_property('color', 'green')
+        fill_solid_mode.add_property('opacity', 1)
+
+        ## Add properties for line fill mode
+        fill_line_mode.add_property('line_color', 'black')
+        fill_line_mode.add_property('line_opacity', 1)
+
+        ## Add properties for image fill mode
+        fill_image_mode.add_property('image_path', 'None')
+        fill_image_mode.add_property('opacity', 1)
+
+        ## Set default fill mode
+        fill_domain.set_mode('basic')
+
+
+        ## Create an outline domain
+        outline_domain = style.add_domain('outline')
+
+        ## Add modes for outline domain
+        _ = outline_domain.add_mode('none')
+        outline_solid_mode = outline_domain.add_mode('solid')
+
+        ## Add properties for solid outline mode 
+        outline_solid_mode.add_property('color', 'black')
+        outline_solid_mode.add_property('weight', 1)
+        outline_solid_mode.add_property('opacity', 1)
+        
+        ## Set default outline mode
+        outline_domain.set_mode('solid')
+
+    else:
+        pass
+    
+    if parent_style:
+        parent_style.add_child_style(style)
+    
+    return style
 """
 <End Refactor>
 """
@@ -373,13 +467,8 @@ class Feature:
         self.parent = parent
         self.geometry = geometry
 
-
-        #style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
-        #self.style = style_class[geometry.geometry_type](self)
-        self.style = FeatureStyle(self)
-        build_style(self.style, self.parent.geometry_type)
-
-        #self.style.set_defaults(parent.geometry_type)
+        ## Set up style
+        self.style = get_style_object(self, self.parent.geometry_type, self.parent.style)
 
         self.attributes = {}
         for field in parent.field_names:
@@ -429,8 +518,13 @@ class FeatureList:
     def __init__(self, parent, features):
         self.parent = parent
         self.features = features
-        self.style = LayerStyle(self)
-        build_style(self.style, self.parent.geometry_type)
+
+        ## Set up Style
+        self.style = get_style_object(self, self.parent.geometry_type)
+
+        ## Set up children styles
+        for feature in features:
+            self.style.add_child_style(feature.style)
     
     def __len__(self):
         return len(self.features)
@@ -605,8 +699,9 @@ class VectorLayer(BaseLayer):
         self.miny = []
 
         ## Style
-        self.style = LayerStyle(self)
-        build_style(self.style, self.geometry_type)
+        #self.style = LayerStyle(self)
+        #build_style(self.style, self.geometry_type)
+        self.style = get_style_object(self, self.geometry_type)
 
         ## Update status
         self.status = 'initialized'
