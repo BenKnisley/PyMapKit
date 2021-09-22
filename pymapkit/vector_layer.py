@@ -12,11 +12,17 @@ from operator import methodcaller
 import pyproj
 import ogr
 from .base_layer import BaseLayer
-from .base_style import BaseStyle
+from .base_style import Style
 
-class LayerStyle(BaseStyle):
+
+
+"""
+<Start Refactor>
+"""
+
+class LayerStyle(Style):
     def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
+        Style.__init__(self, parent_feature)
         self.layer = parent_feature
 
     def create_domain_mode_etters(self, domain_name):
@@ -80,9 +86,9 @@ class LayerStyle(BaseStyle):
         for f in self.layer:
             f.style.cached_renderer_fn = None
 
-class FeatureStyle(BaseStyle):
+class FeatureStyle(Style):
     def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
+        Style.__init__(self, parent_feature)
 
     def create_property_etters(self, property_name):
 
@@ -113,7 +119,6 @@ class FeatureStyle(BaseStyle):
         ## Link, and bind set_display as a named method of the parent feature
         bound_getter = get_property_template.__get__(self, type(self))
         self.__dict__['get_'+property_name] = bound_getter
-
 
 def build_style(style, geo_type):
     """
@@ -231,6 +236,11 @@ def build_style(style, geo_type):
 
     else:
         pass
+
+
+"""
+<End Refactor>
+"""
 
 class Geometry:
     """

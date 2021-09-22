@@ -8,7 +8,7 @@ Created: 5 January, 2021
 """
 import pyproj
 import numpy as np
-from .base_style import BaseStyle
+from .base_style import Style
 
 
 def get_renderer(renderer_name):
@@ -27,16 +27,23 @@ def get_renderer(renderer_name):
         renderer = SkiaRenderer()
     return renderer
 
-class BackgroundStyle(BaseStyle):
+class BackgroundStyle(Style):
     def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
+        Style.__init__(self, parent_feature)
 
-        self.add_domain('background')
-        self.add_mode('none', 'background')
-        self.add_mode('color', 'background')
-        self.add_property('color', 'white', 'color', 'background')
-        self.add_property('opacity', 1, 'color', 'background')
-        self.set_mode('color', 'background')
+        ## For map object, create a background domain
+        background_domain = self.add_domain('background')
+
+        ## Create a background none mode
+        none_mode = background_domain.add_mode('none')
+
+        ## Create a background color fill mode 
+        color_mode = background_domain.add_mode('color')
+        color_mode.add_property('color', 'white')
+        color_mode.add_property('opacity', 1)
+
+        ## Activate color fill mode
+        background_domain.set_mode('color')
 
 class Map:
     """

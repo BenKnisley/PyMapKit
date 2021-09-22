@@ -1,395 +1,233 @@
 """
 Project: PyMapKit
-Title: BaseStyle
-Function: Holds BaseStyle Class
+Title: Dynamic Feature Styler
+Function: Separates ...
 Author: Ben Knisley [benknisley@gmail.com]
-Date: 8, June 2021
+Date: 8 September, 2021
 """
 
-class BaseStyle:
+
+class Style:
     """
-    The BaseStyle class holds properties and adds methods to a parent (a styled)
-    object. It lets a user build a style profile using: add_domain, add_mode, 
-    and add_property methods. A domain is set of modes and properties that are 
-    independent of each other, like outline and fill. A mode is a way to render
-    a domain and a set of properties that goes with that. For example: in the 
-    fill domain of a polygon, you could have several modes: like solid color 
-    fill or image fill. Both of these are separate modes with different 
-    properties. A property is a named value, e.g. fill_color = 'red'
+    This class stores style properties and manages getter and setter methods for
+    a given "Styled Feature". It allows for a user to build a style profile, and
+    it will automatically manages properties and bind getter and setter methods 
+    to the companion styled object. 
     """
-
-    def __init__(self, feature):
-        """
-        Initializes a BaseStyle instance.
-        Setup instance variables: feature, domains, current_modes and 
-        managed_properties.
-        
-        Args:
-            feature (object): The object to style.
-    
-        Returns:
-            None
-        """
-        ## Store ref to styled feature
-        self.feature = feature
-
-        ## Whatever the user names style. feature.style has to be style
-        self.feature.style = self
-
-        ## Create Dict to hold domain mode properties
-        self.domains = {}
-
-        ## Create dict to hold current display modes
-        self.current_modes = {}
-
-        ## Create dict to hold property values
+    def __init__(self, styled_feature) -> None:
+        """ Inits a new style object """
+        self.feature = styled_feature
+        self.my_properties = []
         self.managed_properties = {}
-
+        self.domains = {}
+        self.children_styles = []
         self.cached_renderer_fn = None
 
-    def __getitem__(self, key):
-        """
-        Returns the value of a property
+    def __getitem__(self, prop_name) -> object:
+        """ Returns the value of a property anywhere in the style tree """
+        return self.managed_properties[prop_name].value
+
+    def add_property(self, prop_name, prop_value):
+        """ Adds a top-level property to the style. """
+        new_prop = StyleProperty(self, prop_name, prop_value)
+        self.managed_properties[prop_name] = new_prop
+        self.my_properties.append(new_prop)
+        new_prop.bind_etters()
+
+    def add_domain(self, domain_name):
+        """ Adds a domain to the style """
+        new_domain = StyleDomain(self, domain_name)
+        self.domains[domain_name] = new_domain
+        new_domain.bind_mode_setter()
+        return new_domain
+
+    def add_child_style(self, child_style):
+        self.children_styles.append(child_style)
+
+
+
+
+class StyleDomain:
+    def __init__(self, parent_style, domain_name) -> None:
+        ## Store domain name & references to parent style, and styled feature
+        self.name = domain_name
+        self.style = parent_style
+        self.feature = parent_style.feature
         
-        Args:
-            key (string): The name of the property.
-    
-        Returns:
-            value (*): The value of the property.
+        ## Store a list of properties managed by self domain
+        self.my_properties = []
+
+        ## Store a dict of avabile modes, and the current active mode
+        self.my_modes = {}
+        self.active_mode = None
         
-        Requires:
-            The key must be a key in the managed_properties dict.
+        ## Add a property in the parent style for the current active mode
+        domain_mode_property_name = self.name + '_mode'
+        new_prop = StyleProperty(parent_style, domain_mode_property_name, None)
+        self.style.managed_properties[domain_mode_property_name] = new_prop
 
-        Result:
-            None
-        """
-        return self.managed_properties[key]
-
-    def add_domain(self, new_domain_name):
-        """
-        Adds a new domain to the style profile.
-
-        Args:
-            new_domain_name (string): The name for the new domain.
-    
-        Returns:
-            None
-        """
-        self.domains[new_domain_name] = {}
-        self.current_modes[new_domain_name] = None
+    def add_property(self, prop_name, prop_value):
+        ''' Adds a property to the domain '''
+        ## Prepend domain name to property name, & generate a property instance
+        updated_prop_name = self.name + '_' + prop_name
+        new_prop = StyleProperty(self.style, updated_prop_name, prop_value)
         
-        if new_domain_name != None: 
-            self.managed_properties[new_domain_name + '_mode'] = None
+        ## Add new property instance to selfs & parent styles' property lists
+        self.style.managed_properties[updated_prop_name] = new_prop
+        self.my_properties.append(new_prop)
         
-        self.create_domain_mode_etters(new_domain_name)
+        ## Bind property getter and setter to styled feature
+        new_prop.bind_etters()
 
-    def add_mode(self, new_mode_name, domain=None):
+    def add_mode(self, mode_name):
         """
-        Adds a new mode to the style profile.
+        """
+        new_mode = StyleMode(self, mode_name)
+        self.my_modes[mode_name] = new_mode
+        return new_mode
 
-        Args:
-            new_mode_name (string): The name for the new mode.
+    def set_mode(self, mode_name):
+        """ ... """
+        ## Deactivate old mode
+        if self.active_mode:
+            self.active_mode.deactivate()
         
-        Optional Args:
-            domain (string): The name of the domain to add the mode to. Default
-            is None, which adds the mode to the entire style.
-
-        Returns:
-            None
-        """
-        if domain == None:
-            if None not in self.domains:
-                self.add_domain(None)
-
-        self.domains[domain][new_mode_name] = {}
-
-    def add_property(self, new_prop_name, default_value, mode=None, domain=None):
-        """
-        Adds a managed property to the style profile.
-        
-        Args:
-            new_prop_name (string): The name for the new property.
-
-            default_value (*): The value to give the property when it is first 
-            created.
-        
-        Optional Args:
-            mode (string): The name of the mode to add the property to. 
-            Default is None, which adds the property to the entire style.
-
-            domain (string): The name of the domain to add the property to. 
-            Default is None, which adds the property to the entire style.
-
-        Returns:
-            None
-        """
-        if domain:
-            self.domains[domain][mode][domain + '_' + new_prop_name] = default_value
+        if mode_name == None:
+            self.active_mode = None
         else:
-            if mode:
-                self.domains[domain][mode][new_prop_name] = default_value
-            else:
-                ## Add top level property
-                self.managed_properties[new_prop_name] = default_value
-                self.create_property_etters(new_prop_name)
+            ## Activate new mode
+            new_mode = self.my_modes[mode_name]
+            new_mode.activate()
 
-    def set_mode(self, mode_name, domain=None):
+            ##
+            domain_mode_property_name = self.name + '_mode'
+            self.style.managed_properties[domain_mode_property_name].value = mode_name
+
+        for child_style in self.style.children_styles:
+            child_style.domains[self.name].set_mode(mode_name)
+
+    def bind_mode_setter(self):
         """
-        Sets which mode is active for a domain.
-
-        Args:
-            mode_name (string): The name for the mode to activate.
-        
-        Optional Args:
-            domain (string): The name of the domain to the mode belongs to.
-            Default is None, which is for modes with no domain.
-
-        Returns:
-            None
+        ...
         """
-        ## Get list of current properties
-        current_mode = self.current_modes[domain]
-        if current_mode:
-            current_properties = list(self.domains[domain][current_mode].keys())
-        else:
-            current_properties = []
 
-        ## Get list properties needed for new_mode
-        incoming_properties = list(self.domains[domain][mode_name].keys())
+        ### <START INNER FUNCTION LOGIC>
+        ## ...
+        domain_name = self.name
+        style_self = self.style
 
-        ## new_properties
-        new_properties = [p for p in incoming_properties if p not in current_properties]
-        old_properties = [p for p in current_properties if p not in incoming_properties]
+        def set_mode_template(self, new_mode_name):
+            ## Set mode for features' style
+            style_self.domains[domain_name].set_mode(new_mode_name)
+            style_self.cached_renderer_fn = None
 
-        ## Remove old properties etters and from self.properties dict
-        for prop in old_properties:
-            self.remove_property_etters(prop)
-            del self.managed_properties[prop]
+            ## Set mode for all children styles as well
+            #for child_style in style_self.children_styles:
+            #    child_style.domains[domain_name].set_mode(new_mode_name)
 
-        ## Create new property and its etters
-        for prop in new_properties:
-            self.managed_properties[prop] = self.domains[domain][mode_name][prop]
-            self.create_property_etters(prop)
+        ### <END INNER FUNCTION LOGIC>
         
-        self.current_modes[domain] = mode_name
+        ## Setup a doc string for the method
+        set_mode_template.__doc__ = f"Sets ...///... {self.name}"
+
+        ## Create a name for the setter method
+        setter_name = 'set_' + self.name + '_mode'
         
-        if domain:
-            mode_prop_name = domain + '_mode'
-        else:
-            mode_prop_name = 'display_mode'
-
-        self.managed_properties[mode_prop_name] = mode_name
-
-    def create_domain_mode_etters(self, domain_name=None):
-        """
-        Creates mode setting methods for a domain and attaches them to the 
-        styled object.
-
-        Args:
-            None
-        
-        Optional Args:
-            domain_name (string): The name of the domain to create a getter and
-            setter for. The default is None, which creates a domainless getter 
-            and setter.
-
-        Returns:
-            None
-        """
-        
-        ## Add domain setter to feature
-        def set_display_template(self, new_value):
-            self.style.set_mode(new_value, domain_name)
-            self.style.clear_cache()
-        
-        if domain_name:
-            setter_name = 'set_' + domain_name + '_display'
-            getter_name = 'get_' + domain_name + '_display'
-        else:
-            setter_name = 'set_display'
-            getter_name = 'get_display'
-
-        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[setter_name] = bound_setter
-
-        ## Add domain getter to feature
-        def feature_get_display_template(self):
-            return self.style.current_modes[domain_name]
-
         ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = feature_get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[getter_name] = bound_getter
+        bound_setter = set_mode_template.__get__(self.feature, type(self.feature))
 
-        ## Bind a getter to self too
-        def style_get_display_template(self):
-            return self.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = style_get_display_template.__get__(self, type(self))
-        self.__dict__[getter_name] = bound_getter
-
-    def create_property_etters(self, property_name):
-        """
-        Creates property getter and setter methods for a property and attaches 
-        them to the styled object.
-
-        Args:
-            property_name (string): The name of the property to create a getter
-            and setter for.
-
-        Returns:
-            None
-        """
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            self.style.managed_properties[property_name] = new_value
-            self.style.clear_cache()
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-
-        def get_property_template(self):
-            return self.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self, type(self))
-        self.__dict__['get_'+property_name] = bound_getter
-
-    def remove_property_etters(self, property_name):
-        """
-        Detaches property getter and setter methods from the styled object.
-
-        Args:
-            property_name (string): The name of the property to remove the 
-            getter and setter of.
-
-        Returns:
-            None
-        """
-        del self.feature.__dict__['get_' + property_name]
-        del self.feature.__dict__['set_' + property_name]
-
-    def clear_cache(self):
-        """
-        Clears the cached renderer function
-
-        Args:
-            None
-        
-        Returns:
-            None
-        """
-        self.cached_renderer_fn = None
-
-
-class ParentStyle(BaseStyle):
-    """
-    A class for styling all child elements of an iterable object. 
-
-    Requires that parent_feature must be interable.
-    """
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-
-    def create_domain_mode_etters(self, domain_name):
-        """
-        """
-
-        ## Create a local copy of self.feature to avoid 'self' collisions in 
-        # bound inner functions 
-        parent_feature = self.feature
-
-        """
-        <INNER FUNCTIONS>
-        """
-        
-        def parent_set_display_template(self, new_value):
-            self.style.set_mode(new_value, domain_name)
-            self.style.clear_cache()
-            
-            for f in parent_feature:
-                f.style.set_mode(new_value, domain_name)
-                f.style.clear_cache()
-
-                if isinstance(f.style, ParentStyle):
-                    for sub_f in f:
-                        print(sub_f)
-                
-    
-        def parent_get_display_template(self):
-            return self.style.current_modes[domain_name]
-        
-        def child_get_display_template(self):
-            return self.current_modes[domain_name]
-
-        """
-        </INNER FUNCTIONS>
-        """
-
-        if domain_name:
-            setter_name = 'set_' + domain_name + '_display'
-            getter_name = 'get_' + domain_name + '_display'
-        else:
-            setter_name = 'set_display' 
-            getter_name = 'get_display'
-        
-
-        ## Bind etters to parent
-        bound_setter = parent_set_display_template.__get__(self.feature, type(self.feature))
+        ## Add inner function as an entry in feature.__dict__
         self.feature.__dict__[setter_name] = bound_setter
 
 
+class StyleMode:
+    def __init__(self, parent_domain, mode_name) -> None:
+        self.domain = parent_domain
+        self.style = self.domain.style
+        self.feature = self.domain.feature
+
+        ## Store modes name
+        self.name = mode_name
+
+        self.my_properties = [] ## Switch to dict
+    
+    def add_property(self, prop_name, prop_value):
+        updated_prop_name = self.domain.name + '_' + prop_name
+        new_prop = StyleProperty(self.style, updated_prop_name, prop_value)
+        self.my_properties.append(new_prop)
+    
+    def activate(self):
+        for prop in self.my_properties:
+            self.style.managed_properties[prop.name] = prop
+            prop.bind_etters()
+
+    def deactivate(self):
+        """ """
+        for prop in self.my_properties:
+            del self.style.managed_properties[prop.name]
+            prop.unbind_etters()
+
+
+class StyleProperty:
+    def __init__(self, parent_style, name, init_value) -> None:
+        """ """
+        ## Store the name and value of the property
+        self.name = name
+        self.value = init_value
+
+        ## Store a reference to the parent style object and the parent feature
+        self.style = parent_style
+        self.feature = parent_style.feature
+    
+    def get_value(self):
+        """ """
+        return self.value
+    
+    def set_value(self, new_value):
+        """ """
+        ## Change to new value
+        self.value = new_value
+
+        ## Call set_value on all children_styles
+        for child_style in self.style.children_styles:
+            child_style.managed_properties[self.name].set_value(new_value)
+
+    def bind_etters(self):
+        """ """
+
+        ### <START INNER FUNCTION LOGIC>
+        
+        prop = self ## Rereference self as prop, because self will be different 
+        # in bound methods
+
+        def set_prop_template(self, new_value):
+            prop.set_value(new_value)
+            prop.style.cached_renderer_fn = None
+        
+        def get_prop_template(self):
+            return prop.get_value()
+
+        ### <END INNER FUNCTION LOGIC> """
+        
+        ## Setup a doc string for the method
+        set_prop_template.__doc__ = f"Sets {self.name}"
+        get_prop_template.__doc__ = f"Gets {self.name}"
+
+        ## Create names for getter and setter methods
+        setter_name = 'set_' + self.name
+        getter_name = 'get_' + self.name
+        
         ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = parent_get_display_template.__get__(self.feature, type(self.feature))
+        bound_setter = set_prop_template.__get__(self.feature, type(self.feature))
+        bound_getter = get_prop_template.__get__(self.feature, type(self.feature))
+
+        ## Add inner function as an entry in feature.__dict__
+        self.feature.__dict__[setter_name] = bound_setter
         self.feature.__dict__[getter_name] = bound_getter
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = child_get_display_template.__get__(self, type(self))
-        self.__dict__[getter_name] = bound_getter
-
-    def create_property_etters(self, property_name):
-
-        ## Create a local copy of self.feature to avoid 'self' collisions in 
-        # bound inner functions 
-        parent_feature = self.feature
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            """
-            """
-            for f in parent_feature:
-                if property_name in f.style.managed_properties:
-                    f.style.managed_properties[property_name] = new_value
-                f.style.clear_cache()
-
-                if isinstance(f.style, ParentStyle):
-                    for sub_f in f:
-                        if property_name in f.style.managed_properties:
-                            sub_f.style.managed_properties[property_name] = new_value
-                            sub_f.__dict__['set_' + property_name](new_value)
-                        sub_f.style.clear_cache()
-
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-    def clear_cache(self):
-        for f in self.feature:
-            f.style.cached_renderer_fn = None
+    
+    def unbind_etters(self):
+        """ """
+        setter_name = 'set_' + self.name
+        getter_name = 'get_' + self.name
+        del self.feature.__dict__[setter_name]
+        del self.feature.__dict__[getter_name]
