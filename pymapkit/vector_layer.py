@@ -245,14 +245,14 @@ def get_style_object(feature, geo_type, parent_style=None):
 
     if geo_type == 'point':
 
-        #point_domain = style.add_domain('display')
+        point_domain = style.add_domain('')
         
         ## Create modes for fill
-        point_domain.add_mode('none')
-        circle_mode = style.add_mode('circle')
-        square_mode = style.add_mode('square')
-        triangle_mode = style.add_mode('triangle')
-        icon_mode = style.add_mode('icon')
+        point_domain.add_mode('')
+        circle_mode = point_domain.add_mode('circle')
+        square_mode = point_domain.add_mode('square')
+        triangle_mode = point_domain.add_mode('triangle')
+        icon_mode = point_domain.add_mode('icon')
 
 
         ## Add properties to circle display mode
@@ -277,9 +277,28 @@ def get_style_object(feature, geo_type, parent_style=None):
         
         ## Set default mode
         point_domain.set_mode('circle')
-
     elif geo_type == 'line':
-        pass
+        ## Create modes for fill
+
+        line_domain = style.add_domain('')
+
+        _ = line_domain.add_mode('none')
+        solid_mode = line_domain.add_mode('solid')
+        dash_mode = line_domain.add_mode('dashed')
+
+        ## Add properties to solid display mode
+        solid_mode.add_property('color', 'blue')
+        solid_mode.add_property('weight', 1)
+        solid_mode.add_property('opacity', 1)
+        
+        ## Add properties to dashed display mode
+        dash_mode.add_property('color', 'blue')
+        dash_mode.add_property('weight', 1)
+        dash_mode.add_property('opacity', 1)
+        
+        ## Set default mode
+        line_domain.set_mode('solid')
+
     elif geo_type == 'polygon':
         ## Add properties for whole feature
         style.add_property('display', True)

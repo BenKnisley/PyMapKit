@@ -202,11 +202,11 @@ class SkiaRenderer(BaseRenderer):
 
         
         ## Fill
-        if  style['display_mode'] == 'none':
+        if  style['mode'] == 'none':
             ## Cache em
             fill_cached_renderer_fn = empty_fn()
 
-        elif style['display_mode'] == 'circle':
+        elif style['mode'] == 'circle':
             ## Pull relevant data from style
             color = self.cache_color(style['color'], style['opacity'])
             weight = style['weight'] / 2
@@ -216,7 +216,7 @@ class SkiaRenderer(BaseRenderer):
             style.cached_renderer_fn = cache_fn(draw_point_circle, color=color, weight=weight)
         
         else:
-            print(f'''"{style['display_mode']}" display mode not yet supported by this renderer''')
+            print(f'''"{style['mode']}" display mode not yet supported by this renderer''')
 
     def draw_line(self, canvas, structure, x_values, y_values, style):
         """
@@ -254,17 +254,17 @@ class SkiaRenderer(BaseRenderer):
             return
 
                 ## Fill
-        if  style['display_mode'] == 'none':
+        if  style['mode'] == 'none':
             style.cached_renderer_fn = empty_fn()
 
-        elif style['display_mode'] == 'solid':
+        elif style['mode'] == 'solid':
             color = self.cache_color(style['color'], style['opacity'])
             weight = style['weight'] / 2
 
             draw_line_solid(canvas, path, color, weight)
             style.cached_renderer_fn = cache_fn(draw_line_solid, color=color, weight=weight)
 
-        elif style['display_mode'] == 'dashed':
+        elif style['mode'] == 'dashed':
             color = self.cache_color(style['color'], style['opacity'])
             weight = style['weight'] / 2
 

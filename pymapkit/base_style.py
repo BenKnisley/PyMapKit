@@ -44,9 +44,6 @@ class Style:
     def add_child_style(self, child_style):
         self.children_styles.append(child_style)
 
-
-
-
 class StyleDomain:
     def __init__(self, parent_style, domain_name) -> None:
         ## Store domain name & references to parent style, and styled feature
@@ -62,7 +59,11 @@ class StyleDomain:
         self.active_mode = None
         
         ## Add a property in the parent style for the current active mode
-        domain_mode_property_name = self.name + '_mode'
+        if self.name:
+            domain_mode_property_name = self.name + '_mode'
+        else: 
+            domain_mode_property_name = 'mode'
+
         new_prop = StyleProperty(parent_style, domain_mode_property_name, None)
         self.style.managed_properties[domain_mode_property_name] = new_prop
 
@@ -100,7 +101,10 @@ class StyleDomain:
             new_mode.activate()
 
             ##
-            domain_mode_property_name = self.name + '_mode'
+            if self.name:
+                domain_mode_property_name = self.name + '_mode'
+            else: 
+                domain_mode_property_name = 'mode'
             self.style.managed_properties[domain_mode_property_name].value = mode_name
 
         ## Clear rendering function cache
@@ -133,7 +137,11 @@ class StyleDomain:
         set_mode_template.__doc__ = f"Sets ...///... {self.name}"
 
         ## Create a name for the setter method
-        setter_name = 'set_' + self.name + '_mode'
+
+        if self.name:
+            setter_name = 'set_' + self.name + '_mode'
+        else:
+            setter_name = 'set_mode'
         
         ## Link, and bind set_display as a named method of the parent feature
         bound_setter = set_mode_template.__get__(self.feature, type(self.feature))
@@ -153,8 +161,15 @@ class StyleMode:
 
         self.my_properties = [] ## Switch to dict
     
+    def get_prop_prefix(self):
+        if self.domain.name:
+            prefix = self.domain.name + '_'
+        else:
+            prefix = ''
+        return prefix
+    
     def add_property(self, prop_name, prop_value):
-        updated_prop_name = self.domain.name + '_' + prop_name
+        updated_prop_name = self.get_prop_prefix() + prop_name
         new_prop = StyleProperty(self.style, updated_prop_name, prop_value)
         self.my_properties.append(new_prop)
     
