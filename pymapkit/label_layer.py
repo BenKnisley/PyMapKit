@@ -3,34 +3,43 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 2 September, 2021
 """
 from .base_layer import BaseLayer
-from .base_style import BaseStyle, ParentStyle
+from .base_style import Style
 
 
 
-def build_textline_style(style):
+def build_textline_style(feature, parent_style=None):
     """
+    Returns a configured Style Object for the given geometry type. If a parent 
+    style object is given it makes the new style a child style.
     """
+    style = Style(feature)
+
+    style.add_property('color', 'black')
     style.add_property('font_size', 12)
     style.add_property('typeface', None)
-    style.add_property('color', 'black')
     style.add_property('bold', False)
     style.add_property('italic', False)
 
-
+    if parent_style:
+        parent_style.add_child_style(style)
+    
+    return style
 
 class TextLine:
     """
     Class to hold info about a line of text.
     """
-    def __init__(self, text):
+    def __init__(self, parent, text):
         """
         """
+
+        self.parent = parent
+
         ## Setup variable to hold the text value
         self.text = text
 
         ## Setup style
-        self.style = BaseStyle(self)
-        build_textline_style(self.style)
+        self.style = build_textline_style(self, self.parent.style)
 
     def __repr__(self):
         """ Returns self.text as objects' string representation """
@@ -52,18 +61,17 @@ class TextBlock:
         ## Save reference to parent TextLayer
         self.layer = parent
 
+        ## Setup style
+        self.style = build_textline_style(self, self.layer.style)
+
         ## Set text align
         self.align = 'left'
         self.padding = 10 ## Px
 
         ## Create a TextLine instance for each line
         init_string = init_string.replace('\\', '\n')
-        text_lines = [TextLine(w.strip()) for w in init_string.split('\n')]
+        text_lines = [TextLine(self, w.strip()) for w in init_string.split('\n')]
         self.text_lines = text_lines if text_lines else []
-
-        ## Setup style
-        self.style = ParentStyle(self)
-        build_textline_style(self.style)
 
         ## Placement vars
         self.x = x_place
@@ -124,7 +132,7 @@ class TextBlock:
             return input
 
     def add_line(self, text, position=-1):
-        new_text_line = TextLine(text)
+        new_text_line = TextLine(self, text)
         if position == -1:
             self.text_lines.append(new_text_line)
         else:
@@ -156,8 +164,7 @@ class StaticTextLayer(BaseLayer):
         self.name = "Static Text Layer"
 
         ## Setup style
-        self.style = ParentStyle(self)
-        build_textline_style(self.style)
+        self.style = build_textline_style(self)
 
         ## Create a list to hold text elements
         self.text_elements = []

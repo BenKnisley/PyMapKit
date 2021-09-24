@@ -412,14 +412,18 @@ class SkiaRenderer(BaseRenderer):
         canvas.drawImageRect(image_cache, rect, paint)
 
     def draw_text(self, canvas, text, x, y, style):
-
+        """
+        """
+        ## Create a paint and a font object
         paint = skia.Paint()
+        font = skia.Font()
+
         paint.setColor( self.cache_color(style['color']) )    
         
-        font = skia.Font()
         font.setSize(style['font_size'])
-
-
+        font.setTypeface(skia.Typeface(style['typeface']))
+        font.setEmbolden(style['bold'])
+        
         canvas.drawSimpleText(text, x, y, font, paint)
 
 
