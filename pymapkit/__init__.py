@@ -20,7 +20,7 @@ from .map import Map
 ## Import Base Classes
 from .base_renderer import BaseRenderer
 from .skia_renderer import SkiaRenderer
-from .base_style import BaseStyle, ParentStyle
+from .base_style import Style
 
 ## Import Layers
 from .raster_layer import RasterLayer

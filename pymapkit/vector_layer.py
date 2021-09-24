@@ -12,225 +12,124 @@ from operator import methodcaller
 import pyproj
 import ogr
 from .base_layer import BaseLayer
-from .base_style import BaseStyle
-
-class LayerStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-        self.layer = parent_feature
-
-    def create_domain_mode_etters(self, domain_name):
-
-        ## Add domain setter to feature
-        def set_display_template(self, new_value):
-            self.style.set_mode(new_value, domain_name)
-            self.style.clear_cache()
-            
-            for f in self.features:
-                f.style.set_mode(new_value, domain_name)
-                f.style.clear_cache()
-        
-        if domain_name:
-            setter_name = 'set_' + domain_name + '_display'
-            getter_name = 'get_' + domain_name + '_display'
-        else:
-            setter_name = 'set_display'
-            getter_name = 'get_display'
-        
-        bound_setter = set_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[setter_name] = bound_setter
-
-        ## Add domain getter to feature
-        def get_display_template(self):
-            return self.style.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__[getter_name] = bound_getter
-
-        ## Bind a getter to self too
-        def get_display_template(self):
-            return self.current_modes[domain_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_display_template.__get__(self, type(self))
-        self.__dict__[getter_name] = bound_getter
-
-    def create_property_etters(self, property_name):
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            for f in self.features:
-                if property_name in f.style.managed_properties:
-                    f.style.managed_properties[property_name] = new_value
-                f.style.clear_cache()
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-    def clear_cache(self):
-        for f in self.layer:
-            f.style.cached_renderer_fn = None
-
-class FeatureStyle(BaseStyle):
-    def __init__(self, parent_feature):
-        BaseStyle.__init__(self, parent_feature)
-
-    def create_property_etters(self, property_name):
-
-        ## Define [g][s]et_display templates
-        def set_property_template(self, new_value):
-            self.style.managed_properties[property_name] = new_value
-            self.style.clear_cache()
-            ## Put feature to render last
-            self.parent.features.remove(self)
-            self.parent.features.append(self)
+from .base_style import Style
 
 
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_setter = set_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['set_'+property_name] = bound_setter
-
-        def get_property_template(self):
-            return self.style.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self.feature, type(self.feature))
-        self.feature.__dict__['get_'+property_name] = bound_getter
-
-
-        def get_property_template(self):
-            return self.managed_properties[property_name]
-
-        ## Link, and bind set_display as a named method of the parent feature
-        bound_getter = get_property_template.__get__(self, type(self))
-        self.__dict__['get_'+property_name] = bound_getter
-
-
-def build_style(style, geo_type):
+def get_style_object(feature, geo_type, parent_style=None):
     """
-    Takes a style object and adds domains, modes, and properties to create
-    a style object useful for thr given geometry type. Normal expected 
-    usage is for either a FeatureStyle object for feature, or a LayerStyle for
-    layers.
+    Returns a configured Style Object for the given geometry type. If a parent 
+    style object is given it makes the new style a child style.
     """
-    style.type = geo_type
+    style = Style(feature)
 
     if geo_type == 'point':
 
-        ## Add domains for point
-        #style.add_domain(None) ## This is implied
-
+        point_domain = style.add_domain('')
+        
         ## Create modes for fill
-        style.add_mode('none')
-        style.add_mode('circle')
-        style.add_mode('square')
-        style.add_mode('triangle')
-        style.add_mode('icon')
+        point_domain.add_mode('')
+        circle_mode = point_domain.add_mode('circle')
+        square_mode = point_domain.add_mode('square')
+        triangle_mode = point_domain.add_mode('triangle')
+        icon_mode = point_domain.add_mode('icon')
 
 
         ## Add properties to circle display mode
-        style.add_property('color', 'red', 'circle')
-        style.add_property('weight', 3, 'circle')
-        style.add_property('opacity', 1, 'circle')
+        circle_mode.add_property('color', 'red')
+        circle_mode.add_property('weight', 3)
+        circle_mode.add_property('opacity', 1)
 
-        ## Add properties to circle display mode
-        style.add_property('color', 'red', 'square')
-        style.add_property('weight', 3, 'square')
-        style.add_property('opacity', 1, 'square')
+        ## Add properties to square display mode
+        square_mode.add_property('color', 'red')
+        square_mode.add_property('weight', 3)
+        square_mode.add_property('opacity', 1)
         
         ## Add properties to circle display mode
-        style.add_property('color', 'red', 'triangle')
-        style.add_property('weight', 3, 'triangle')
-        style.add_property('opacity', 1, 'triangle')
+        triangle_mode.add_property('color', 'red')
+        triangle_mode.add_property('weight', 3)
+        triangle_mode.add_property('opacity', 1)
 
         ## Add properties to circle display mode
-        style.add_property('path', 'red', 'icon')
-        style.add_property('weight', 3, 'icon')
-        style.add_property('opacity', 1, 'icon')
+        icon_mode.add_property('path', 'red')
+        icon_mode.add_property('weight', 3)
+        icon_mode.add_property('opacity', 1)
         
         ## Set default mode
-        style.set_mode('circle')
-
-
+        point_domain.set_mode('circle')
     elif geo_type == 'line':
-        ## Add domains for point
-        #style.add_domain(None) ## This is implied
-
         ## Create modes for fill
-        style.add_mode('none')
-        style.add_mode('solid')
-        style.add_mode('dashed')
-        ## Square
-        ## Triangle
-        ## Icon
+
+        line_domain = style.add_domain('')
+
+        _ = line_domain.add_mode('none')
+        solid_mode = line_domain.add_mode('solid')
+        dash_mode = line_domain.add_mode('dashed')
 
         ## Add properties to solid display mode
-        style.add_property('color', 'blue', 'solid')
-        style.add_property('weight', 1, 'solid')
-        style.add_property('opacity', 1, 'solid')
+        solid_mode.add_property('color', 'blue')
+        solid_mode.add_property('weight', 1)
+        solid_mode.add_property('opacity', 1)
         
         ## Add properties to dashed display mode
-        style.add_property('color', 'blue', 'dashed')
-        style.add_property('weight', 1, 'dashed')
-        style.add_property('opacity', 1, 'dashed')
+        dash_mode.add_property('color', 'blue')
+        dash_mode.add_property('weight', 1)
+        dash_mode.add_property('opacity', 1)
         
         ## Set default mode
-        style.set_mode('solid')
+        line_domain.set_mode('solid')
 
     elif geo_type == 'polygon':
-
         ## Add properties for whole feature
         style.add_property('display', True)
         style.add_property('opacity', 1)
 
-        ## Create domains for polygon styles
-        style.add_domain('fill')
-        style.add_domain('outline')
+        ## Create fill domain for polygon styles
+        fill_domain = style.add_domain('fill')
 
-        ## Create modes for fill
-        style.add_mode('none', 'fill')
-        style.add_mode('basic', 'fill')
-        style.add_mode('line', 'fill')
-        style.add_mode('image', 'fill')
+        ## Create modes for fill domain
+        _ = fill_domain.add_mode('none')
+        fill_solid_mode = fill_domain.add_mode('basic')
+        fill_line_mode = fill_domain.add_mode('line')
+        fill_image_mode = fill_domain.add_mode('image')
 
         ## Add Properties for basic fill mode
-        style.add_property('color', 'green', 'basic', 'fill')
-        style.add_property('opacity', 1, 'basic', 'fill')
+        fill_solid_mode.add_property('color', 'green')
+        fill_solid_mode.add_property('opacity', 1)
 
         ## Add properties for line fill mode
-        style.add_property('line_color', 'black', 'line', 'fill')
-        style.add_property('line_opacity', 1, 'line', 'fill')
+        fill_line_mode.add_property('line_color', 'black')
+        fill_line_mode.add_property('line_opacity', 1)
 
         ## Add properties for image fill mode
-        style.add_property('image_path', 'None', 'image', 'fill')
-        style.add_property('opacity', 1, 'image', 'fill')
+        fill_image_mode.add_property('image_path', 'None')
+        fill_image_mode.add_property('opacity', 1)
 
         ## Set default fill mode
-        style.set_mode('basic', 'fill')
+        fill_domain.set_mode('basic')
 
-        ## Add modes for outline 
-        style.add_mode('none', 'outline')
-        style.add_mode('solid', 'outline')
+
+        ## Create an outline domain
+        outline_domain = style.add_domain('outline')
+
+        ## Add modes for outline domain
+        _ = outline_domain.add_mode('none')
+        outline_solid_mode = outline_domain.add_mode('solid')
 
         ## Add properties for solid outline mode 
-        style.add_property('color', 'black', 'solid', 'outline')
-        style.add_property('weight', 1, 'solid', 'outline')
-        style.add_property('opacity', 1, 'solid', 'outline')
+        outline_solid_mode.add_property('color', 'black')
+        outline_solid_mode.add_property('weight', 1)
+        outline_solid_mode.add_property('opacity', 1)
         
         ## Set default outline mode
-        style.set_mode('solid', 'outline')
+        outline_domain.set_mode('solid')
 
     else:
         pass
+    
+    if parent_style:
+        parent_style.add_child_style(style)
+    
+    return style
 
 class Geometry:
     """
@@ -363,13 +262,8 @@ class Feature:
         self.parent = parent
         self.geometry = geometry
 
-
-        #style_class = {'point': PointStyle, 'line': LineStyle, 'polygon': PolyStyle}
-        #self.style = style_class[geometry.geometry_type](self)
-        self.style = FeatureStyle(self)
-        build_style(self.style, self.parent.geometry_type)
-
-        #self.style.set_defaults(parent.geometry_type)
+        ## Set up style
+        self.style = get_style_object(self, self.parent.geometry_type, self.parent.style)
 
         self.attributes = {}
         for field in parent.field_names:
@@ -419,8 +313,13 @@ class FeatureList:
     def __init__(self, parent, features):
         self.parent = parent
         self.features = features
-        self.style = LayerStyle(self)
-        build_style(self.style, self.parent.geometry_type)
+
+        ## Set up Style
+        self.style = get_style_object(self, self.parent.geometry_type)
+
+        ## Set up children styles
+        for feature in features:
+            self.style.add_child_style(feature.style)
     
     def __len__(self):
         return len(self.features)
@@ -595,8 +494,9 @@ class VectorLayer(BaseLayer):
         self.miny = []
 
         ## Style
-        self.style = LayerStyle(self)
-        build_style(self.style, self.geometry_type)
+        #self.style = LayerStyle(self)
+        #build_style(self.style, self.geometry_type)
+        self.style = get_style_object(self, self.geometry_type)
 
         ## Update status
         self.status = 'initialized'
