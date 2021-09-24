@@ -521,10 +521,15 @@ class Map:
         if isinstance(proj_x, list):
             proj_x, proj_y = np.array(proj_x), np.array(proj_y)
 
-            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
-            while np.isinf(proj_x).any() or np.isinf(proj_y).any():
-                proj_x[np.where(np.isinf(proj_x))] = proj_x[np.where(np.isinf(proj_x))[0]-1]
-                proj_y[np.where(np.isinf(proj_y))] = proj_y[np.where(np.isinf(proj_y))[0]-1]
+            x_mask = np.isinf(proj_x)
+            y_mask = np.isinf(proj_y)
+            mask = np.logical_or(x_mask, y_mask)
+
+            idx = np.where(~mask, np.arange(mask.size), 0)
+            idx = np.maximum.accumulate(idx, axis=0)
+
+            proj_x[mask] = proj_x[idx[mask]]
+            proj_y[mask] = proj_y[idx[mask]]
             
             ## Convert back to python list
             proj_x, proj_y = list(proj_x), list(proj_y)
