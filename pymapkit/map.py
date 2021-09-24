@@ -541,18 +541,6 @@ class Map:
             geo_y (int | float | list): The output latitude (y) value(s).
         """
         geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
-
-        ## If data is a list, purge all infs from dataset
-        if isinstance(geo_x, list):
-            geo_x, geo_y = np.array(geo_x), np.array(geo_y)
-
-            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
-            while np.isinf(geo_x).any() or np.isinf(geo_y).any():
-                geo_x[np.where(np.isinf(geo_x))] = geo_x[np.where(np.isinf(geo_x))[0]-1]
-                geo_y[np.where(np.isinf(geo_y))] = geo_y[np.where(np.isinf(geo_y))[0]-1]
-            
-            ## Convert back to python list
-            geo_x, geo_y = list(geo_x), list(geo_y)
         
         return geo_x, geo_y
 
