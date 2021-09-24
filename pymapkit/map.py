@@ -516,23 +516,6 @@ class Map:
         """
         ## Use geo2proj transform to convert points
         proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
-
-        ## If data is a list, purge all infs from dataset
-        if isinstance(proj_x, list):
-            proj_x, proj_y = np.array(proj_x), np.array(proj_y)
-
-            x_mask = np.isinf(proj_x)
-            y_mask = np.isinf(proj_y)
-            mask = np.logical_or(x_mask, y_mask)
-
-            idx = np.where(~mask, np.arange(mask.size), 0)
-            idx = np.maximum.accumulate(idx, axis=0)
-
-            proj_x[mask] = proj_x[idx[mask]]
-            proj_y[mask] = proj_y[idx[mask]]
-            
-            ## Convert back to python list
-            proj_x, proj_y = list(proj_x), list(proj_y)
         
         ## Return data values
         return proj_x, proj_y
@@ -599,9 +582,9 @@ class Map:
 
         ## Convert list to numpy array
         if isinstance(proj_x, list):
+            list_flag = True
             proj_x = np.array(proj_x)
             proj_y = np.array(proj_y)
-            list_flag = True
         
         ## Do math logic on all points
         # NOTE: @ self._proj_scale has to be a float!
@@ -610,9 +593,8 @@ class Map:
 
         ## Convert numpy array to list
         if list_flag:
-            pix_x = list(map(round, pix_x))
-            pix_y = list(map(round, pix_y))
-        
+            pix_x = pix_x.tolist()
+            pix_y = pix_y.tolist()
         
         return pix_x, pix_y
 
@@ -691,7 +673,7 @@ class Map:
 
         Converts canvas pixel coordinates to geographic coordinates.
         Input can be either singlet or vectorized.
-        Canvas pixel coordinates have (0,0) at the top left corner of the map. \
+        Canvas pixel coordinates have (0,0) at the top left corner of the map.
         Output type is same type as input.
 
         Args:

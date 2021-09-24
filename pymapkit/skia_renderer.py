@@ -9,6 +9,7 @@ Created: 5 February, 2021
 import functools
 import skia
 from .base_renderer import BaseRenderer
+import numpy as np
 
 
 class SkiaRenderer(BaseRenderer):
@@ -300,9 +301,24 @@ class SkiaRenderer(BaseRenderer):
         ## Load points into path
         pointer = 0
         for p_count in structure:
-            path.moveTo( x_values[pointer], y_values[pointer] )
+            
+            point = x_values[pointer], y_values[pointer]
+            
+            while np.inf in point:
+                pointer = pointer + 1
+                p_count = p_count - 1
+                if pointer == pointer+p_count:
+                    point = 100, 100
+                    break
+                point = x_values[pointer], y_values[pointer]
+
+
+            path.moveTo( *point )
+
             for index in range(pointer, pointer+p_count):
-                path.lineTo(x_values[index], y_values[index])
+                point = x_values[index], y_values[index]
+                if np.inf not in point:
+                    path.lineTo(*point)
             pointer = pointer + p_count
 
         ## If a rendering function is already cached, use it.
