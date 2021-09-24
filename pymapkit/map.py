@@ -516,8 +516,6 @@ class Map:
         """
         ## Use geo2proj transform to convert points
         proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
-        
-        ## Return data values
         return proj_x, proj_y
     
     def proj2geo(self, proj_x, proj_y):
@@ -541,7 +539,6 @@ class Map:
             geo_y (int | float | list): The output latitude (y) value(s).
         """
         geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
-        
         return geo_x, geo_y
 
     def proj2pix(self, proj_x, proj_y):
@@ -625,8 +622,8 @@ class Map:
 
         ## Convert numpy array to list
         if list_flag:
-            proj_x = list(proj_x)
-            proj_y = list(proj_y)
+            proj_x = proj_x.tolist()
+            proj_y = proj_y.tolist()
         
         return proj_x, proj_y
 
