@@ -429,17 +429,39 @@ class SkiaRenderer(BaseRenderer):
 
     def draw_text(self, canvas, text, x, y, style):
         """
+        Draws a line of text onto the canvas.
+
+        Args:
+            canvas (skia.Canvas): The canvas to draw on.
+
+            text (str): The line of text to draw on the canvas.
+
+            x (int): The pixel x location to place the text.
+            
+            y (int): The pixel y location to place the text.
+
+            style (PyMapKit.Style) The style object holding data regarding 
+            how to render the text. 
+        
+        Returns:
+            None
         """
-        ## Create a paint and a font object
+        ## Create a skia paint & font objects
         paint = skia.Paint()
         font = skia.Font()
 
+        ## Set text color
         paint.setColor( self.cache_color(style['color']) )    
         
+        ## Set font properties
         font.setSize(style['font_size'])
         font.setTypeface(skia.Typeface(style['typeface']))
         font.setEmbolden(style['bold'])
-        
+
+        #! This is a hack, maybe find a better way
+        if style['italic']: font.setSkewX(-0.5)
+
+        ## Draw Text Skia Call
         canvas.drawSimpleText(text, x, y, font, paint)
 
 
