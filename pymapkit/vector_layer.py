@@ -10,7 +10,7 @@ import math
 import bisect
 from operator import methodcaller
 import pyproj
-import ogr
+import osgeo.ogr as ogr
 from .base_layer import BaseLayer
 from .base_style import Style
 
