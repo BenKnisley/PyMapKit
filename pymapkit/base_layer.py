@@ -3,6 +3,7 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 19 January, 2020
 """
 import abc
+import numpy as np
 
 class BaseLayer(metaclass=abc.ABCMeta):
     """
@@ -93,9 +94,14 @@ class BaseLayer(metaclass=abc.ABCMeta):
         ## Get layer extent
         min_x, min_y, max_x, max_y = self.get_extent()
 
+        ## If has inf values, don't do anything
+        if np.inf in (min_x, min_y, max_x, max_y):
+            return
+
         ## Calculate center and set new map coord 
         proj_x = (max_x + min_x) / 2
         proj_y = (max_y + min_y) / 2
+
         self.map.set_projection_coordinates(proj_x, proj_y)
 
         ## If layer has no area, do not proceed 

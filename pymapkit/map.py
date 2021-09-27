@@ -516,20 +516,6 @@ class Map:
         """
         ## Use geo2proj transform to convert points
         proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
-
-        ## If data is a list, purge all infs from dataset
-        if isinstance(proj_x, list):
-            proj_x, proj_y = np.array(proj_x), np.array(proj_y)
-
-            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
-            while np.isinf(proj_x).any() or np.isinf(proj_y).any():
-                proj_x[np.where(np.isinf(proj_x))] = proj_x[np.where(np.isinf(proj_x))[0]-1]
-                proj_y[np.where(np.isinf(proj_y))] = proj_y[np.where(np.isinf(proj_y))[0]-1]
-            
-            ## Convert back to python list
-            proj_x, proj_y = list(proj_x), list(proj_y)
-        
-        ## Return data values
         return proj_x, proj_y
     
     def proj2geo(self, proj_x, proj_y):
@@ -553,19 +539,6 @@ class Map:
             geo_y (int | float | list): The output latitude (y) value(s).
         """
         geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
-
-        ## If data is a list, purge all infs from dataset
-        if isinstance(geo_x, list):
-            geo_x, geo_y = np.array(geo_x), np.array(geo_y)
-
-            ## Replace all np.inf values with last valid value (to prevent tearing during rendering)
-            while np.isinf(geo_x).any() or np.isinf(geo_y).any():
-                geo_x[np.where(np.isinf(geo_x))] = geo_x[np.where(np.isinf(geo_x))[0]-1]
-                geo_y[np.where(np.isinf(geo_y))] = geo_y[np.where(np.isinf(geo_y))[0]-1]
-            
-            ## Convert back to python list
-            geo_x, geo_y = list(geo_x), list(geo_y)
-        
         return geo_x, geo_y
 
     def proj2pix(self, proj_x, proj_y):
@@ -594,9 +567,9 @@ class Map:
 
         ## Convert list to numpy array
         if isinstance(proj_x, list):
+            list_flag = True
             proj_x = np.array(proj_x)
             proj_y = np.array(proj_y)
-            list_flag = True
         
         ## Do math logic on all points
         # NOTE: @ self._proj_scale has to be a float!
@@ -605,9 +578,8 @@ class Map:
 
         ## Convert numpy array to list
         if list_flag:
-            pix_x = list(map(round, pix_x))
-            pix_y = list(map(round, pix_y))
-        
+            pix_x = pix_x.tolist()
+            pix_y = pix_y.tolist()
         
         return pix_x, pix_y
 
@@ -650,8 +622,8 @@ class Map:
 
         ## Convert numpy array to list
         if list_flag:
-            proj_x = list(proj_x)
-            proj_y = list(proj_y)
+            proj_x = proj_x.tolist()
+            proj_y = proj_y.tolist()
         
         return proj_x, proj_y
 
@@ -686,7 +658,7 @@ class Map:
 
         Converts canvas pixel coordinates to geographic coordinates.
         Input can be either singlet or vectorized.
-        Canvas pixel coordinates have (0,0) at the top left corner of the map. \
+        Canvas pixel coordinates have (0,0) at the top left corner of the map.
         Output type is same type as input.
 
         Args:
