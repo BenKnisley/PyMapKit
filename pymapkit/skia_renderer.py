@@ -143,7 +143,7 @@ class SkiaRenderer(BaseRenderer):
 
     def draw_background(self, canvas, style):
         """
-        Draws a single color on the whole canvas.
+        Draws a background over the whole canvas.
         
         Args:
             canvas (skia.Canvas): The canvas to draw on.
@@ -153,7 +153,6 @@ class SkiaRenderer(BaseRenderer):
         Returns:
             None
         """
-
         ## If a rendering function is already defined, use it.
         if style.cached_renderer_fn:
             style.cached_renderer_fn(canvas)
@@ -162,10 +161,31 @@ class SkiaRenderer(BaseRenderer):
         if style['background_mode'] == 'none':
             return
 
-        color = self.cache_color(style['background_color'], style['background_opacity'])
+        elif style['background_mode'] == 'image':
+            ##
+            image_cache = self.cache_image(style['background_path'])
+            
+            ##
+            if style['background_fit'] == 'stretch':
+                x_scale = self.surface.width() / image_cache.width()
+                y_scale = self.surface.height() /image_cache.height()
 
-        draw_background_basic(canvas, color)
-        style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
+            elif style['background_fit'] == 'fit':
+                x_scale = self.surface.width() / image_cache.width()
+                y_scale = self.surface.height() /image_cache.height()
+                scale = max((x_scale, y_scale))
+                x_scale, y_scale = scale, scale
+
+            else: ## No scale
+                x_scale, y_scale = 1, 1
+
+            self.draw_image(canvas, image_cache, 0, 0, x_scale, y_scale, 'nw', 1)
+            return
+
+        else: ## if style['background_mode'] == 'color'
+            color = self.cache_color(style['background_color'], style['background_opacity'])
+            draw_background_basic(canvas, color)
+            style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
 
     def draw_point(self, canvas, structure, x_values, y_values, style):
         """
