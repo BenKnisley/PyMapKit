@@ -152,7 +152,7 @@ class TextBlock:
             renderer.draw_text(canvas, text_line.text, x + line_x_off, y_index, text_line.style)
 
 
-class StaticTextLayer(BaseLayer):
+class TextLayer(BaseLayer):
     """
     A class and a MapLayer to hold text blocks.
     """
@@ -183,7 +183,8 @@ class StaticTextLayer(BaseLayer):
         Returns:
             repr_str (str): A string representation of the LabelLayer.
         '''
-        return "Label Layer Object"
+        num_blocks = len(self.text_elements)
+        return f"Label Layer Object, containing {num_blocks} blocks"
 
     def activate(self):
         '''
@@ -238,8 +239,7 @@ class StaticTextLayer(BaseLayer):
 
     def render(self, renderer, canvas):
         ''' 
-        Abstract method to be implemented by child layer. 
-        Draws the layer onto a canvas using the renderer.
+        Draws the text layer onto a canvas using the renderer.
 
         Args:
         renderer (BaseRenderer): The renderer to use to draw on the canvas.
