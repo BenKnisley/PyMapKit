@@ -4,7 +4,7 @@ Date: 19 April, 2021
 """
 import os
 import tempfile
-import gdal
+import osgeo.gdal as gdal
 import pyproj
 from .base_layer import BaseLayer
 

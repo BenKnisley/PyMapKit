@@ -9,8 +9,7 @@ import os
 import math
 import bisect
 from operator import methodcaller
-import pyproj
-import ogr
+import osgeo.ogr as ogr
 from .base_layer import BaseLayer
 from .base_style import Style
 
@@ -470,9 +469,6 @@ class VectorLayer(BaseLayer):
 
         self.field_names = field_names
         self.features = []
-
-        ## >> self.projection = pyproj.Proj(projection)
-        self.geographic_crs = pyproj.crs.CRS("EPSG:4326")
 
         self.geometry_type = geometry_type
         self.geometries = []

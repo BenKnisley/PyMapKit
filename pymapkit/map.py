@@ -42,6 +42,11 @@ class BackgroundStyle(Style):
         color_mode.add_property('color', 'white')
         color_mode.add_property('opacity', 1)
 
+        ## Create a background color fill mode 
+        image_mode = background_domain.add_mode('image')
+        image_mode.add_property('path', None)
+        image_mode.add_property('fit', 'full') ##
+
         ## Activate color fill mode
         background_domain.set_mode('color')
 
