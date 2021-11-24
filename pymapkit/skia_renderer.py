@@ -161,31 +161,22 @@ class SkiaRenderer(BaseRenderer):
         if style['background_mode'] == 'none':
             return
 
-        elif style['background_mode'] == 'image':
-            ##
-            image_cache = self.cache_image(style['background_path'])
-            
-            ##
-            if style['background_fit'] == 'stretch':
-                x_scale = self.surface.width() / image_cache.width()
-                y_scale = self.surface.height() /image_cache.height()
-
-            elif style['background_fit'] == 'fit':
-                x_scale = self.surface.width() / image_cache.width()
-                y_scale = self.surface.height() /image_cache.height()
-                scale = max((x_scale, y_scale))
-                x_scale, y_scale = scale, scale
-
-            else: ## No scale
-                x_scale, y_scale = 1, 1
-
-            self.draw_image(canvas, image_cache, 0, 0, x_scale, y_scale, 'nw', 1)
-            return
-
-        else: ## if style['background_mode'] == 'color'
+        elif style['background_mode'] == 'color':
             color = self.cache_color(style['background_color'], style['background_opacity'])
             draw_background_basic(canvas, color)
             style.cached_renderer_fn = cache_fn(draw_background_basic, color=color)
+
+        elif style['background_mode'] == 'image':
+            image_cache = self.cache_image(style['background_path'])
+            draw_background_image(canvas, self, image_cache, style['background_fit'])
+            style.cached_renderer_fn = cache_fn(draw_background_image, 
+                image_cache=image_cache, fit=style['background_fit'])
+        else:
+            print(f'''"{style['background_mode']}" display mode not supported by this renderer''')
+        
+        return
+        
+
 
     def draw_point(self, canvas, structure, x_values, y_values, style):
         """
@@ -486,6 +477,28 @@ def draw_background_basic(canvas, color):
     ## Create a Skia Paint object and draw paint over whole canvas
     paint = skia.Paint(Color=color)
     canvas.drawPaint(paint)
+
+def draw_background_image(canvas, renderer, image_cache, fit):
+    """
+    Fills the whole canvas with a image. Used for backgrounds.
+    """
+    ## Scale image based on fit arg
+    if fit == 'stretch':
+        x_scale = renderer.surface.width() / image_cache.width()
+        y_scale = renderer.surface.height() /image_cache.height()
+
+    elif fit == 'fit':
+        x_scale = renderer.surface.width() / image_cache.width()
+        y_scale = renderer.surface.height() /image_cache.height()
+        scale = max((x_scale, y_scale))
+        x_scale, y_scale = scale, scale
+
+    else: ## No scaling
+        x_scale, y_scale = 1, 1
+
+    ## Draw image
+    renderer.draw_image(canvas, image_cache, 0, 0, x_scale, y_scale, 'nw', 1)
+    return
 
 ## Point Display Modes
 
