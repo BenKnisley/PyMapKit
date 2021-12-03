@@ -102,7 +102,7 @@ class TextBlock:
         if self.align == 'left':
             return 0
         elif self.align == 'center':
-            return (self.get_width() - line_width)/2.0
+            return -(self.get_width())/2.0
         elif self.align == 'right':
             return self.get_width() - line_width
 
