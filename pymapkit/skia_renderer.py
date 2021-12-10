@@ -378,7 +378,7 @@ class SkiaRenderer(BaseRenderer):
             outline_cached_renderer_fn = cache_fn(draw_poly_solid_outline, outline_color=outline_color, outline_weight=outline_weight)
 
 
-        style.cached_renderer_fn = join_fns((fill_cached_renderer_fn, outline_cached_renderer_fn))
+        style.cached_renderer_fn = join_cached_fns((fill_cached_renderer_fn, outline_cached_renderer_fn))
 
     def cache_image(self, image_path):
         """
@@ -448,21 +448,53 @@ class SkiaRenderer(BaseRenderer):
 
 def cache_fn(fn, **args):
     """
+    Caches a rendering function with the given keyword arguments froze in place.
+    
+    Args:
+        fn (function): A rendering function.
+    
+    Keyword Args: 
+        args (dict): The key values to freeze to the function.
+    
+    Returns:
+        cached_fn (function): The input function with given arguments fixed. 
     """
     _args = args
     cached_fn = functools.partial(fn, **_args)
     return cached_fn
 
-def join_fns(functions):
-    def inner(canvas, path):
+def join_cached_fns(functions):
+    """
+    Joins two or more cached rendering function into a single cached function.
+
+    Args:
+        functions (list: function): A list of functions to compile into one.
+    
+    Returns: 
+        joined_function (function): A single function the runs all of the input
+        when called.
+    """
+
+    ## Setup a inner function
+    def joined_function(canvas, path):
         for fn in functions:
             fn(canvas, path)
-    return inner
+
+    return joined_function
 
 def empty_fn():
-    def fun(*args): 
-        pass
-    return fun
+    """
+    Returns a function object that does nothing. Used when a function needs to
+    be cached, but nothing is renderer.
+
+    Args: 
+        None
+    
+    Returns:
+        empty_fn (function): A function that does nothing.
+    """
+    empty_fn = lambda *args: None
+    return empty_fn
 
 """****************************
 ****** Drawing functions ******
@@ -500,7 +532,8 @@ def draw_background_image(canvas, renderer, image_cache, fit):
     renderer.draw_image(canvas, image_cache, 0, 0, x_scale, y_scale, 'nw', 1)
     return
 
-## Point Display Modes
+
+## Vector Point Display Modes
 
 def draw_point_circle(canvas, point_list, color, weight):
     
@@ -515,7 +548,8 @@ def draw_point_circle(canvas, point_list, color, weight):
 
     return
 
-## Line Display modes
+
+## Vector Line Display modes
 
 def draw_line_solid(canvas, path, color, weight):
      ## Create line paint
@@ -541,7 +575,7 @@ def draw_line_dashed(canvas, path, color, weight):
         canvas.drawPath(path, paint)
 
 
-## Polygon Display Modes
+## Vector Polygon Display Modes
 
 def draw_poly_basic_fill(canvas, path, fill_color):
     """
@@ -555,7 +589,6 @@ def draw_poly_basic_fill(canvas, path, fill_color):
 def draw_poly_image_fill(canvas, path, image_cache):
     
     x1,y1, x2, y2 = path.getBounds()
-
 
     ## Get width of image
     w = image_cache.width()
@@ -577,7 +610,6 @@ def draw_poly_image_fill(canvas, path, image_cache):
     canvas.drawImageRect(image_cache, rect, paint)
 
     canvas.restore()
-
 
 def draw_poly_line_fill(canvas, path, fill_line_color):
     """
