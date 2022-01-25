@@ -28,7 +28,7 @@ setup(
     long_description_content_type='text/markdown',
     url = "https://github.com/BenKnisley/PyMapKit",
     
-    install_requires=['pyproj==3.0.0.post1', 'numpy==1.19.1',],
+    install_requires=['pyproj==3.0.0.post1', 'numpy==1.19.1', 'skia-python==87.3'],
     packages=["pymapkit"],
 
     keywords = "GIS Geography GeoSpatial MapTiles PyMapKit pymapkit",
