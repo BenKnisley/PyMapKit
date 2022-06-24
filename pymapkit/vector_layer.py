@@ -362,7 +362,7 @@ class Geometry:
         sumCx, sumCy, sumAc = 0, 0, 0
         for i in range(len(x_vals)-1):
             sumCx += (x_vals[i]+x_vals[i+1])*(x_vals[i]*y_vals[i+1]-x_vals[i+1]*y_vals[i])
-            sumCx += (y_vals[i]+y_vals[i+1])*(x_vals[i]*y_vals[i+1]-x_vals[i+1]*y_vals[i])
+            sumCy += (y_vals[i]+y_vals[i+1])*(x_vals[i]*y_vals[i+1]-x_vals[i+1]*y_vals[i])
             sumAc += (x_vals[i]*y_vals[i+1])-(x_vals[i+1]*y_vals[i])
         
         ## Compute area, centroid x and y coord
