@@ -253,6 +253,126 @@ class Geometry:
                     return True
             return False
 
+    def get_area(self):
+        """
+        Returns the total area of the geometry.
+        
+        Returns the total area of the geometry, including all subgeometries.
+
+        Args:
+            None
+
+        Returns:
+            area (float): The area of the geometry in the current projection 
+                units squared. Returns 0 for point and line geometry types.
+        """
+        ## If geometry_type is point or line, return 0
+        if self.geometry_type in ('point', 'line'):
+            return 0
+        
+        ## Create a var to hold total area of all subgeom
+        total_area = 0
+
+        ## Loop through each subgeometry, adding area to total
+        for subgeom in self.get_subgeometries():
+
+            ## Get x and y values from subgeom
+            x_vals, y_vals = subgeom
+
+            ## Round to ints, maybe remove
+            #x_vals = [int(x) for x in x_vals]
+            #y_vals = [int(y) for y in y_vals]
+
+            ## Get number of points
+            n = len(x_vals)
+
+            ## Compute psum
+            psum = 0
+            for i in range(n):
+                sindex = (i + 1) % n
+                prod = x_vals[i] * y_vals[sindex]
+                psum += prod
+
+            ## Compute nsum
+            nsum = 0
+            for i in range(n):
+                sindex = (i + 1) % n
+                prod = x_vals[sindex] * y_vals[i]
+                nsum += prod
+
+            ## Compute subgeom_area
+            subgeom_area = abs(1/2*(psum - nsum))
+
+            ## Check if geom is an interior_geom, by checking if its first point
+            ## is within another subgeom
+            interior_geom = False
+            test_x, test_y = x_vals[0], y_vals[0]
+            for x_points, y_points in self.get_subgeometries():
+                inside = False
+                n = len(x_points)
+                p1x,p1y = x_points[0], y_points[0]
+                for i in range(n+1):
+                    p2x, p2y = x_points[i % n], y_points[i % n]
+                    if test_y > min(p1y,p2y):
+                        if test_y <= max(p1y,p2y):
+                            if test_x <= max(p1x,p2x):
+                                if p1y != p2y:
+                                    xints = (test_y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                                if p1x == p2x or test_x <= xints:
+                                    inside = not inside
+                    p1x,p1y = p2x,p2y
+                if inside:
+                    interior_geom = True
+        
+            ## Subtract from total area if interior_geom, add if not.
+            if interior_geom:
+                total_area -= subgeom_area
+            else:
+                total_area += subgeom_area
+        
+        ## Return total area
+        return total_area
+
+    def get_centroid(self, sum_geom_index=0):
+        """
+        Returns the centroid of the geometry.
+        
+        Args:
+            None
+        
+        Optional:
+            sum_geom_index (int | None): The index of the subgeometry to find 
+                the centroid for.
+        
+        Returns:
+            x (float): The x value of the centroid of the geometry.
+            y (float): The y value of the centroid of the geometry.
+
+        Notes:
+            Only gets centroid of single subgeom, by default the first one.
+            Needs a way to select all geometries.
+
+        References:
+            http://pyhyd.blogspot.com/2017/08/calculate-centroid-of-polygon-with.html
+        """
+        ## Get all coord values of a single subgeom
+        x_vals, y_vals = self.get_subgeometry(sum_geom_index)
+
+        ## Create sum counters, and do logic
+        sumCx, sumCy, sumAc = 0, 0, 0
+        for i in range(len(x_vals)-1):
+            sumCx += (x_vals[i]+x_vals[i+1])*(x_vals[i]*y_vals[i+1]-x_vals[i+1]*y_vals[i])
+            sumCx += (y_vals[i]+y_vals[i+1])*(x_vals[i]*y_vals[i+1]-x_vals[i+1]*y_vals[i])
+            sumAc += (x_vals[i]*y_vals[i+1])-(x_vals[i+1]*y_vals[i])
+        
+        ## Compute area, centroid x and y coord
+        ar = sumAc / 2.0
+        x = (1.0 / (6.0 * ar)) * sumCx
+        y = (1.0 / (6.0 * ar)) * sumCy
+
+        ## Return only centroid coord
+        return x, y
+
 class Feature:
     """
     A class representing a single feature
