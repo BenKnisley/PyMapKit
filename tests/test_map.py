@@ -47,7 +47,7 @@ def test_map_init():
     m = pmk.Map(renderer=r)
     assert r == m.renderer
 
-def test_map_add():
+def test_add():
     """ 
     Test that Map.add correctly adds a layers to the layer list in the correct 
     order.
@@ -64,30 +64,22 @@ def test_map_add():
     m.add(new_layer1)
     assert len(m.layers) == 1
     assert m.layers[0] == new_layer1
+    ## Test that BaseLayer._activate was called
+    new_layer1._activate.assert_called_once_with(m)
 
     ## Test that method adds layers in correct order
     m.add(new_layer2)
     assert len(m.layers) == 2
     assert m.layers[1] == new_layer2
+    ## Test that BaseLayer._activate was called
+    new_layer2._activate.assert_called_once_with(m)
 
     ## Test that method adds layers at correct index
     m.add(new_layer3, 1)
     assert len(m.layers) == 3
     assert m.layers[1] == new_layer3
-
-def test_add_activate():
-    """ Tests that Map.add calls layer BaseLayer._activate method. """
-    ## Create Map object for testing
-    m = pmk.Map()
-
-    ## Create mock layers
-    new_layer = MockLayer()
-
-    ## Add layer
-    m.add(new_layer)
-
     ## Test that BaseLayer._activate was called
-    new_layer._activate.assert_called_once_with(m)
+    new_layer2._activate.assert_called_once_with(m)
 
 def test_add_type_constraints():
     """ Tests that Map.add raises TypeError with given bad inputs. """
@@ -106,22 +98,66 @@ def test_add_type_constraints():
     with pytest.raises(TypeError):
         m.add(new_layer, bad_type_input)
 
-def test_map_remove():
-    """ Test Map.add adds layer to layer list"""
+def test_remove():
+    """ 
+    Tests that Map.remove removes layer from layer list, and calls 
+    BaseLayer._activate method.
+    """
+    ## Create Map object for testing
     m = pmk.Map()
-    new_layer1 = MockLayer()
-    new_layer2 = MockLayer()
-    new_layer3 = MockLayer()
 
-    m.add(new_layer1)
-    m.add(new_layer2)
-    m.add(new_layer3)
+    ## Create mock layers
+    test_layer1 = MockLayer()
+    test_layer2 = MockLayer()
+    test_layer3 = MockLayer()
 
-    m.remove(new_layer3)
+    ## Add layer to map, without add method
+    m.layers.append(test_layer1)
+    m.layers.append(test_layer2)
+    m.layers.append(test_layer3)
 
-    assert len(m.layers) == 2, "Map.add method did not remove layer from map object"
-    assert new_layer3 not in m.layers, "Map.add method did not remove correct layer from map object"
-    new_layer3._deactivate.assert_called_once()
+    ## Call remove method
+    m.remove(test_layer2)
+
+    ## Test that layer was removed
+    assert test_layer2 not in m.layers
+    assert len(m.layers) == 2
+
+    ## Test that _deactivate method was called
+    test_layer2._deactivate.assert_called_once()
+
+def test_remove_type_constraints():
+    """ Tests that Map.remove type constrain """
+    ## Create Map object for testing
+    m = pmk.Map()
+
+    ## Create mock layers
+    not_layer = 'not layer'
+
+    ## Add not_layer to layer list, should never happen
+    m.layers.append(not_layer)
+
+    with pytest.raises(TypeError):
+        m.remove(not_layer)
+
+    ## Confirm was not removed
+    assert not_layer in m.layers
+
+def test_remove_exist_constraints():
+    """ Tests that Map.remove does not call  """
+    ## Create Map object for testing
+    m = pmk.Map()
+
+    ## Create mock layers
+    test_layer = MockLayer()
+
+    ## Check ValueError is raised when remove is called on layer not in m.layers
+    with pytest.raises(ValueError):
+        m.remove(test_layer)
+    
+    ## Confirm was layer was not added, & _deactivate was not called
+    assert test_layer not in m.layers
+    test_layer._deactivate.assert_not_called()
 
 def test_set_projection():
     """ Test Map.set_projection method """

@@ -111,22 +111,25 @@ class Map:
         self.proj_y = 0
 
 
-    def add(self, new_layer:BaseLayer, index:int=-1):
+    def add(self, new_layer:BaseLayer, index:int=-1) -> None:
         """
         Adds a layer to the map.
 
-        Adds a given map layer to the map.layers list. It defaults to adding 
-        the layer to the top of existing layers (end of list), but layer can be 
-        added to any location using the optional index argument.
-
         Parameters:
-            - new_layer (BaseLayer): The new layer to add to map.
+            - new_layer (BaseLayer): Layer to add to the map.
 
         Optional Parameters:
             - index (int): The index where to insert the new map layer.
 
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: raised when something other than a BaseLayer instance
+                is provided as new_layer.
+
+            - TypeError: raised when something other than an int is provided as 
+                index.
         """
         ## Constrain new_layer type
         if not isinstance(new_layer, BaseLayer):
@@ -149,22 +152,38 @@ class Map:
         else:
             self.layers.insert(index, new_layer)
 
-    def remove(self, del_layer):
+    def remove(self, del_layer:BaseLayer) -> None:
         """
-        Removes a given layer from the map.
+        Removes a layer from the map.
 
-        Removes a given layer from the maps layer list. Layer must exist in 
-        map.layer for it to be removed, otherwise it throws an error.
-
-        Args:
-            del_layer (BaseLayer): The layer to remove from the Map. Must exist
-            currently in map.layer.
+        Parameters:
+            - del_layer (BaseLayer): Layer to remove from the map.
         
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: raised when something other than a BaseLayer instance
+                is provided as del_layer.
+
+            - ValueError: raised when a layer not already in the map is provided
+                as del_layer.
         """
+        ## Constrain del_layer type
+        if not isinstance(del_layer, BaseLayer):
+            type_str = type(del_layer).__name__
+            error_msg = f"TypeError: Expected BaseLayer, {type_str} given."
+            raise TypeError(error_msg)
+
+        ## Confirm layer currently exists in layer list
+        if del_layer not in self.layers:
+            error_msg = f"ValueError: Given layer not found"
+            raise ValueError(error_msg)
+
         ## Call deactivate on del_layer
         del_layer._deactivate()
+
+        ## Remove layer from layer list
         self.layers.remove(del_layer)
 
     def set_geographic_crs(self, new_crs):
