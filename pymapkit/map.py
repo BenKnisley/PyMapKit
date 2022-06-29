@@ -8,8 +8,10 @@ Created: 5 January, 2021
 """
 import pyproj
 import numpy as np
+from typing import Union
 from .base_style import Style
 from .base_layer import BaseLayer
+from .base_renderer import BaseRenderer
 
 
 def get_renderer(renderer_name):
@@ -58,37 +60,38 @@ class Map:
     A class that models a map. It has three primary functions:
         - Store and manage map data, such as: location, projections, and scale
         - Holds and manages map data layers
-        - Serves as the entry point of the rendering pipline, and controls 
+        - Serves as the entry point of the rendering pipeline, and controls 
             rendering
     """
-
-    def __init__(self, renderer='pyskia'):
+    def __init__(self, renderer:Union(str, BaseRenderer)='pyskia') -> None:
         """
         Initializes a new Map object.
 
-        Initializes a Map object with defaults or given parameters.
-
-        Args:
+        Parameters:
             None
 
-        Optional Args:
-            renderer='pyskia' (str | base_renderer obj): A string naming the 
-            renderer to use, retrieved via the get_renderer function. Or a 
-            base_renderer object to be used directly as the renderer.
+        Optional Parameters:
+            - renderer (str | base_renderer obj): A string naming the renderer 
+                to use, or a base_renderer instance to be used directly as the 
+                renderer.
+        
+        Returns:
+            None
 
+        Exceptions:
+            None
         """
         ## Create a list to hold layers
-        self.layers = [] #! Add type hint
+        self.layers: list[BaseLayer] = []
 
-        ## Hold a renderer
-        self.renderer = None
+        ## Get the renderer
         if isinstance(renderer, str):
-            self.renderer = get_renderer(renderer)
+            self.renderer: BaseRenderer = get_renderer(renderer)
         else: 
-            self.renderer = renderer
+            self.renderer: BaseRenderer = renderer
         
-        #self.background = Background()
-        self.style = BackgroundStyle(self)
+        ## Get the background style
+        self.style: BackgroundStyle = BackgroundStyle(self)
 
         ## Create integers to hold width and height. Default 500x500
         self.width: int = 500
@@ -100,16 +103,17 @@ class Map:
         self.projected_crs: pyproj.crs.CRS = pyproj.crs.CRS("EPSG:3785")
 
         ## Create transformer objects
-        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
-        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+        self.transform_geo2proj = pyproj.Transformer.from_crs(
+            self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(
+            self.projected_crs, self.geographic_crs, always_xy=True)
 
         ## Create a variable to hold scale
-        self._proj_scale = 1.0 ## unit/pixel
+        self._proj_scale: float = 1.0 ## unit/pixel
         
         ## Set projection location
-        self.proj_x = 0
-        self.proj_y = 0
-
+        self.proj_x: float = 0.0
+        self.proj_y: float = 0.0
 
     def add(self, new_layer:BaseLayer, index:int=-1) -> None:
         """
