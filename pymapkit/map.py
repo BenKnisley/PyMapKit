@@ -9,6 +9,7 @@ Created: 5 January, 2021
 import pyproj
 import numpy as np
 from .base_style import Style
+from .base_layer import BaseLayer
 
 
 def get_renderer(renderer_name):
@@ -110,28 +111,39 @@ class Map:
         self.proj_y = 0
 
 
-    def add(self, new_layer, index=-1):
+    def add(self, new_layer:BaseLayer, index:int=-1):
         """
-        Adds a new layer to the map.
+        Adds a layer to the map.
 
         Adds a given map layer to the map.layers list. It defaults to adding 
-        the layer to the top of the map (end of list), but layer can be added
-        to any location using the optional index argument.
+        the layer to the top of existing layers (end of list), but layer can be 
+        added to any location using the optional index argument.
 
-        Args:
-            new_layer (BaseLayer): The layer the add to map
+        Parameters:
+            - new_layer (BaseLayer): The new layer to add to map.
 
-        Optional Args:
-            index (int): The index where to insert the new map layer.
+        Optional Parameters:
+            - index (int): The index where to insert the new map layer.
 
         Returns:
             None
         """
+        ## Constrain new_layer type
+        if not isinstance(new_layer, BaseLayer):
+            type_str = type(new_layer).__name__
+            error_msg = f"TypeError: Expected BaseLayer, {type_str} given."
+            raise TypeError(error_msg)
         
+        ## Constrain index type
+        if not isinstance(index, int):
+            type_str = type(index).__name__
+            error_msg = f"TypeError: Expected int, {type_str} given."
+            raise TypeError(error_msg)
+
         ## Call _activate on new_layer, a requirement for BaseLayer derivatives
         new_layer._activate(self)
 
-        ## Add layer. 
+        ## Add layer to layer list
         if index == -1:
             self.layers.append(new_layer)
         else:

@@ -3,13 +3,14 @@ Author: Ben Knisley [benknisley@gmail.com]
 Date: 10 January, 2020
 """
 import pytest
+import unittest.mock as mock
 from unittest.mock import MagicMock
 from pytest_mock import mocker
 import pymapkit as pmk
 import pyproj
 import numpy as np
 
-
+'''
 class MockLayer:
     def __init__(self):
         ## Create a mock draw function
@@ -17,6 +18,11 @@ class MockLayer:
         self._activate = MagicMock()
         self._deactivate = MagicMock()
         self.render = MagicMock()
+'''
+
+class MockLayer(pmk.base_layer.BaseLayer):
+    def __new__(cls, *args, **kwargs):
+        return mock.Mock(spec=cls)
 
 class mock_renderer:
     def __init__(self):
@@ -42,23 +48,63 @@ def test_map_init():
     assert r == m.renderer
 
 def test_map_add():
-    """ Test Map.add adds layer to layer list"""
+    """ 
+    Test that Map.add correctly adds a layers to the layer list in the correct 
+    order.
+    """
+    ## Create Map object for testing
     m = pmk.Map()
-    new_layer0 = MockLayer()
+
+    ## Create mock layers
     new_layer1 = MockLayer()
     new_layer2 = MockLayer()
     new_layer3 = MockLayer()
-    m.add(new_layer1)
-    m.add(new_layer2)
-    m.add(new_layer3)
-    m.add(new_layer0, 0)
 
-    assert len(m.layers) == 4, "Map.add method did not add layer to map object"
-    assert m.layers[0] == new_layer0, "Map.add(index=0) method did not add layer to begining of list"
-    assert m.layers[1] == new_layer1, "Map.add method did not add layer to end of list"
-    assert m.layers[2] == new_layer2, "Map.add method did not add layer to end of list"
-    assert m.layers[3] == new_layer3, "Map.add method did not add layer to end of list"
-    new_layer1._activate.assert_called_once_with(m)
+    ## Test that add method adds a the layer to the Map.layers list
+    m.add(new_layer1)
+    assert len(m.layers) == 1
+    assert m.layers[0] == new_layer1
+
+    ## Test that method adds layers in correct order
+    m.add(new_layer2)
+    assert len(m.layers) == 2
+    assert m.layers[1] == new_layer2
+
+    ## Test that method adds layers at correct index
+    m.add(new_layer3, 1)
+    assert len(m.layers) == 3
+    assert m.layers[1] == new_layer3
+
+def test_add_activate():
+    """ Tests that Map.add calls layer BaseLayer._activate method. """
+    ## Create Map object for testing
+    m = pmk.Map()
+
+    ## Create mock layers
+    new_layer = MockLayer()
+
+    ## Add layer
+    m.add(new_layer)
+
+    ## Test that BaseLayer._activate was called
+    new_layer._activate.assert_called_once_with(m)
+
+def test_add_type_constraints():
+    """ Tests that Map.add raises TypeError with given bad inputs. """
+    ## Create Map object for testing
+    m = pmk.Map()
+
+    ## Create test data
+    new_layer = MockLayer()
+    bad_type_input = 'This is a string'
+
+    ## Test raising TypeError when a bad type is given as new_layer
+    with pytest.raises(TypeError):
+        m.add(bad_type_input)
+    
+    ## Test raising TypeError when a bad type is given as index
+    with pytest.raises(TypeError):
+        m.add(new_layer, bad_type_input)
 
 def test_map_remove():
     """ Test Map.add adds layer to layer list"""
