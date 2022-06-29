@@ -14,7 +14,7 @@ from .base_layer import BaseLayer
 from .base_renderer import BaseRenderer
 
 
-def get_renderer(renderer_name):
+def get_renderer(renderer_name: str) -> BaseRenderer:
     """ 
     Returns a named renderer instance based on input string
 
@@ -63,7 +63,7 @@ class Map:
         - Serves as the entry point of the rendering pipeline, and controls 
             rendering
     """
-    def __init__(self, renderer:Union(str, BaseRenderer)='pyskia') -> None:
+    def __init__(self, renderer: Union[str, BaseRenderer]='pyskia') -> None:
         """
         Initializes a new Map object.
 
