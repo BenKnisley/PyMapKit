@@ -243,46 +243,54 @@ class Map:
         for layer in self.layers:
             layer.activate()
 
-    def set_projection(self, new_crs): #@ Rename to set_crs
+    def set_projection(self, new_crs:Union[str, pyproj.crs.CRS]):
         """
-        Sets the projected coordinate system of the map.
+        Sets the projected coordinate system (projection) of the map.
 
         Sets the projected coordinate system of the map. Or how the map 
         displays the spherical coordinates on a 2D plane.
 
-        Args:
-            new_crs (str | pyproj.crs.CRS): The CRS to use as the projected 
-            reference system.
+        Parameters:
+            - new_crs (str | pyproj.crs.CRS): The CRS to use as the projected 
+                reference system.
         
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: If new_crs is not either a str or a pyproj.crs.CRS 
+                object.
+            
+            - CRSError: If given string is not a valid projection
         """
+        ## Type check input
+        if isinstance(new_crs, pyproj.crs.CRS):
+            new_proj_crs = new_crs
+        elif isinstance(new_crs, str):
+            new_proj_crs = pyproj.crs.CRS(new_crs)
+        else: ## If any over input is given, raise type error
+            raise TypeError(f'TypeError: Expected str or PyProj CRS object.')
+
         ## Backup location and scale
         location = self.get_location()
         scale = self.get_scale()
 
-        #! NOTE: Get scale & keep it to change it to the correct scale 
-
-        if isinstance(new_crs, str):
-            self.projected_crs = pyproj.crs.CRS(new_crs)
-
-        elif isinstance(new_crs, pyproj.crs.CRS):
-            self.projected_crs = pyproj.crs.CRS(new_crs)
-        
-        else:
-            raise Exception("Input not a valid CRS")
+        ## Once projection is confirmed valid: set projected_crs to new_proj_crs
+        self.projected_crs = new_proj_crs
         
         ## Recreate transformer objects
-        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
-        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+        self.transform_geo2proj = pyproj.Transformer.from_crs(
+            self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(
+            self.projected_crs, self.geographic_crs, always_xy=True)
 
-        ## Reactivate layers
+        ## Reactivate layers, to rebuild to new projection
         for layer in self.layers:
             layer.activate()
 
         ## Restore location and scale
         self.set_location(*location)
-        self.set_scale(scale)        
+        self.set_scale(scale)
 
     def set_location(self, latitude, longitude):
         """

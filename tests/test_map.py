@@ -2,6 +2,7 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Date: 10 January, 2020
 """
+from matplotlib.pyplot import sca
 import pytest
 import unittest.mock as mock
 from unittest.mock import MagicMock
@@ -164,7 +165,7 @@ def test_set_geographic_crs():
     Test Map.set_projection method. 
     
     Tests that:
-        - Method checks inputs types correctly
+        - Input is type checked correctly
         - Basic usage works as expected
         - Method calls activate on existing layers
         - Method changes the transformer objects
@@ -182,7 +183,7 @@ def test_set_geographic_crs():
 
     ## Test that PyProj raises an error when a bad projection string is given
     with pytest.raises(pyproj.exceptions.CRSError):
-        m.set_geographic_crs('not a CSR')
+        m.set_geographic_crs('not a CRS')
 
     ## Create, add, and reset mock layers
     mock_layer1 = MockLayer()
@@ -213,41 +214,68 @@ def test_set_geographic_crs():
     mock_layer2.activate.assert_called_once()
 
 def test_set_projection():
-    """ Test Map.set_projection method """
+    """ 
+    Test Map.set_projection method
+    
+    Tests that:
+        - Input is type checked correctly
+        - Basic usage works as expected
+        - Method calls activate on existing layers
+        - Method changes the transformer objects
+        - Location and scale are preserved
+    """
     ## Create Map object for testing
     m = pmk.Map()
+
+    ## Set location and scale
+    scale = 99.9
+    location = 22.3, 55.22
+    m.set_scale(scale)
+    m.set_location(*location)
+
+    ## Test that unsupported input type raises TypeError exception
+    with pytest.raises(TypeError):
+        m.set_projection(3)
+    
+    ## Test that PyProj raises an error when a bad projection string is given
+    with pytest.raises(pyproj.exceptions.CRSError):
+        m.set_geographic_crs('not a CRS')
 
     ## Add mock layers to map, and reset mocked activate method
     mock_layer1 = MockLayer()
     m.add(mock_layer1)
+    mock_layer1.activate.reset_mock()
     
     mock_layer2 = MockLayer()
     m.add(mock_layer2)
-    
-    ## Reset activate mocks
-    mock_layer1.activate.reset_mock()
     mock_layer2.activate.reset_mock()
-
+    
     ## Hold these to test if changed
     old_transform_geo2proj = m.transform_geo2proj
     old_transform_proj2geo = m.transform_proj2geo
 
-    ## Test unsupported input type raises exception
-    with pytest.raises(Exception):
-        m.set_projection(3)
-
-    ## Test set with text
+    ## Call set_projection 
     m.set_projection('EPSG:32023')
 
-    ## Check that projected_crs is correct, geo_crs is the same, and that the transforms updated
-    assert m.projected_crs == pyproj.crs.CRS("EPSG:32023")
-    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4326")
-    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
-    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
-
-    ## Check that method calls layer activate method
+    ## Check that method calls activate method on each layer
     mock_layer1.activate.assert_called_once()
     mock_layer2.activate.assert_called_once()
+
+    ## Check that method updated projected_crs
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:32023")
+
+    ## Check that geographic_crs is unchanged
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4326")
+
+    ## Check that transformer objects were changed
+    assert not m.transform_geo2proj.is_exact_same(old_transform_geo2proj)
+    assert not m.transform_proj2geo.is_exact_same(old_transform_proj2geo)
+
+    ## Check that scale and location are unchanged
+    assert m.get_scale() == pytest.approx(scale)
+    assert m.get_location()[0] == pytest.approx(location[0])
+    assert m.get_location()[1] == pytest.approx(location[1])
+
 
 
 
