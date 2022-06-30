@@ -363,21 +363,23 @@ def test_set_projection_coordinates():
     assert m.proj_y == test_y
 
 def test_get_projection_coordinates():
-    """ Test Map.get_projection_coordinates method """
+    """ 
+    Test Map.get_projection_coordinates method 
+
+    Tests that:
+        - Method returns correct values for m.proj_x, and m.proj_y
+    """
     m = pmk.Map()
     m.set_projection("EPSG:3785")
     
     ## Set first test values
-    test_x, test_y = 7453953, 5593228
+    m.proj_x, m.proj_y = 7453953, 5593228
     
-    ## Call set_projection_coordinates method
-    m.set_projection_coordinates(test_x, test_y)
-
     ## Get Results from get_projection_coordinates 
     result_x, result_y = m.get_projection_coordinates()
 
-    assert result_x == test_x
-    assert result_y == test_y
+    assert result_x == 7453953
+    assert result_y == 5593228
 
 def test_set_scale():
     """ Test Map.set_scale method """

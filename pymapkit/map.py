@@ -339,7 +339,7 @@ class Map:
     def set_projection_coordinates(self, new_x: float, new_y: float):
         """
         Directly sets the projected location of the map.
-        
+
         Parameters:
             - new_x (float): The x value of the projections coordinate of the map
                 location.
@@ -374,16 +374,20 @@ class Map:
         Returns the projected location of the map.
 
         Returns the projected location of the center of the map, location is 
-        returned as x, y.
+        returned as x, y values.
 
-        Args:
+        Parameters:
             None
 
         Returns:
-            x (float): The x value of the projections coordinate of the map
-            location.
-            y (float): The y value of the projections coordinate of the map
-            location.
+            - x (float): The x value of the projections coordinate of the map
+                location.
+            
+            - y (float): The y value of the projections coordinate of the map
+                location.
+        
+        Exceptions:
+            None
         """
         return self.proj_x, self.proj_y
 
