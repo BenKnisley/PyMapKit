@@ -2,7 +2,6 @@
 Author: Ben Knisley [benknisley@gmail.com]
 Date: 10 January, 2020
 """
-from matplotlib.pyplot import sca
 import pytest
 import unittest.mock as mock
 from unittest.mock import MagicMock
@@ -10,16 +9,6 @@ from pytest_mock import mocker
 import pymapkit as pmk
 import pyproj
 import numpy as np
-
-'''
-class MockLayer:
-    def __init__(self):
-        ## Create a mock draw function
-        self.activate = MagicMock()
-        self._activate = MagicMock()
-        self._deactivate = MagicMock()
-        self.render = MagicMock()
-'''
 
 class MockLayer(pmk.base_layer.BaseLayer):
     def __new__(cls, *args, **kwargs):
