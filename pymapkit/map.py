@@ -260,7 +260,7 @@ class Map:
         Exceptions:
             - TypeError: If new_crs is not either a str or a pyproj.crs.CRS 
                 object.
-            
+
             - CRSError: If given string is not a valid projection
         """
         ## Type check input
@@ -292,18 +292,22 @@ class Map:
         self.set_location(*location)
         self.set_scale(scale)
 
-    def set_location(self, latitude, longitude):
+    def set_location(self, latitude: float, longitude: float):
         """
         Sets the geographic location of the map.
 
         Sets the geographic location of the center of the map, location is 
         specified using lat/lon, and stored as projection x/y.
 
-        Args:
-            latitude (float): The latitude coordinate of the map.
-            longitude (float): The longitude coordinate of the map.
+        Parameters:
+            - latitude (float): The latitude coordinate of the map.
+            
+            - longitude (float): The longitude coordinate of the map.
 
         Returns:
+            None
+
+        Exceptions:
             None
         """
         geo_y, geo_x = latitude, longitude

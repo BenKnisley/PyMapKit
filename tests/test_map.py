@@ -276,31 +276,38 @@ def test_set_projection():
     assert m.get_location()[0] == pytest.approx(location[0])
     assert m.get_location()[1] == pytest.approx(location[1])
 
-
-
-
 def test_set_location():
-    """ Test Map.set_projection method """
+    """ 
+    Test Map.set_projection method 
+    
+    Tests that: 
+        - Location is updated as expected
+    """
+    ## Create Map object for testing
     m = pmk.Map()
 
+    ## Create a set of geo & proj CRS to use for testing
     geographic_crs = pyproj.crs.CRS("EPSG:4326")
     projected_crs = pyproj.crs.CRS("EPSG:3785")
+    
+    ## Use testing CRS in map
     m.set_geographic_crs(geographic_crs)
     m.set_projection(projected_crs)
 
-    tranform = pyproj.Transformer.from_crs(geographic_crs, projected_crs)
+    ## Create a transformer object to compare results against
+    transform = pyproj.Transformer.from_crs(geographic_crs, projected_crs)
 
     ## Basic case
-    try_x, try_y = tranform.transform(40, -83)
+    test_x, test_y = transform.transform(40, -83)
     m.set_location(40, -83)
-    assert m.proj_x == try_x
-    assert m.proj_y == try_y
+    assert m.proj_x == test_x
+    assert m.proj_y == test_y
 
     ## Edge case - values to big
-    try_x, try_y = tranform.transform(200, 200)
+    test_x, test_y = transform.transform(200, 200)
     m.set_location(200, 200)
-    assert m.proj_x == try_x
-    assert m.proj_y == try_y
+    assert m.proj_x == test_x
+    assert m.proj_y == test_y
 
 def test_get_location():
     """ Test Map.get_projection method """
