@@ -321,15 +321,19 @@ class Map:
         Returns the geographic location of the center of the map, location is
         returned in lat/lon.
 
-        Args:
+        Parameters:
             None
 
         Returns:
-            latitude (float): The latitude coordinate of the map.
-            longitude (float): The longitude coordinate of the map.
+            - latitude (float): The latitude coordinate of the map.
+            
+            - longitude (float): The longitude coordinate of the map.
+
+        Exceptions:
+            None
         """
         geo_x, geo_y = self.proj2geo(self.proj_x, self.proj_y)
-        latitude, longitude = geo_y, geo_x ## I do this for now
+        latitude, longitude = geo_y, geo_x
         return latitude, longitude
 
     def set_projection_coordinates(self, new_x, new_y):
