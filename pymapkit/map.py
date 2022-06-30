@@ -190,7 +190,7 @@ class Map:
         ## Remove layer from layer list
         self.layers.remove(del_layer)
 
-    def set_geographic_crs(self, new_crs):
+    def set_geographic_crs(self, new_crs:Union[str, pyproj.crs.CRS]):
         """
         Sets the base geographic reference system. 
 
@@ -198,28 +198,48 @@ class Map:
         projection conversion. Defaults to WGS84(EPSG:4326) 
         See: https://xkcd.com/2170/
 
-        Args:
-            new_crs (str | pyproj.crs.CRS): The CRS to use as the base 
-            geographic reference system.
+        Parameters:
+            - new_crs (str | pyproj.crs.CRS): The CRS to use as the base 
+                geographic reference system.
         
         Returns:
             None
-        """
-
-        if isinstance(new_crs, str):
-            self.geographic_crs = pyproj.crs.CRS(new_crs)
-
-        elif isinstance(new_crs, pyproj.crs.CRS):
-            self.geographic_crs = pyproj.crs.CRS(new_crs)
         
+        Exceptions:
+            - TypeError: If new_crs is not either a str or a pyproj.crs.CRS 
+                object.
+            
+            - CRSError: If given projection is not a geographic projection.
+
+            - CRSError: If given string is not a valid projection
+        """
+        ## Check input type of new_crs
+        if isinstance(new_crs, pyproj.crs.CRS):
+            ## If a CRS object is given directly
+            new_geo_crs = new_crs
+        elif isinstance(new_crs, str):
+            ## If a string is given to represent the CRS
+            new_geo_crs = pyproj.crs.CRS(new_crs)
         else:
-            pass #@ NOTE: throw errors
+            ## If any over input is given, raise type error
+            raise TypeError(f'TypeError: Expected str or PyProj CRS object.')
+
+        ## Check that new CRS is geographic
+        if not new_geo_crs.is_geographic:
+            msg = 'CRSError: Expected a geographic projection.'
+            #@ Maybe make an in-house error for this?
+            raise pyproj.exceptions.CRSError(msg) 
+
+        ## Once projection is confirmed valid, set geographic_crs to new_geo_crs
+        self.geographic_crs = new_geo_crs
 
         ## Recreate transformer objects
-        self.transform_geo2proj = pyproj.Transformer.from_crs(self.geographic_crs, self.projected_crs, always_xy=True)
-        self.transform_proj2geo = pyproj.Transformer.from_crs(self.projected_crs, self.geographic_crs, always_xy=True)
+        self.transform_geo2proj = pyproj.Transformer.from_crs(
+            self.geographic_crs, self.projected_crs, always_xy=True)
+        self.transform_proj2geo = pyproj.Transformer.from_crs(
+            self.projected_crs, self.geographic_crs, always_xy=True)
 
-        ## Reactivate layers
+        ## Reactivate layers, to rebuild to new projection
         for layer in self.layers:
             layer.activate()
 

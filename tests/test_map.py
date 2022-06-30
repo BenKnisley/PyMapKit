@@ -159,15 +159,72 @@ def test_remove_exist_constraints():
     assert test_layer not in m.layers
     test_layer._deactivate.assert_not_called()
 
+def test_set_geographic_crs():
+    """ 
+    Test Map.set_projection method. 
+    
+    Tests that:
+        - Method checks inputs types correctly
+        - Basic usage works as expected
+        - Method calls activate on existing layers
+        - Method changes the transformer objects
+    """
+    ## Create Map object for testing
+    m = pmk.Map()
+
+    ## Test raising TypeError when a bad type is given as new_crs
+    with pytest.raises(TypeError):
+        m.set_geographic_crs(265)
+    
+    ## Test that method catches when a non geographic projection is given
+    with pytest.raises(pyproj.exceptions.CRSError):
+        m.set_geographic_crs('EPSG:3785')
+
+    ## Test that PyProj raises an error when a bad projection string is given
+    with pytest.raises(pyproj.exceptions.CRSError):
+        m.set_geographic_crs('not a CSR')
+
+    ## Create, add, and reset mock layers
+    mock_layer1 = MockLayer()
+    m.add(mock_layer1)
+    mock_layer1.activate.reset_mock()
+
+    mock_layer2 = MockLayer()
+    m.add(mock_layer2)
+    mock_layer2.activate.reset_mock()
+
+    ## Hold these to test if changed
+    old_transform_geo2proj = m.transform_geo2proj
+    old_transform_proj2geo = m.transform_proj2geo
+
+    ## Call set_geographic_crs
+    m.set_geographic_crs('EPSG:4267')
+
+    ## Check that geographic_crs is correct, proj_crs is the same, and that the transforms updated
+    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4267")
+    assert m.projected_crs == pyproj.crs.CRS("EPSG:3785")
+
+    ## Check that both transformers got changed
+    assert not m.transform_geo2proj.is_exact_same(old_transform_geo2proj)
+    assert not m.transform_proj2geo.is_exact_same(old_transform_proj2geo)
+
+    ## Check that method calls layer.activate method
+    mock_layer1.activate.assert_called_once()
+    mock_layer2.activate.assert_called_once()
+
 def test_set_projection():
     """ Test Map.set_projection method """
+    ## Create Map object for testing
     m = pmk.Map()
 
     ## Add mock layers to map, and reset mocked activate method
     mock_layer1 = MockLayer()
-    mock_layer2 = MockLayer()
     m.add(mock_layer1)
+    
+    mock_layer2 = MockLayer()
     m.add(mock_layer2)
+    
+    ## Reset activate mocks
     mock_layer1.activate.reset_mock()
     mock_layer2.activate.reset_mock()
 
@@ -192,39 +249,7 @@ def test_set_projection():
     mock_layer1.activate.assert_called_once()
     mock_layer2.activate.assert_called_once()
 
-def test_set_geographic_crs():
-    """ Test Map.set_projection method """
-    m = pmk.Map()
 
-    mock_layer1 = MockLayer()
-    mock_layer2 = MockLayer()
-
-    ## Add mock layers to map, and reset mocked activate method
-    m.add(mock_layer1)
-    m.add(mock_layer2)
-    mock_layer1.activate.reset_mock()
-    mock_layer2.activate.reset_mock()
-
-    ##
-    ## Test set with text
-    ##
-
-    ## Hold these to test if changed
-    old_transform_geo2proj = m.transform_geo2proj
-    old_transform_proj2geo = m.transform_proj2geo
-
-    ## Call set_geographic_crs
-    m.set_geographic_crs('EPSG:4267')
-
-    ## Check that geographic_crs is correct, proj_crs is the same, and that the transforms updated
-    assert m.geographic_crs == pyproj.crs.CRS("EPSG:4267")
-    assert m.projected_crs == pyproj.crs.CRS("EPSG:3785")
-    assert m.transform_geo2proj.is_exact_same(old_transform_geo2proj) == False
-    assert m.transform_proj2geo.is_exact_same(old_transform_proj2geo) == False
-
-    ## Check that method calls layer activate method
-    mock_layer1.activate.assert_called_once()
-    mock_layer2.activate.assert_called_once()
 
 def test_set_location():
     """ Test Map.set_projection method """
