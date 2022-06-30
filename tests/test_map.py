@@ -369,6 +369,7 @@ def test_get_projection_coordinates():
     Tests that:
         - Method returns correct values for m.proj_x, and m.proj_y
     """
+    ## Create Map object for testing
     m = pmk.Map()
     m.set_projection("EPSG:3785")
     
@@ -382,27 +383,40 @@ def test_get_projection_coordinates():
     assert result_y == 5593228
 
 def test_set_scale():
-    """ Test Map.set_scale method """
+    """ 
+    Test Map.set_scale method 
+    
+    Tests that:
+        - Method updates _proj_scale correctly
+        - proj_units flag causes it to directly set scale factor
+        - Type checking works
+    """
+    ## Create Map object for testing
     m = pmk.Map()
 
-    ## Do basic it changed test
-    old_proj_scale = m._proj_scale
-    m.set_scale(50)
-    assert m._proj_scale != old_proj_scale
+    ## Test raising TypeError when a bad type is given as either input
+    with pytest.raises(TypeError):
+        m.set_scale('bad type')
+    
+    with pytest.raises(TypeError):
+        m.set_scale(270, 'bad type')
 
-    ## Test with US-Ft projection
+    ## Check that method changes _proj_scale value
+    m.set_scale(55.0)
+    assert m._proj_scale == 55.0
+
+    ## Test with a US-FT projection
     m.set_projection('EPSG:32023')
     m.set_scale(50)
     assert m._proj_scale == pytest.approx(164.042)
 
-    ## Test with US-Ft projection with proj_units True
-    m.set_scale(50, True)
-    assert m._proj_scale == pytest.approx(50)
+    ## Test with a proj_units=True
+    m.set_scale(50.0, True)
+    assert m._proj_scale == pytest.approx(50.0)
 
-
-    ## Test with degree projection
+    ## Test with a degree projection
     m.set_projection('EPSG:4326')
-    m.set_scale(50)
+    m.set_scale(50.0)
     assert m._proj_scale == pytest.approx(0.000452202)
 
 def test_get_scale():

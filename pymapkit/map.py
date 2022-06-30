@@ -391,7 +391,7 @@ class Map:
         """
         return self.proj_x, self.proj_y
 
-    def set_scale(self, new_scale, proj_units=False):
+    def set_scale(self, new_scale:float, proj_units:bool=False):
         """
         Set the scale of the map.
 
@@ -399,17 +399,35 @@ class Map:
         projections' base unit. Unless the optional `proj_units` flag is set to
         true, then the new scale is set to use the map's projections units/pix.
 
-        Args:
-            new_scale (float): The new scale of the map in meters per pixel.
+        Parameters:
+            - new_scale (float): The new scale of the map in meters per pixel.
 
-        Optional Args:
-            proj_units (bool): Whether to use the map's projections unit/pix 
-            instead of m/pix. Defaults to false. 
+        Optional Parameters:
+            - proj_units (bool): Whether to use the map's projections unit/pix 
+                instead of m/pix. Defaults to false. 
 
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: raised when something other than a number is given as 
+                new_scale.            
+            
+            - TypeError: raised when something other than a bool is given as 
+                proj_units.
         """
+        ## Type check inputs
+        if not isinstance(new_scale, (float, int)):
+            type_str = type(new_scale).__name__
+            msg = f'TypeError: Expected float, {type_str} given.'
+            raise TypeError(msg)
+        
+        if not isinstance(proj_units, bool):
+            type_str = type(new_scale).__name__
+            msg = f'TypeError: Expected float, {type_str} given.'
+            raise TypeError(msg)
 
+        ## If proj_units flag is set set scale directly
         if proj_units:
             self._proj_scale = float(new_scale)
             return
@@ -417,11 +435,11 @@ class Map:
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code
 
-        if proj_unit == '9003': ## 9003 == US survey foot
+        if proj_unit == '9003': ## 9003 = US survey foot
             ## Meters to feet
             new_scale = new_scale * 3.28084
 
-        if proj_unit == '9122': ## 9122 == degree':
+        if proj_unit == '9122': ## 9122 = degree'
             ## degrees to meters
             new_scale = new_scale / 110570
 
