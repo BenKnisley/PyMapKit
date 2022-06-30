@@ -336,22 +336,36 @@ class Map:
         latitude, longitude = geo_y, geo_x
         return latitude, longitude
 
-    def set_projection_coordinates(self, new_x, new_y):
+    def set_projection_coordinates(self, new_x: float, new_y: float):
         """
-        Sets the projected location of the map.
-
-        Sets the projected location of the center of the map, location is 
-        specified and stored as projection x/y.
-
-        Args:
-            x (float): The x value of the projections coordinate of the map
-            location.
-            y (float): The y value of the projections coordinate of the map
-            location.
+        Directly sets the projected location of the map.
+        
+        Parameters:
+            - new_x (float): The x value of the projections coordinate of the map
+                location.
+            
+            - new_y (float): The y value of the projections coordinate of the map
+                location.
 
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: raised when something other than a number is given as 
+                input.
         """
+        ## Type check inputs
+        if not isinstance(new_x, (float, int)):
+            type_str = type(new_x).__name__
+            msg = f'TypeError: Expected float, {type_str} given.'
+            raise TypeError(msg)
+        
+        if not isinstance(new_y, (float, int)):
+            type_str = type(new_y).__name__
+            msg = f'TypeError: Expected float, {type_str} given.'
+            raise TypeError(msg)
+
+        ## Set projection coord values
         self.proj_x = new_x
         self.proj_y = new_y
 

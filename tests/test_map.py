@@ -334,11 +334,25 @@ def test_get_location():
     assert lon == pytest.approx(83.1)
 
 def test_set_projection_coordinates():
-    """ Test Map.set_projection_coordinates method """
+    """ 
+    Tests Map.set_projection_coordinates method 
+    
+    Tests that:
+        - Projection coordinates are updated as expected
+        - Type checking works as expected
+    """
+    ## Create Map object for testing, and set projection
     m = pmk.Map()
     m.set_projection("EPSG:3785")
+
+    ## Test raising TypeError when a bad type is given as either input
+    with pytest.raises(TypeError):
+        m.set_projection_coordinates('x', 22)
     
-    ## Set first test values
+    with pytest.raises(TypeError):
+        m.set_projection_coordinates(22, 'x')
+
+    ## Define test values
     test_x, test_y = 7453953, 5593228
     
     ## Call set_projection_coordinates method
