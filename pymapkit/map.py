@@ -190,7 +190,7 @@ class Map:
         ## Remove layer from layer list
         self.layers.remove(del_layer)
 
-    def set_geographic_crs(self, new_crs:Union[str, pyproj.crs.CRS]):
+    def set_geographic_crs(self, new_crs:Union[str, pyproj.crs.CRS]) -> None:
         """
         Sets the base geographic reference system. 
 
@@ -243,7 +243,7 @@ class Map:
         for layer in self.layers:
             layer.activate()
 
-    def set_projection(self, new_crs:Union[str, pyproj.crs.CRS]):
+    def set_projection(self, new_crs:Union[str, pyproj.crs.CRS]) -> None:
         """
         Sets the projected coordinate system (projection) of the map.
 
@@ -292,7 +292,7 @@ class Map:
         self.set_location(*location)
         self.set_scale(scale)
 
-    def set_location(self, latitude: float, longitude: float):
+    def set_location(self, latitude: float, longitude: float) -> None:
         """
         Sets the geographic location of the map.
 
@@ -314,7 +314,7 @@ class Map:
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         self.set_projection_coordinates(proj_x, proj_y)
 
-    def get_location(self):
+    def get_location(self) -> Tuple(float, float):
         """
         Returns the geographic location of the map.
 
