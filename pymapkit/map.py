@@ -8,7 +8,7 @@ Created: 5 January, 2021
 """
 import pyproj
 import numpy as np
-from typing import Union
+from typing import Union, Tuple
 from .base_style import Style
 from .base_layer import BaseLayer
 from .base_renderer import BaseRenderer
@@ -336,7 +336,7 @@ class Map:
         latitude, longitude = geo_y, geo_x
         return latitude, longitude
 
-    def set_projection_coordinates(self, new_x: float, new_y: float):
+    def set_projection_coordinates(self, new_x: float, new_y: float) -> None:
         """
         Directly sets the projected location of the map.
 
@@ -369,7 +369,7 @@ class Map:
         self.proj_x = new_x
         self.proj_y = new_y
 
-    def get_projection_coordinates(self):
+    def get_projection_coordinates(self) -> Tuple(float, float):
         """
         Returns the projected location of the map.
 
@@ -391,7 +391,7 @@ class Map:
         """
         return self.proj_x, self.proj_y
 
-    def set_scale(self, new_scale:float, proj_units:bool=False):
+    def set_scale(self, new_scale:float, proj_units:bool=False) -> None:
         """
         Set the scale of the map.
 
@@ -448,7 +448,7 @@ class Map:
         ## Set scale in proj units per pix
         self._proj_scale = float(new_scale)
 
-    def get_scale(self):
+    def get_scale(self) -> float:
         """
         Returns the map scale in meters per pixel.
 
