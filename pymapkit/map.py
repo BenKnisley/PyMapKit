@@ -525,17 +525,19 @@ class Map:
         self.width = width
         self.height = height
 
-    def get_size(self):
+    def get_size(self) -> Tuple(int, int):
         """
-        Returns the pixel size on the map canvas.
+        Returns the pixel width & height of the map area.
 
-        Returns the width & height of the map area.
-
-        Args:
-            width (int): The width of the map canvas in pixels.
-            height (int): The height of the map canvas in pixels.
+        Parameters:
+            - width (int): The width of the map canvas in pixels.
+            
+            - height (int): The height of the map canvas in pixels.
             
         Returns:
+            None
+        
+        Exceptions:
             None
         """
         return self.width, self.height
