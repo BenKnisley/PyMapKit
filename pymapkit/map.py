@@ -456,25 +456,31 @@ class Map:
         m/pix and thus is independent of the projections' base unit. This is 
         done by converting internal projection scale to the m/pix scale.
 
-        Args:
+        Parameters:
             None
 
         Returns:
-            scale (float): The scale of the map in meters per pixel.
+            - scale (float): The scale of the map in meters per pixel.
+        
+        Exceptions:
+            None
         """
-        ## Get current scale in units/pix
+        ## Get current projection scale in units/pixel
         proj_scale = self._proj_scale
 
         ## Get unit code of base unit of projection
         proj_unit = self.projected_crs.axis_info[0].unit_code
 
+        ## If current projection scale is in meters, return direct value
         if proj_unit == '9001':
             return proj_scale
 
+        ## If current scale is in US-FT, convert to meters
         if proj_unit == '9003': ## 9003 == US survey foot
             ## Meters to feet
             return proj_scale / 3.28084
 
+        ## If current scale is in degrees, convert to meters
         if proj_unit == '9122': ## 9122 == degree':
             ## meters to degrees
             return proj_scale * 110570
