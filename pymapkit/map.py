@@ -6,6 +6,7 @@ Function: Define the Map class that pymapkit project is build around.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 5 January, 2021
 """
+from msilib.schema import Error
 import pyproj
 import numpy as np
 from typing import Union, Tuple
@@ -485,19 +486,42 @@ class Map:
             ## meters to degrees
             return proj_scale * 110570
 
-    def set_size(self, width, height):
+    def set_size(self, width:int, height: int) -> None:
         """
-        Sets the pixel size of the canvas.
-
         Sets the pixel width & height of the map area.
 
-        Arguments:
+        Parameters:
             - width (int): the new width of the map canvas.
+            
             - height (int): the new width of the map canvas.
 
-        Returns: None
-        """
+        Returns: 
+            None
+        
+        Exceptions:
+            - TypeError: If either width or height is not an int.
+            - ValueError: If either width or height is less than 1.
 
+        """
+        ## Type check inputs
+        if not isinstance(width, int):
+            type_str = type(width).__name__
+            error_msg = f"TypeError: Expected int, {type_str} given."
+            raise TypeError(error_msg)
+        if not isinstance(height, int):
+            type_str = type(height).__name__
+            error_msg = f"TypeError: Expected int, {type_str} given."
+            raise TypeError(error_msg)
+        
+        ## Check Constrains
+        if width < 1:
+            error_msg = f"ValueError: width required to be less than 1."
+            raise ValueError(error_msg)
+        if height < 1:
+            error_msg = f"ValueError: height required to be less than 1."
+            raise ValueError(error_msg)
+
+        ## Set instance width & height variables
         self.width = width
         self.height = height
 
