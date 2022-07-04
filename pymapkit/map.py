@@ -565,7 +565,7 @@ class Map:
             error_msg = f"TypeError: Expected int or float, {type_str} given."
             raise TypeError(error_msg)
 
-        ## Change 
+        ## Call set_scale with current scale divided by the factor
         self.set_scale(self.get_scale()/factor)
 
     def zoom_out(self, factor=1.5):
