@@ -568,21 +568,30 @@ class Map:
         ## Call set_scale with current scale divided by the factor
         self.set_scale(self.get_scale()/factor)
 
-    def zoom_out(self, factor=1.5):
+    def zoom_out(self, factor:Union[int, float]=1.5) -> None:
         """
-        Zooms the map out by increasing the map scale.
+        Zooms the map out by increasing the map scale. Default scale factor is 
+        1.5 times.
 
-        Changes the map scale by multiplying by a factor (1.5 default).
-
-        Args:
+        Parameters:
             None
 
-        Optional Args:
-            factor (int | float): The scaling factor to multiplying by.
+        Optional Parameters:
+            - factor (int | float): The scaling factor to zoom out by.
 
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: If factor input is not a float or int.
         """
+        ## Type check input
+        if not isinstance(factor, (int, float)):
+            type_str = type(factor).__name__
+            error_msg = f"TypeError: Expected int or float, {type_str} given."
+            raise TypeError(error_msg)
+
+        ## Call set_scale with current scale multiplied by the factor
         self.set_scale(self.get_scale() * factor)
 
     def set_renderer(self, renderer):
