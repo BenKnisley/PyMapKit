@@ -542,21 +542,30 @@ class Map:
         """
         return self.width, self.height
 
-    def zoom_in(self, factor=1.5):
+    def zoom_in(self, factor:Union[int, float]=1.5) -> None:
         """
-        Zooms the map in by shrinking the map scale.
+        Zooms the map in by shrinking the map scale. Default scale factor is 
+        1.5 times.
 
-        Changes the map scale by dividing by a factor (1.5 default).
-
-        Args:
+        Parameters:
             None
 
-        Optional Args:
-            factor (int | float): The scaling factor to divide by.
+        Optional Parameters:
+            - factor (int | float): The scaling factor to zoom in by.
 
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: If factor input is not a float or int.
         """
+        ## Type check input
+        if not isinstance(factor, (int, float)):
+            type_str = type(factor).__name__
+            error_msg = f"TypeError: Expected int or float, {type_str} given."
+            raise TypeError(error_msg)
+
+        ## Change 
         self.set_scale(self.get_scale()/factor)
 
     def zoom_out(self, factor=1.5):
