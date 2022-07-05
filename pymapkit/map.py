@@ -813,8 +813,8 @@ class Map:
         return proj_x, proj_y
 
     def geo2pix(self, 
-        geo_x:Union[int, list, np.array],
-        geo_y:Union[int, list, np.array]) -> tuple:
+        geo_x:Union[int, float, list, np.array],
+        geo_y:Union[int, float, list, np.array]) -> tuple:
         """
         Converts geographic coordinates to canvas pixel coordinates.
 
@@ -845,7 +845,9 @@ class Map:
         canvas_x, canvas_y = self.proj2pix(proj_x, proj_y)
         return canvas_x, canvas_y
     
-    def pix2geo(self, pix_x, pix_y):
+    def pix2geo(self, 
+        pix_x:Union[int, list, np.array], 
+        pix_y:Union[int, list, np.array]) -> tuple:
         """
         Converts canvas pixel coordinates to geographic coordinates.
 
@@ -854,18 +856,19 @@ class Map:
         Canvas pixel coordinates have (0,0) at the top left corner of the map.
         Output type is same type as input.
 
-        Args:
-            pix_x (int | float | list): The input canvas x value(s) to 
-            convert.
+        Parameters:
+            - pix_x (int | float | list | np.array): The input canvas X value(s) 
+                to convert.
 
-            pix_y (int | float | list): The input canvas y value(s) to 
-            convert.
+            - pix_y (int | float | list | np.array): The input canvas Y value(s) 
+                to convert.
 
         Returns:
-            geo_x (int | float | list): The output longitude (x) value(s).
+            - geo_x (int | float | list): The output longitude (X) value(s).
 
-            geo_y (int | float | list): The output latitude (y) value(s).
+            - geo_y (int | float | list): The output latitude (Y) value(s).
         """
+        ## Push input through pix2proj to proj2geo, then return output
         proj_x, proj_y = self.pix2proj(pix_x, pix_y)
         geo_x, geo_y = self.proj2geo(proj_x, proj_y)
         return geo_x, geo_y
