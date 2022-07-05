@@ -664,7 +664,7 @@ class Map:
 
     def geo2proj(self, 
         geo_x:Union[int, float, list, np.array], 
-        geo_y:Union[int, float, list, np.array]):
+        geo_y:Union[int, float, list, np.array]) -> tuple:
         """
         Converts geographic coordinates to projection coordinates.
 
@@ -691,26 +691,34 @@ class Map:
         proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
         return proj_x, proj_y
     
-    def proj2geo(self, proj_x, proj_y):
+    def proj2geo(self, 
+        proj_x:Union[int, float, list, np.array], 
+        proj_y:Union[int, float, list, np.array]) -> tuple:
         """
         Converts projection coordinates to geographic coordinates.
 
         Converts projection coordinates using the maps CRS, either singlet or 
-        vectorized, to geographic coordinates. Output is same type as input.
+        vectorized, to geographic coordinates. Vector output is returned as the
+        same type as input.
 
-        Args:
-            proj_x (int | float | list): The input projected x value(s) to 
-            convert.
+        Parameters:
+            - proj_x (int | float | list | np.array): The input projected X 
+                value(s) to convert.
 
-            proj_y (int | float | list): The input projected y value(s) to 
-            convert.
+            - proj_y (int | float | list | np.array): The input projected Y 
+                value(s) to convert.
     
-
         Returns:
-            geo_x (int | float | list): The output longitude (x) value(s).
+            - geo_x (int | float | list | np.array): The output longitude (X) 
+                value(s).
 
-            geo_y (int | float | list): The output latitude (y) value(s).
+            - geo_y (int | float | list | np.array): The output latitude (Y) 
+                value(s).
+        
+        Exceptions:
+            None
         """
+        ## Use instance proj2geo transform to convert points, & return to caller
         geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
         return geo_x, geo_y
 
