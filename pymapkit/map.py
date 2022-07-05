@@ -619,41 +619,43 @@ class Map:
             f"TypeError: Expected str or BaseRenderer object, {type_str} given."
             raise TypeError(error_msg)
 
-    def render(self, output=None, *args):
+    def render(self, output:Union[None, str, any]=None, *args) -> None:
         """
         Renders the map.
-        
-        Renders all map data stored in map layers to a map canvas with a map 
-        renderer.
 
-        Args:
+        Parameters:
             None
         
-        Optional Args:
-            output (str): The location to store the output map. Defaults to 
-            None, meaning the map will be drawn, but not be saved.
+        Optional Parameters:
+            - output (str, any): Either the path to save the output map to. Or
+                the canvas to draw on directly. Defaults to None, meaning the 
+                map will be drawn, but nothing will be saved.
 
-            args (tuple): All other arguments will be sent to the 
-            renderer.save method if called.
+            - *args (tuple): All other arguments after output will be sent to 
+                the renderer.save method if given.
 
         Returns:
             None
-         
+        
+        Exceptions:
+            None
         """
-
+        ## Create output file variable
         output_file = None
         
+        ## If output arg is a valid canvas, tell renderer to draw on it
         if self.renderer.is_canvas(output):
             output_file = output
             canvas = self.renderer
         else:
-           canvas = self.renderer.new_canvas(self.width, self.height)
-           output_file = output
+            ## Create a new canvas object, and set output file path to output
+            canvas = self.renderer.new_canvas(self.width, self.height)
+            output_file = output
         
-        ## Draw background
+        ## Draw map background
         self.renderer.draw_background(canvas, self.style)
 
-        ## Draw each layer, pass renderer, and canvas to each object
+        ## Draw each layer, pass renderer, and canvas to each layer object
         for layer in self.layers:
             layer.render(self.renderer, canvas)
         
