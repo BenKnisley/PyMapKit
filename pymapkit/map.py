@@ -812,7 +812,9 @@ class Map:
         ## Return results to caller
         return proj_x, proj_y
 
-    def geo2pix(self, geo_x, geo_y):
+    def geo2pix(self, 
+        geo_x:Union[int, list, np.array],
+        geo_y:Union[int, list, np.array]) -> tuple:
         """
         Converts geographic coordinates to canvas pixel coordinates.
 
@@ -821,18 +823,22 @@ class Map:
         input. Canvas pixel coordinates are set to have (0,0) at the top left 
         corner of the map.
 
-        Args:
-            geo_x (int | float | list): The input longitude or geographic x 
-            value(s) to convert.
+        Parameters:
+            - geo_x (int | list | np.array): The input longitude or geographic X 
+                value(s) to convert.
 
-            geo_y (int | float | list): The input latitude or geographic y 
-            value(s) to convert.
+            - geo_y (int | list | np.array): The input latitude or geographic Y 
+                value(s) to convert.
 
         Returns:
-            canvas_x (int | float | list): The output pixel x value(s).
+            - canvas_x (int | float | list): The output pixel X value(s).
 
-            canvas_y (int | float | list): The output pixel y value(s).
+            - canvas_y (int | float | list): The output pixel Y value(s).
+        
+        Exceptions:
+            None
         """
+        ## Push input through geo2proj to geo2proj, then return output
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         canvas_x, canvas_y = self.proj2pix(proj_x, proj_y)
         return canvas_x, canvas_y
