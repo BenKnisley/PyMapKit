@@ -766,7 +766,9 @@ class Map:
         ## Return results to caller
         return pix_x, pix_y
 
-    def pix2proj(self, pix_x, pix_y):
+    def pix2proj(self, 
+        pix_x:Union[int, list, np.array], 
+        pix_y: Union[int, list, np.array]) -> tuple:
         """
         Converts canvas pixel coordinates to projection coordinates.
 
@@ -775,39 +777,39 @@ class Map:
         origin (0,0) is at the top left corner of the map. Output type is same 
         as input type.
 
-        Args:
-            pix_x (int | float | list): The input canvas x value(s) to 
+        Parameters:
+            - pix_x (int | list | np.array): The input canvas X value(s) to 
             convert.
 
-            pix_y (int | float | list): The input canvas y value(s) to 
+            - pix_y (int | list | np.array): The input canvas Y value(s) to 
             convert.
     
         Returns:
-            proj_x (int | float | list): The output projection x value(s).
+            - proj_x (int | float | list): The output projection X value(s).
 
-            proj_y (int | float | list): The output projection y value(s).
+            - proj_y (int | float | list): The output projection Y value(s).
+        
+        Exceptions:
+            None
         """
-        ## Flag true if input is list
+        ## Convert lists to numpy array, and setting list flag 
         list_flag = False
-
-        ## Convert list to numpy array
         if isinstance(pix_x, list):
             pix_x = np.array(pix_x)
             pix_y = np.array(pix_y)
             list_flag = True
         
         ## Do math logic on all points
-        #! NOTE: @ self._proj_scale has to be a float!
         #! NOTE: a round(...) might be better 
         proj_x = self.proj_x + ((pix_x - int(self.width / 2)) * self._proj_scale) 
         proj_y = (self.proj_y + ((pix_y - int(self.height / 2)) * self._proj_scale))
-
 
         ## Convert numpy array to list
         if list_flag:
             proj_x = proj_x.tolist()
             proj_y = proj_y.tolist()
         
+        ## Return results to caller
         return proj_x, proj_y
 
     def geo2pix(self, geo_x, geo_y):
