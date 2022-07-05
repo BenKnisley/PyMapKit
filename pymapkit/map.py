@@ -722,7 +722,9 @@ class Map:
         geo_x, geo_y = self.transform_proj2geo.transform(proj_x, proj_y)
         return geo_x, geo_y
 
-    def proj2pix(self, proj_x, proj_y):
+    def proj2pix(self, 
+        proj_x:Union[int, float, list, np.array], 
+        proj_y:Union[int, float, list, np.array]) -> tuple:
         """
         Converts projection coordinates to canvas pixel coordinates.
 
@@ -730,38 +732,38 @@ class Map:
         vectorized, to canvas pixel coordinates with (0,0) at the top left 
         corner of the map. Output type is same type as input.
 
-        Args:
-            proj_x (int | float | list): The input projected x value(s) to 
-            convert.
+        Parameters:
+            - proj_x (int | float | list | np.array): The input projected X 
+                value(s) to convert.
 
-            proj_y (int | float | list): The input projected y value(s) to 
-            convert.
+            - proj_y (int | float | list | np.array): The input projected y 
+                value(s) to convert.
     
-
         Returns:
-            canvas_x (int | float | list): The output pixel x value(s).
+            - canvas_x (int | list | np.array): The output pixel X value(s).
 
-            canvas_y (int | float | list): The output pixel y value(s).
+            - canvas_y (int | list | np.array): The output pixel Y value(s).
+        
+        Exceptions:
+            None
         """
-        ## Flag true if input is list
+        ## Convert lists to numpy array, and setting list flag 
         list_flag = False
-
-        ## Convert list to numpy array
         if isinstance(proj_x, list):
             list_flag = True
             proj_x = np.array(proj_x)
             proj_y = np.array(proj_y)
         
         ## Do math logic on all points
-        # NOTE: @ self._proj_scale has to be a float!
         pix_x = ((proj_x - self.proj_x) / self._proj_scale) + int(self.width / 2)
         pix_y = -((proj_y - self.proj_y) / self._proj_scale) + int(self.height / 2)
 
-        ## Convert numpy array to list
+        ## Convert numpy array to list, if list flag is set
         if list_flag:
             pix_x = pix_x.tolist()
             pix_y = pix_y.tolist()
         
+        ## Return results to caller
         return pix_x, pix_y
 
     def pix2proj(self, pix_x, pix_y):
