@@ -16,14 +16,14 @@ from .base_renderer import BaseRenderer
 
 def get_renderer(renderer_name: str) -> BaseRenderer:
     """ 
-    Returns a named renderer instance based on input string
+    Returns a named renderer instance based on input string.
 
-    Args:
-        renderer_name (str): The name of the renderer object to return.
+    Parameters:
+        - renderer_name (str): The name of the renderer object to return.
     
     Returns:
-        renderer (base_renderer): A renderer object of the type given with 
-        renderer_name.
+        - renderer (base_renderer): A renderer object of the type given with 
+            renderer_name.
     """
     if renderer_name in ('skia', 'pyskia'):
         from .skia_renderer import SkiaRenderer
