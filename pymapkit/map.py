@@ -824,16 +824,18 @@ class Map:
         corner of the map.
 
         Parameters:
-            - geo_x (int | list | np.array): The input longitude or geographic X 
-                value(s) to convert.
+            - geo_x (int | float | list | np.array): The input longitude or 
+                geographic X value(s) to convert.
 
-            - geo_y (int | list | np.array): The input latitude or geographic Y 
-                value(s) to convert.
+            - geo_y (int | float | list | np.array): The input latitude or 
+                geographic Y value(s) to convert.
 
         Returns:
-            - canvas_x (int | float | list): The output pixel X value(s).
+            - canvas_x (int | float | list | np.array): The output pixel X 
+                value(s).
 
-            - canvas_y (int | float | list): The output pixel Y value(s).
+            - canvas_y (int | float | list | np.array): The output pixel Y 
+                value(s).
         
         Exceptions:
             None
