@@ -6,7 +6,6 @@ Function: Define the Map class that pymapkit project is build around.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 5 January, 2021
 """
-from msilib.schema import Error
 import pyproj
 import numpy as np
 from typing import Union, Tuple
@@ -315,7 +314,7 @@ class Map:
         proj_x, proj_y = self.geo2proj(geo_x, geo_y)
         self.set_projection_coordinates(proj_x, proj_y)
 
-    def get_location(self) -> Tuple(float, float):
+    def get_location(self) -> Tuple[float, float]:
         """
         Returns the geographic location of the map.
 
@@ -370,7 +369,7 @@ class Map:
         self.proj_x = new_x
         self.proj_y = new_y
 
-    def get_projection_coordinates(self) -> Tuple(float, float):
+    def get_projection_coordinates(self) -> Tuple[float, float]:
         """
         Returns the projected location of the map.
 
@@ -525,7 +524,7 @@ class Map:
         self.width = width
         self.height = height
 
-    def get_size(self) -> Tuple(int, int):
+    def get_size(self) -> Tuple[int, int]:
         """
         Returns the pixel width & height of the map area.
 
@@ -594,26 +593,31 @@ class Map:
         ## Call set_scale with current scale multiplied by the factor
         self.set_scale(self.get_scale() * factor)
 
-    def set_renderer(self, renderer):
+    def set_renderer(self, renderer: Union[str, BaseRenderer]) -> None:
         """
-        Tells the map which renderer to use to render the map.
+        Sets the renderer the map will use to render the output.
 
-        Sets the renderer to be used to render the map data. Set from a string 
-        or a directly given renderer object.
-
-        Args:
-            renderer (str | base_renderer obj): A string naming the renderer to
-            use, retrieved via the get_renderer function. Or a base_renderer 
-            object to be used directly as the renderer.
+        Parameters:
+            - renderer (str | base_renderer obj): A string naming the renderer 
+                to use, retrieved via the get_renderer function. Or a 
+                base_renderer object to be used directly as the renderer.
             
         Returns:
             None
+        
+        Exceptions:
+            - TypeError: Raised if given renderer is not a str or BaseRenderer
+                instance.
         """
-
         if isinstance(renderer, str):
             self.renderer = get_renderer(renderer)
-        else: 
+        elif isinstance(renderer, BaseRenderer): 
             self.renderer = renderer
+        else:
+            type_str = type(renderer).__name__
+            error_msg = \
+            f"TypeError: Expected str or BaseRenderer object, {type_str} given."
+            raise TypeError(error_msg)
 
     def render(self, output=None, *args):
         """
