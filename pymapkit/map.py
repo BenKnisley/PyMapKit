@@ -662,27 +662,32 @@ class Map:
         ## Save or display canvas
         self.renderer.save(canvas, output_file)
 
-    def geo2proj(self, geo_x, geo_y):
+    def geo2proj(self, 
+        geo_x:Union[int, float, list, np.array], 
+        geo_y:Union[int, float, list, np.array]):
         """
         Converts geographic coordinates to projection coordinates.
 
         Converts geographic coordinates, either singlet or vectorized, to 
-        projection coordinates of the maps CRS. Output is same type as input.
+        projection coordinates of the maps CRS. Vector output is returned as the
+        same type as input.
 
-        Args:
-            geo_x (int | float | list): The input longitude or geographic x 
-            value(s) to convert.
+        Parameters:
+            - geo_x (int | float | list | np.array): The input longitude or 
+                geographic X value(s) to convert.
 
-            geo_y (int | float | list): The input latitude or geographic y 
-            value(s) to convert.
+            - geo_y (int | float | list | np.array): The input latitude or 
+                geographic Y value(s) to convert.
     
-
         Returns:
-            proj_x (int | float | list): The output x value(s).
+            - proj_x (int | float | list | np.array): The output x value(s).
 
-            proj_y (int | float | list): The output y value(s).
+            - proj_y (int | float | list | np.array): The output y value(s).
+        
+        Exceptions:
+            None
         """
-        ## Use geo2proj transform to convert points
+        ## Use instance geo2proj transform to convert points, & return to caller
         proj_x, proj_y = self.transform_geo2proj.transform(geo_x, geo_y)
         return proj_x, proj_y
     
