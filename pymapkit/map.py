@@ -2,7 +2,7 @@
 Project: PyMapKit
 File: map.py
 Title: Map Class Definition
-Function: Define the Map class that pymapkit project is build around.
+Function: Define the Map class, with any helper functions.
 Author: Ben Knisley [benknisley@gmail.com]
 Created: 5 January, 2021
 """
